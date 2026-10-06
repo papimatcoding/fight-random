@@ -1,31 +1,57 @@
 # Fight Random
 
-Fast 1v1 browser arena: both players pick a permanent power after every round until the build becomes absurd.
+Browser arena for 2–4 players. No account, no install: create a room, share the link and play.
 
-## Current gameplay foundation
+## Modes
 
-- Online 1v1 with room links and no account/install.
-- Both players must press **Ready** before the match starts.
-- Rematches only start after both players accept.
-- First to 5 round wins takes the match.
-- 3 rotating arena layouts with different obstacle geometry.
-- Map pickups: healing, shield and temporary speed boost.
-- Elemental powers: fire, frost and shock.
-- Match stats: damage, accuracy and pickups.
-- Multishot is represented visually by multiple barrels.
-- Host-authoritative simulation over PeerJS/WebRTC.
+- **1v1** — 2 players, first to 5 rounds.
+- **1v1v1** — 3-player free-for-all, first to 4 rounds.
+- **2v2** — 4 players, first team to 5 rounds.
 
-## Balance direction
+The host is authoritative: clients send inputs and choices, while the host simulates damage, projectiles, barrels, pickups and round results.
 
-The original prototype ended too quickly, so the baseline now targets a longer time-to-kill:
+## Turret / character direction
 
-- Base HP increased to 140.
-- Base projectile damage reduced to 11 and base fire delay increased to 0.48 s.
-- Multishot uses diminishing per-projectile damage instead of scaling linearly.
-- Fire-rate upgrades are milder and capped.
-- Stronger rarities unlock later in the match.
-- Legendary/illegal upgrades have meaningful downsides.
-- Healing and defensive pickups create comeback windows without resetting builds.
+The current fighter is a neutral **Prototype turret**. Character definitions are intentionally not invented yet.
+
+- Common, rare and epic upgrades are general build upgrades.
+- Legendary and illegal slots are reserved for character ability upgrades.
+- The character registry and ability-upgrade hooks already exist, ready for the user-defined roster.
+
+## Comeback rarity system
+
+Upgrade rarity is weighted by consecutive round losses. The base table strongly favors common/rare upgrades; a losing streak gradually shifts weight upward. Legendary and illegal rarity only participates when the selected character actually has upgrades defined for those tiers.
+
+The system is capped at 3 consecutive losses so comeback luck helps without turning a losing player into an automatic high-roll machine.
+
+## Gameplay
+
+- 3 rotating maps with different obstacle geometry.
+- Explosive barrels at authored map positions; explosions damage anyone and can chain-react.
+- Healing, shield and temporary speed pickups.
+- Fire, frost, shock, homing and explosive epic upgrades.
+- Visible health bars above every turret plus desktop HUD cards.
+- Multishot is represented by multiple physical barrels on the turret.
+- Fullscreen arena option.
+- Ready-up before the match and unanimous rematch ready-up.
+- End-of-match damage, accuracy, eliminations and pickup stats.
+
+## Current general upgrade pool
+
+**Common:** multishot, fire rate, movement speed, max HP, base caliber.
+
+**Rare:** heavy rounds, ricochet, dash improvement, round-start shield, lifesteal.
+
+**Epic:** fire, frost, shock, homing, explosive projectiles.
+
+## Balance baseline
+
+- Duel: 150 base HP.
+- 3/4 player modes: 165 base HP to reduce focus-fire burst.
+- 10.5 base projectile damage and 0.50 s base fire delay.
+- Multishot uses diminishing per-projectile damage.
+- Fire-rate, mobility and damage upgrades are capped.
+- Strong effects are kept in epic rarity rather than stacking raw damage in low tiers.
 
 ## Controls
 
@@ -33,7 +59,3 @@ The original prototype ended too quickly, so the baseline now targets a longer t
 - Mouse — aim
 - Left click — shoot
 - `Space` — dash
-
-## Next candidates
-
-Gameplay first: more arenas, additional elemental interactions, alternative modes and deeper balance passes. Cosmetics/shop can come later once the combat loop is solid.
