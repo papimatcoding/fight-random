@@ -37,6 +37,7 @@ create table if not exists public.fr_rooms (
 );
 
 create index if not exists fr_rooms_lobby_idx on public.fr_rooms (status, visibility, last_heartbeat_at desc);
+create index if not exists fr_rooms_host_player_idx on public.fr_rooms (host_player_id);
 
 create table if not exists public.fr_room_members (
   room_id uuid not null references public.fr_rooms(id) on delete cascade,
@@ -71,6 +72,8 @@ create table if not exists public.fr_matches (
 create unique index if not exists fr_matches_client_match_uidx
   on public.fr_matches (client_match_id) where client_match_id is not null;
 create index if not exists fr_matches_finished_idx on public.fr_matches (finished_at desc);
+create index if not exists fr_matches_room_idx on public.fr_matches (room_id);
+create index if not exists fr_matches_winner_player_idx on public.fr_matches (winner_player_id);
 
 create table if not exists public.fr_match_players (
   match_id uuid not null references public.fr_matches(id) on delete cascade,
