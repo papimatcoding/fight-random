@@ -22,3 +22,11 @@
 .score-pill,.round-chip{padding:5px 10px}
 .tips{justify-content:center;opacity:.8}
 @media(max-width:980px){.how-grid{grid-template-columns:repeat(3,1fr)}.game-wrap .canvas-frame{width:100%}}
+
+.character-picker{width:min(620px,100%);display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 18px}
+.character-card{border:1px solid #30394f;border-radius:14px;background:#0d121c;color:#f4f6ff;padding:14px 16px;text-align:left;transition:.14s ease}
+.character-card strong{display:block;font-size:20px;letter-spacing:-.03em}
+.character-card span{display:block;color:#8f9aaf;font-size:11px;line-height:1.4;margin-top:4px}
+.character-card.selected{border-color:#ffd166;box-shadow:inset 0 0 0 1px #ffd166,0 0 24px #ffd16612;background:#171711}
+.character-card:disabled{opacity:.7}
+@media(max-width:700px){.character-picker{grid-template-columns:1fr}}

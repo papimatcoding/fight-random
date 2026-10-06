@@ -14,7 +14,7 @@ function hostGame(){clean();host=true;me=0;code=roomCode();net('conectando…');
   const seat=chooseFreeSeat();if(seat==null){incoming.on('open',()=>{incoming.send({type:'reject',reason:'Sala llena'});incoming.close()});return}reservedSeats.add(seat);bindHostConnection(incoming,seat)
 })}
 function bindHostConnection(c,seat){c.on('open',()=>{reservedSeats.delete(seat);hostConnections.set(seat,c);game.connected[seat]=true;game.ready[seat]=false;remoteInputs[seat]=blankInput();c.send({type:'welcome',seat,g:clone(game)});net(connectedCount()+'/'+modeOf().players+' online',true);broadcast(true)});
-  c.on('data',d=>{if(d.type==='input')Object.assign(remoteInputs[seat],d.k);if(d.type==='pick')chooseUpgrade(seat,+d.n);if(d.type==='ready')setReady(seat,'ready');if(d.type==='rematch')setReady(seat,'rematch')});
+  c.on('data',d=>{if(d.type==='input')Object.assign(remoteInputs[seat],d.k);if(d.type==='pick')chooseUpgrade(seat,+d.n);if(d.type==='character')setCharacter(seat,d.id);if(d.type==='ready')setReady(seat,'ready');if(d.type==='rematch')setReady(seat,'rematch')});
   c.on('close',()=>{reservedSeats.delete(seat);hostConnections.delete(seat);if(game){game.connected[seat]=false;resetRoomAfterDisconnect()}net(connectedCount()+'/'+modeOf().players+' online',connectedCount()>1)})
 }
 function joinGame(raw){const x=(raw||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);if(x.length!==6){status('El código tiene 6 caracteres.',true);return}clean();host=false;me=null;code=x;net('conectando…');peer=new Peer();commonPeerEvents();peer.on('open',()=>{conn=peer.connect(PFX+code,{reliable:true});bindClientConnection()})}

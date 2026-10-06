@@ -20,8 +20,8 @@
     <section class="lobby panel" id="lobby">
       <div class="hero-copy">
         <p class="eyebrow">ARENA ONLINE · 2–4 JUGADORES · SIN INSTALAR</p>
-        <h1>MIX entra.<br><span>La arena escala.</span></h1>
-        <p class="lead">MIX es el primer personaje jugable. Construye su armamento con mejoras generales y transforma sus habilidades con mejoras legendarias e ilegales.</p>
+        <h1>Elige torreta.<br><span>Rompe la arena.</span></h1>
+        <p class="lead">MIX controla el ritmo con movilidad y explosivos. TRUCKS avanza lento, aguanta daño y bloquea zonas con fuego persistente.</p>
       </div>
 
       <div class="lobby-actions">
@@ -46,8 +46,8 @@
         <div><kbd>WASD</kbd><span>mover</span></div>
         <div><kbd>RATÓN</kbd><span>apuntar</span></div>
         <div><kbd>CLICK</kbd><span>disparar</span></div>
-        <div><kbd>SPACE</kbd><span>dash</span></div>
-        <div><kbd>E</kbd><span>bola de cañón</span></div>
+        <div><kbd>SPACE</kbd><span>habilidad básica</span></div>
+        <div><kbd>E</kbd><span>habilidad especial</span></div>
       </div>
     </section>
 
@@ -82,6 +82,16 @@
           <p class="eyebrow">LA SALA EMPIEZA CUANDO TODOS ESTÉN LISTOS</p>
           <h2 id="readyTitle">¿PREPARADO?</h2>
           <p id="readySubtitle">Esperando jugadores.</p>
+          <div class="character-picker" id="characterPicker">
+            <button class="character-card selected" type="button" data-character="mix">
+              <strong>MIX</strong>
+              <span>Equilibrado · SPACE Dash · E Bola de cañón</span>
+            </button>
+            <button class="character-card" type="button" data-character="trucks">
+              <strong>TRUCKS</strong>
+              <span>Tanque · SPACE Fortificar · E ¡Fuego!</span>
+            </button>
+          </div>
           <button class="primary" id="readyBtn" type="button">ESTOY LISTO</button>
           <div class="ready-state" id="readyState">1 / 2 conectados</div>
         </div>
@@ -111,8 +121,8 @@
       </div>
 
       <div class="tips">
-        <span><b>SPACE</b> dash</span>
-        <span><b>E</b> bola de cañón</span>
+        <span><b>SPACE</b> habilidad básica</span>
+        <span><b>E</b> habilidad especial</span>
         <span><b>BARRILES</b> explosivos</span>
         <span class="danger">la tormenta cierra las rondas largas</span>
       </div>
