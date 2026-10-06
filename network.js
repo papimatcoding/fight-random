@@ -1,0 +1,21 @@
+'use strict';
+function broadcast(force=false){if(!host||!game)return;if(!force&&sendAccumulator<.05)return;sendAccumulator=0;const packet={type:'state',g:clone(game)};for(const c of hostConnections.values())if(c.open)c.send(packet)}
+function hostLoop(){clearInterval(timer);let prev=performance.now();timer=setInterval(()=>{const now=performance.now(),dt=Math.min(.035,(now-prev)/1000);prev=now;sim(dt);sendAccumulator+=dt;broadcast(false);view=game},1000/60)}
+function net(txt,on){$('netText').textContent=txt;$('netPill').classList.toggle('online',!!on)}
+function status(t,e){$('lobbyStatus').textContent=t;$('lobbyStatus').classList.toggle('error',!!e)}
+function roomCode(){let x='',s='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';for(let i=0;i<6;i++)x+=s[Math.floor(Math.random()*s.length)];return x}
+function closeNetworking(){clearInterval(timer);for(const c of hostConnections.values())try{c.close()}catch{}hostConnections.clear();reservedSeats.clear();try{conn?.close()}catch{}try{peer?.destroy()}catch{}peer=conn=null;for(const k of Object.keys(remoteInputs))delete remoteInputs[k]}
+function clean(){closeNetworking();host=false;me=null;game=view=null;$('lobby').classList.remove('hidden');$('roomPanel').classList.add('hidden');$('gameWrap').classList.add('hidden');$('fullscreenBtn').classList.add('hidden');net('offline')}
+function commonPeerEvents(){peer.on('error',e=>{console.error(e);status(e.type==='peer-unavailable'?'No existe esa sala o ya está llena.':'Error de conexión. Prueba otra vez.',true);net('error')})}
+function showGame(){ $('lobby').classList.add('hidden');$('roomPanel').classList.remove('hidden');$('gameWrap').classList.remove('hidden');$('fullscreenBtn').classList.remove('hidden');$('roomCode').textContent=code;const u=new URL(location.href);u.searchParams.set('room',code);history.replaceState({},'',u)}
+function chooseFreeSeat(){const m=modeOf();for(let i=1;i<m.players;i++)if(!game.connected[i]&&!reservedSeats.has(i))return i;return null}
+
+function hostGame(){clean();host=true;me=0;code=roomCode();net('conectando…');game=makeGame(selectedMode);game.connected[0]=true;view=game;peer=new Peer(PFX+code,{debug:1});commonPeerEvents();peer.on('open',()=>{showGame();net('esperando jugadores');hostLoop()});peer.on('connection',incoming=>{
+  const seat=chooseFreeSeat();if(seat==null){incoming.on('open',()=>{incoming.send({type:'reject',reason:'Sala llena'});incoming.close()});return}reservedSeats.add(seat);bindHostConnection(incoming,seat)
+})}
+function bindHostConnection(c,seat){c.on('open',()=>{reservedSeats.delete(seat);hostConnections.set(seat,c);game.connected[seat]=true;game.ready[seat]=false;remoteInputs[seat]=blankInput();c.send({type:'welcome',seat,g:clone(game)});net(connectedCount()+'/'+modeOf().players+' online',true);broadcast(true)});
+  c.on('data',d=>{if(d.type==='input')Object.assign(remoteInputs[seat],d.k);if(d.type==='pick')chooseUpgrade(seat,+d.n);if(d.type==='ready')setReady(seat,'ready');if(d.type==='rematch')setReady(seat,'rematch')});
+  c.on('close',()=>{reservedSeats.delete(seat);hostConnections.delete(seat);if(game){game.connected[seat]=false;resetRoomAfterDisconnect()}net(connectedCount()+'/'+modeOf().players+' online',connectedCount()>1)})
+}
+function joinGame(raw){const x=(raw||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);if(x.length!==6){status('El código tiene 6 caracteres.',true);return}clean();host=false;me=null;code=x;net('conectando…');peer=new Peer();commonPeerEvents();peer.on('open',()=>{conn=peer.connect(PFX+code,{reliable:true});bindClientConnection()})}
+function bindClientConnection(){conn.on('open',()=>{showGame();net('online',true)});conn.on('data',d=>{if(d.type==='reject'){status(d.reason||'No puedes entrar.',true);clean();return}if(d.type==='welcome'){me=d.seat;view=d.g;selectedMode=d.g.mode;net('online',true)}if(d.type==='state')view=d.g});conn.on('close',()=>net('host desconectado'))}
