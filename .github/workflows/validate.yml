@@ -1,0 +1,22 @@
+name: Validate static game
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: |
+          node --check engine.js
+          node --check network.js
+          node --check game.js
+      - name: Check required browser scripts
+        run: |
+          grep -q 'engine.js' index.html
+          grep -q 'network.js' index.html
+          grep -q 'game.js' index.html
