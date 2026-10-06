@@ -13,6 +13,7 @@
       <a class="brand" href="./" aria-label="Fight Random">FIGHT <span>RANDOM</span></a>
       <div class="top-actions">
         <button class="ghost compact hidden" id="fullscreenBtn" type="button">PANTALLA COMPLETA</button>
+        <div class="net-pill backend-pill" id="backendPill"><span class="dot"></span><span id="backendText">modo local</span></div>
         <div class="net-pill" id="netPill"><span class="dot"></span><span id="netText">offline</span></div>
       </div>
     </header>
@@ -21,10 +22,23 @@
       <div class="hero-copy">
         <p class="eyebrow">ARENA ONLINE · 2–4 JUGADORES · SIN INSTALAR</p>
         <h1>Elige torreta.<br><span>Rompe la arena.</span></h1>
-        <p class="lead">MIX controla el ritmo con movilidad y explosivos. TRUCKS avanza lento, aguanta daño y bloquea zonas con fuego persistente.</p>
+        <p class="lead">Entra directo por enlace o busca una sala pública. Tu perfil, rating e historial se guardan; el combate sigue siendo rápido y sin instalaciones.</p>
       </div>
 
       <div class="lobby-actions">
+        <div class="profile-strip">
+          <div class="profile-main">
+            <span class="mini-label">PERFIL</span>
+            <strong id="profileName">Jugador</strong>
+            <small id="profileMeta">perfil local</small>
+          </div>
+          <div class="profile-edit">
+            <input id="nicknameInput" maxlength="18" autocomplete="off" placeholder="APODO" />
+            <button class="ghost compact" id="saveNicknameBtn" type="button">GUARDAR</button>
+          </div>
+          <span class="profile-message" id="profileMessage"></span>
+        </div>
+
         <span class="mini-label">MODO DE LA SALA</span>
         <div class="mode-grid" id="modeGrid">
           <button class="mode-card selected" type="button" data-mode="duel"><strong>1V1</strong><span>Clásico · 2 jugadores</span></button>
@@ -32,7 +46,14 @@
           <button class="mode-card" type="button" data-mode="teams"><strong>2V2</strong><span>Equipos · 4 jugadores</span></button>
           <button class="mode-card special-mode" type="button" data-mode="core"><strong>NÚCLEO</strong><span>Especial · objetivo central · 1v1</span></button>
         </div>
-        <button class="primary big" id="hostBtn" type="button">CREAR PARTIDA</button>
+        <div class="create-row">
+          <select id="roomVisibility" aria-label="Visibilidad de la sala">
+            <option value="public">SALA PÚBLICA</option>
+            <option value="private">SALA PRIVADA</option>
+          </select>
+          <button class="secondary" id="quickPlayBtn" type="button">PARTIDA RÁPIDA</button>
+          <button class="primary big" id="hostBtn" type="button">CREAR SALA</button>
+        </div>
 
         <div class="or"><span></span><b>o</b><span></span></div>
         <form id="joinForm" class="join-row">
@@ -49,6 +70,21 @@
         <div><kbd>CLICK</kbd><span>disparar</span></div>
         <div><kbd>SPACE</kbd><span>habilidad básica</span></div>
         <div><kbd>E</kbd><span>habilidad especial</span></div>
+      </div>
+
+      <div class="lobby-meta">
+        <article class="meta-card">
+          <div class="meta-head"><span>SALAS PÚBLICAS</span><small>click para entrar</small></div>
+          <div class="room-list" id="publicRooms"><div class="empty-state">Conectando lobby…</div></div>
+        </article>
+        <article class="meta-card">
+          <div class="meta-head"><span>RANKING</span><small>rating</small></div>
+          <div class="leaderboard-list" id="leaderboardRows"><div class="empty-state">Cargando…</div></div>
+        </article>
+        <article class="meta-card">
+          <div class="meta-head"><span>TUS ÚLTIMAS</span><small>historial</small></div>
+          <div class="recent-list" id="recentMatches"><div class="empty-state">Sin partidas todavía.</div></div>
+        </article>
       </div>
     </section>
 
@@ -136,6 +172,7 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
+  <script src="backend.js" defer></script>
   <script src="engine.js" defer></script>
   <script src="network.js" defer></script>
   <script src="game.js" defer></script>
