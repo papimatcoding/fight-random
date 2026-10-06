@@ -74,7 +74,7 @@ function frRenderLobby(){
     for(const r of list){
       const row=document.createElement('button');row.type='button';row.className='room-row';
       row.innerHTML='<span><b>'+frModeLabel(r.mode)+'</b><small>'+escapeHtml(r.host)+' · '+r.hostRating+' rating</small></span><strong>'+r.players+'/'+r.maxPlayers+'</strong>';
-      row.onclick=()=>{if(typeof setQueueIntent==='function')setQueueIntent('quick');joinGame?.(r.code)};
+      row.onclick=()=>{if(typeof garageCanQueue==='function'&&!garageCanQueue()){if(typeof status==='function')status('Completa una máquina válida antes de entrar.',true);return}if(typeof setQueueIntent==='function')setQueueIntent('quick');joinGame?.(r.code)};
       rooms.appendChild(row);
     }
   }
