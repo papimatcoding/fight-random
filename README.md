@@ -1,52 +1,73 @@
 # Fight Random
 
-Browser arena for 2–4 players with incremental builds, character abilities and fast P2P multiplayer.
+Nombre provisional para un arena PvP de máquinas de combate clandestinas. El jugador no elige un héroe cerrado: monta una máquina antes de entrar y la sigue modificando entre rondas.
 
-## Play loop
+## Máquina
 
-- Pick a character: **MIX**, **TRUCKS** or **LIZZY**
-- Play 1v1, 1v1v1, 2v2 or the special **CORE** mode
-- Win rounds and choose upgrades
-- Common / rare / epic upgrades shape the general build
-- Legendary / illegal upgrades modify character abilities
-- Comeback rarity weighting helps a player on a losing streak without guaranteeing high rarity
-- Storm pressure closes rounds that stall
+Cada build usa cuatro piezas:
 
-## Persistent game layer
+- **Chasis** — define vida, movilidad, tamaño, capacidad y la habilidad de `Space`.
+- **Arma** — ataque principal con click.
+- **Especial** — habilidad equipada en `E`.
+- **Sistema** — pasiva sencilla.
 
-Fight Random now has a lightweight Supabase backend while keeping combat P2P:
+Los módulos cuestan puntos y cada chasis tiene un límite de capacidad. La rareza y el coste son conceptos separados.
 
-- persistent guest profile and nickname
-- public / private rooms
-- quick play
-- room heartbeat / stale-room cleanup
-- rating leaderboard
-- recent match history
-- aggregate wins, kills, deaths and damage
-- idempotent server-side match recording
+### Chasis
 
-If the backend is unavailable, direct room links and active P2P matches continue to work.
+- **MIX** — medio, 10 puntos, Dash.
+- **TRUCKS** — pesado, 14 puntos, Fortificar.
+- **LIZZY** — ligero, 7 puntos, Invisibilidad.
 
-## Gameplay systems
+### Armas
 
-- multiple arena sizes and mode-aware map pools
-- explosive barrels and chain reactions
-- explicit healing / speed / shield pickups
-- fire, frost, shock, homing and explosive upgrades
-- build synergies
-- killfeed, damage feedback and procedural combat audio
-- fullscreen desktop arena
+- **RIVET-9** — torreta estándar.
+- **LANCE-50** — francotirador de largo alcance y gran retroceso.
+- **SCRAPSHOT** — escopeta de corto alcance.
+- **SUNLINE** — rayo láser continuo con calor y sobrecarga forzada.
+- **PISTON** — puñetazo hidráulico de enorme knockback y retroceso propio.
+- **GRINDER** — hacha rotatoria para melee sostenido.
 
-## Controls
+Las armas tienen alcance, cadencia y retroceso propios. Algunas tienen restricciones de chasis.
 
-- `WASD` — move
-- Mouse — aim
-- Left click — primary fire
-- `Space` — basic ability
-- `E` — special ability
+### Especiales
+
+- **ATLAS SHELL** — proyectil explosivo pesado.
+- **HELLTRAIL** — línea de proyectiles que deja fuego.
+- **SHIV** — corte frontal.
+- **DEAD TRACK** — minas temporales; caducan sin explotar.
+- **HOUND PACK** — micromisiles con homing moderado.
+- **TRINITY DRIVE** — velocidad adicional y cuchillas orbitales.
+
+### Sistemas iniciales
+
+PLACAS, SIFÓN, OVERCLOCK, SERVOS, REFRIGERACIÓN y ESTABILIZADOR.
+
+## Modificaciones entre rondas
+
+El draft ya no ofrece una lista general idéntica para todo el mundo. El pool depende del chasis, arma, especial y sistema montados.
+
+Rarezas visibles:
+
+**BÁSICO → RARO → ÉPICO → LEGENDARIO → MERCADO NEGRO**
+
+Mercado Negro se reserva para modificaciones que alteran de forma fuerte el comportamiento de una pieza.
+
+## Multiplayer / persistencia
+
+- 1v1, 1v1v1, 2v2 y NÚCLEO.
+- P2P host-authoritative para combate.
+- Perfil persistente, salas públicas/privadas, quick play, rating, leaderboard e historial mediante Supabase.
+- Si el backend persistente falla, las partidas P2P por enlace siguen funcionando.
+
+## Controles
+
+- `WASD` — mover
+- Ratón — apuntar
+- Click — arma
+- `Space` — habilidad del chasis
+- `E` — especial equipado
 
 ## Backend
 
-See `backend/README.md`, `backend/schema.sql` and `backend/fight-random-api/`.
-
-The browser never receives a Supabase service-role/secret key.
+Ver `backend/README.md`, `backend/schema.sql` y `backend/fight-random-api/`.

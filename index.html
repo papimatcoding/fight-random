@@ -116,24 +116,49 @@
         <div class="center-message hidden" id="centerMessage"></div>
 
         <div class="ready-overlay hidden" id="readyOverlay">
-          <p class="eyebrow">LA SALA EMPIEZA CUANDO TODOS ESTÉN LISTOS</p>
+          <p class="eyebrow">TALLER · MONTA TU MÁQUINA ANTES DE ENTRAR</p>
           <h2 id="readyTitle">¿PREPARADO?</h2>
           <p id="readySubtitle">Esperando jugadores.</p>
           <div class="character-picker" id="characterPicker">
             <button class="character-card selected" type="button" data-character="mix">
               <strong>MIX</strong>
-              <span>Equilibrado · SPACE Dash · E Bola de cañón</span>
+              <span>Chasis medio · 10 puntos · SPACE Dash</span>
             </button>
             <button class="character-card" type="button" data-character="trucks">
               <strong>TRUCKS</strong>
-              <span>Tanque · SPACE Fortificar · E ¡Fuego!</span>
+              <span>Chasis pesado · 14 puntos · SPACE Fortificar</span>
             </button>
             <button class="character-card" type="button" data-character="lizzy">
               <strong>LIZZY</strong>
-              <span>Asesina · SPACE Invisibilidad · E Navajazo</span>
+              <span>Chasis ligero · 7 puntos · SPACE Invisibilidad</span>
             </button>
           </div>
-          <button class="primary" id="readyBtn" type="button">ESTOY LISTO</button>
+
+          <div class="workshop" id="workshop">
+            <div class="module-slot">
+              <span class="mini-label">ARMA · CLICK</span>
+              <select id="weaponSelect"></select>
+              <small id="weaponDetail"></small>
+            </div>
+            <div class="module-slot">
+              <span class="mini-label">ESPECIAL · E</span>
+              <select id="specialSelect"></select>
+              <small id="specialDetail"></small>
+            </div>
+            <div class="module-slot">
+              <span class="mini-label">SISTEMA · PASIVA</span>
+              <select id="systemSelect"></select>
+              <small id="systemDetail"></small>
+            </div>
+          </div>
+
+          <div class="capacity">
+            <div class="capacity-line"><span>CAPACIDAD</span><strong id="capacityText">0 / 10</strong></div>
+            <div class="capacity-track"><i id="capacityFill"></i></div>
+            <small id="loadoutWarning">Monta una configuración válida.</small>
+          </div>
+
+          <button class="primary" id="readyBtn" type="button">ENTRAR A LA ARENA</button>
           <div class="ready-state" id="readyState">1 / 2 conectados</div>
         </div>
 
@@ -174,6 +199,7 @@
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
   <script src="backend.js" defer></script>
   <script src="engine.js" defer></script>
+  <script src="machine.js" defer></script>
   <script src="network.js" defer></script>
   <script src="game.js" defer></script>
 </body>
