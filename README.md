@@ -1,6 +1,6 @@
 # Fight Random
 
-A fast 1v1 browser arena where both players pick a permanent power after every round until the build becomes absurd.
+Fast 1v1 browser arena: both players pick a permanent power after every round until the build becomes absurd.
 
 ## Play
 
@@ -22,6 +22,7 @@ Open the GitHub Pages site, click **Crear partida**, and send the room link to a
 
 ## MVP rules
 
-- First to 5 round wins wins the match.
+- First to 5 round wins takes the match.
 - Each player gets 3 random power choices after every round.
-- Powers stack and include multishot, fire rate, bounce, explosive rounds, homing, lifesteal, shields, revive and deliberately broken late-game upgrades.
+- Powers stack: multishot, fire rate, speed, max HP, heavy bullets, bounce, dash, shields, homing, boosted impacts and glass-cannon builds.
+- From round 5, deliberately illegal upgrades can appear.
