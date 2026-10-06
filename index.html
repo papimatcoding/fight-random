@@ -20,8 +20,8 @@
     <section class="lobby panel" id="lobby">
       <div class="hero-copy">
         <p class="eyebrow">ARENA ONLINE · 2–4 JUGADORES · SIN INSTALAR</p>
-        <h1>Una torreta.<br><span>Una build absurda.</span></h1>
-        <p class="lead">Elige modo, crea sala y pasa el enlace. Las mejoras comunes, raras y épicas construyen la build. Las legendarias e ilegales quedan reservadas para habilidades de personaje.</p>
+        <h1>MIX entra.<br><span>La arena escala.</span></h1>
+        <p class="lead">MIX es el primer personaje jugable. Construye su armamento con mejoras generales y transforma sus habilidades con mejoras legendarias e ilegales.</p>
       </div>
 
       <div class="lobby-actions">
@@ -47,6 +47,7 @@
         <div><kbd>RATÓN</kbd><span>apuntar</span></div>
         <div><kbd>CLICK</kbd><span>disparar</span></div>
         <div><kbd>SPACE</kbd><span>dash</span></div>
+        <div><kbd>E</kbd><span>bola de cañón</span></div>
       </div>
     </section>
 
@@ -60,14 +61,6 @@
           <span class="mini-label">MODO</span>
           <strong id="modeName">1V1</strong>
         </div>
-        <div class="room-meta">
-          <span class="mini-label">JUGADORES</span>
-          <strong id="playerCount">1 / 2</strong>
-        </div>
-        <div class="room-meta">
-          <span class="mini-label">MAPA</span>
-          <strong id="mapName">PILARES</strong>
-        </div>
         <div class="room-actions">
           <button class="secondary compact" id="copyBtn" type="button">COPIAR ENLACE</button>
           <button class="ghost compact" id="leaveBtn" type="button">SALIR</button>
@@ -80,7 +73,6 @@
         <div class="scoreboard" id="scoreboard"></div>
         <div class="round-chip"><span>RONDA</span><strong id="roundNum">1</strong></div>
       </div>
-      <div class="players-hud" id="playersHud"></div>
 
       <div class="canvas-frame" id="canvasFrame">
         <canvas id="game" width="1280" height="720" aria-label="Arena de Fight Random"></canvas>
@@ -119,12 +111,10 @@
       </div>
 
       <div class="tips">
-        <span><b>WASD</b> mover</span>
-        <span><b>CLICK</b> disparar</span>
         <span><b>SPACE</b> dash</span>
-        <span><b>BARRILES</b> explotan y encadenan</span>
-        <span><b>OBJETOS</b> curación · escudo · velocidad</span>
-        <span class="danger">perder rondas mejora ligeramente tu suerte</span>
+        <span><b>E</b> bola de cañón</span>
+        <span><b>BARRILES</b> explosivos</span>
+        <span class="danger">la tormenta cierra las rondas largas</span>
       </div>
     </section>
   </main>
