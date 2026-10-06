@@ -7,8 +7,7 @@ Arena online para 2–4 jugadores con combate incremental, personajes y mejoras 
 - **1v1** — 2 jugadores, primero en ganar 5 rondas.
 - **1v1v1** — todos contra todos para 3 jugadores, primero en ganar 4 rondas.
 - **2v2** — 4 jugadores, primer equipo en ganar 5 rondas.
-
-El host sigue siendo autoritativo: los clientes envían inputs, personaje y elecciones; el host resuelve movimiento, daño, habilidades, pickups, tormenta y rondas.
+- **NÚCLEO** — modo especial 1v1. Durante la ronda aparece un objetivo central. Capturarlo estando solo dentro de la zona concede 8 s de Sobrecarga: movimiento, cadencia y recuperación de habilidades mejorados. El objetivo reaparece si la ronda continúa.
 
 ## Personajes
 
@@ -19,8 +18,8 @@ Perfil equilibrado y móvil.
 - Vida: 155 en 1v1 / 170 en modos grandes.
 - Velocidad base: 225.
 - Cadencia base: 0.52 s.
-- **Space — Dash:** desplazamiento rápido con una breve invulnerabilidad.
-- **E — Bola de cañón:** proyectil explosivo de gran retroceso.
+- **Space — Dash:** desplazamiento rápido con breve invulnerabilidad. Recarga base: 1.9 s.
+- **E — Bola de cañón:** proyectil explosivo de alto retroceso. Recarga base: 7.2 s.
 
 Legendarias:
 - Vector reforzado.
@@ -35,34 +34,66 @@ Ilegales:
 Tanque lento centrado en resistencia y control de zona.
 
 - Vida: 212 en 1v1 / 227 en modos grandes.
-- Velocidad base: 158.
-- Cadencia base: 0.70 s.
-- Daño base ligeramente superior a MIX.
-- **Space — Fortificar:** durante 1.55 s reduce un 45% el daño recibido; mientras está activo se mueve más despacio. Recarga base 5.6 s.
-- **E — ¡Fuego!:** dispara una secuencia de proyectiles que avanzan en línea y crean zonas de fuego persistente. Recarga base 10.2 s.
+- Velocidad base: 160.
+- Cadencia base: 0.68 s.
+- **Space — Fortificar:** reduce un 42% el daño durante 1.45 s y ralentiza el movimiento. Recarga base: 5.0 s.
+- **E — ¡Fuego!:** secuencia de proyectiles incendiarios que crea zonas persistentes. Recarga base: 8.8 s.
 
 Legendarias:
-- **Blindaje laminado:** Fortificar reduce un 60% del daño y aumenta su duración.
-- **Compuesto de napalm:** mejora área/duración del fuego y reduce la recarga de ¡Fuego!.
+- Blindaje laminado.
+- Compuesto de napalm.
 
 Ilegales:
-- **Blindaje reactivo:** el primer impacto durante Fortificar libera una onda de retroceso.
-- **Tormenta de fuego:** ¡Fuego! lanza dos líneas paralelas.
+- Blindaje reactivo.
+- Tormenta de fuego.
+
+### LIZZY
+
+Asesina rápida y frágil orientada a reposicionamiento y burst a corta distancia.
+
+- Vida: 140 en 1v1 / 155 en modos grandes.
+- Velocidad base: 258.
+- Cadencia base: 0.44 s.
+- Daño del disparo principal inferior al de MIX.
+- **Space — Invisibilidad:** desaparece durante 1.85 s y se mueve más rápido. Atacar o recibir daño rompe la invisibilidad. Recarga base: 5.4 s.
+- **E — Navajazo:** ataque frontal de corto alcance y alto daño. Recarga base: 5.8 s.
+
+Legendarias:
+- **Camuflaje adaptativo:** más duración, más velocidad mientras está oculta y menor recarga.
+- **Hoja extendida:** más alcance, daño y una pequeña reducción de recarga.
+
+Ilegales:
+- **Depredadora:** usar Navajazo desde invisibilidad potencia el golpe y devuelve parte de la recarga de Invisibilidad si impacta.
+- **Ejecución:** Navajazo causa daño adicional contra enemigos por debajo del 35% de vida.
+
+## Cooldowns
+
+Los tiempos de recarga se han revisado como sistema conjunto para que cada personaje tenga ventanas claras:
+
+- MIX usa habilidades con mucha frecuencia y depende de movilidad.
+- TRUCKS tiene ventanas defensivas/ofensivas más espaciadas.
+- LIZZY alterna entrada, burst y retirada.
+
+La mejora rara **Refrigeración** reduce de forma moderada tanto la habilidad básica como la especial y sigue siendo útil con todos los personajes.
+
+## Feedback de combate
+
+Los impactos tienen ahora feedback inmediato:
+
+- hitmarker;
+- números de daño;
+- feedback ampliado para golpes fuertes y explosiones;
+- banner de eliminación/eliminado;
+- pequeño feedback sonoro generado por el navegador;
+- efectos visuales específicos para invisibilidad, revelado y Navajazo.
+
+Los efectos de daño por tiempo no generan números constantemente para evitar ruido.
 
 ## Combate incremental
 
-Las rondas avanzadas ganan ritmo sin aumentar directamente el daño global:
-
-- movimiento y velocidad de proyectil aumentan ligeramente con cada ronda, con un límite del 16%;
-- los pickups aparecen progresivamente con más frecuencia;
-- las mejoras de daño/cadencia siguen limitadas;
-- la tormenta continúa cerrando rondas demasiado largas.
-
-La intención es que el late game sea más frenético sin reducir el combate a un intercambio instantáneo.
+Las rondas avanzadas aumentan ligeramente velocidad de movimiento/proyectil y frecuencia de pickups, pero no escalan el daño global de forma automática. La tormenta sigue cerrando partidas demasiado largas.
 
 ## Mapas
-
-El pool ahora depende del modo.
 
 Mapas estándar:
 - Pilares
@@ -71,26 +102,16 @@ Mapas estándar:
 - Arsenal
 
 Mapas grandes:
-- **Hangar** — reservado para 1v1v1 y 2v2.
-- **Fábrica** — diseñado exclusivamente para 2v2.
+- Hangar — 1v1v1 / 2v2.
+- Fábrica — 2v2.
 
-Los mapas grandes tienen un mundo físico mayor, no únicamente una geometría más abierta.
+NÚCLEO utiliza el pool de mapas estándar de 1v1.
 
 ## Pickups
 
-Los objetos del mapa tienen siluetas explícitas:
-
 - **Curación:** cruz médica verde, +32 HP.
-- **Velocidad:** doble flecha azul, aumento temporal de movilidad.
+- **Velocidad:** doble flecha azul, movilidad temporal.
 - **Escudo:** escudo gris, bloquea un impacto.
-
-## Mejoras
-
-Común, raro y épico siguen siendo mejoras generales.
-
-Legendario e ilegal modifican habilidades del personaje. El sistema de comeback aumenta gradualmente la probabilidad de rarezas altas con una racha de derrotas, limitado a tres rondas.
-
-La mejora rara **Refrigeración** sustituye a Propulsión: reduce cooldowns de habilidades para que sea útil con cualquier personaje.
 
 ## Controles
 
