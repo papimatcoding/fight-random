@@ -232,6 +232,14 @@ function explodeBarrel(barrel,source){if(!barrel.alive)return;barrel.alive=false
 }
 function splash(b,x,y){if(!b.boom)return;const radius=58+b.boom*15;addEffect('explosion',x,y,radius,'#ff9a52',.32,b.owner);for(const p of game.players){if(!p.alive||!isEnemy(b.owner,p.i))continue;const d=Math.hypot(p.x-x,p.y-y);if(d<radius){const fall=1-d/radius,damage=(4.5+b.boom*2.2)*fall,dx=(p.x-x)/(d||1),dy=(p.y-y)/(d||1);damageRaw(p,damage,b.owner,false,dx*(120+b.boom*35)*fall,dy*(120+b.boom*35)*fall)}}}
 function specialExplosion(b,x,y,directSeat=null){const radius=b.specialRadius||124;shake=Math.max(shake,26);addEffect('cannon',x,y,radius,'#ffd19a',.58,b.owner);for(const p of game.players){if(!p.alive)continue;if(!isEnemy(b.owner,p.i)&&p.i!==directSeat)continue;const d=Math.hypot(p.x-x,p.y-y);if(d<radius){const fall=Math.max(0,1-d/radius),damage=(p.i===directSeat?10:0)+26*fall,dx=(p.x-x)/(d||1),dy=(p.y-y)/(d||1);damageRaw(p,damage,b.owner,false,dx*(b.specialKnock||360)*fall,dy*(b.specialKnock||360)*fall)}}if(b.cluster){for(let k=0;k<3;k++){const a=(Math.PI*2/3)*k+0.4,ex=x+Math.cos(a)*70,ey=y+Math.sin(a)*70;addEffect('cluster',ex,ey,72,'#ffac6e',.34,b.owner);for(const p of game.players){if(!p.alive||!isEnemy(b.owner,p.i))continue;const d=Math.hypot(p.x-ex,p.y-ey);if(d<72){const fall=1-d/72,dx=(p.x-ex)/(d||1),dy=(p.y-ey)/(d||1);damageRaw(p,7*fall,b.owner,false,dx*150*fall,dy*150*fall)}}}}}
+function damageBullet(target,b,amount,direct){if(target.inv>0)return;if(target.shield>0&&direct){target.shield--;target.inv=.14;return}const attacker=game.players[b.owner];
+  if(direct){attacker.stats.hits++;
+    if(b.fire){target.fx.burn=Math.max(target.fx.burn,1.35);target.fx.burnDps=Math.max(target.fx.burnDps,.65+b.fire*.75);target.fx.burnOwner=b.owner}
+    if(b.frost){target.fx.slow=Math.max(target.fx.slow,1.2+b.frost*.25);target.fx.slowFactor=Math.min(target.fx.slowFactor,Math.max(.60,.88-b.frost*.08))}
+    if(b.shock){target.fx.shock+=b.shock;if(target.fx.shock>=3){target.fx.shock-=3;damageRaw(target,4.5+b.shock*2,b.owner,false,0,0)}}
+  }
+  const speed=Math.hypot(b.vx,b.vy)||1;damageRaw(target,amount,b.owner,direct,b.vx/speed*attacker.s.knock,b.vy/speed*attacker.s.knock)
+}
 function damageRaw(target,amount,source,allowFriendly,kx,ky){if(!target.alive||amount<=0)return;if(!allowFriendly&&source!=null&&!isEnemy(source,target.i))return;target.hp-=amount;if(source!=null&&game.players[source]){const a=game.players[source];a.stats.damage+=amount;if(a.s.leech>0&&source!==target.i)a.hp=Math.min(a.max,a.hp+amount*a.s.leech)}target.vx+=kx||0;target.vy+=ky||0;shake=Math.max(shake,5);if(target.hp<=0)eliminate(target,source)}
 
 function spawnPickup(){const map=MAPS[game.map],pt=map.pickupSpawns[Math.floor(Math.random()*map.pickupSpawns.length)],types=Object.keys(PICKUPS),type=types[Math.floor(Math.random()*types.length)];if(game.pickups.length<2)game.pickups.push({id:Math.random().toString(36).slice(2),x:pt[0],y:pt[1],type,life:14})}
