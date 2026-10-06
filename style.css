@@ -261,3 +261,5 @@
   .module-choice{min-height:82px;grid-template-columns:50px 1fr auto}.module-glyph{width:44px;height:44px}
   .ready-garage{grid-template-columns:1fr;grid-template-areas:"top" "party" "builder" "button" "state";max-height:96%;overflow:auto}.ready-party{grid-template-columns:1fr 1fr}.ready-machine-stage{height:220px}.ready-mounts{width:130px}
 }
+
+.map-chip{min-width:118px}.map-chip strong{display:block;max-width:145px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;margin-top:2px}
