@@ -126,7 +126,7 @@ function applyGarageToLocalGame(){
 function setQueueIntent(kind){window.frQueueIntent=kind||'idle'}
 window.applyGarageToLocalGame=applyGarageToLocalGame;window.garageCanQueue=garageCanQueue;window.setQueueIntent=setQueueIntent;
 
-function syncUI(s){if(!s)return;const m=modeOf(s);$('modeName').textContent=m.name;$('roundNum').textContent=s.round;
+function syncUI(s){if(!s)return;const m=modeOf(s);$('modeName').textContent=m.name;$('roundNum').textContent=s.round;$('mapName').textContent=mapDef(s).name;
   const sb=$('scoreboard');sb.innerHTML='';for(const item of scoreData(s)){const el=document.createElement('div');el.className='score-pill';el.style.borderColor=item.color+'66';el.innerHTML='<span style="color:'+item.color+'">'+item.label+'</span><b>'+item.score+'</b>';sb.appendChild(el)}
   const msg=$('centerMessage');if(s.phase==='count'){msg.textContent=Math.ceil(s.count);msg.classList.remove('hidden')}else if(s.phase==='round'){msg.textContent='RONDA TERMINADA';msg.classList.remove('hidden')}else msg.classList.add('hidden');
   readyUI(s);draftUI(s);endUI(s)
@@ -253,5 +253,5 @@ $('fullscreenBtn').onclick=async()=>{try{if(document.fullscreenElement)await doc
 document.addEventListener('fullscreenchange',()=>{$('fullscreenBtn').textContent=document.fullscreenElement?'SALIR DE PANTALLA COMPLETA':'PANTALLA COMPLETA'});
 renderGarage();
 const invite=new URL(location.href).searchParams.get('room');if(invite)$('roomInput').value=invite.toUpperCase().slice(0,6);
-if(typeof Peer==='undefined')status('No se pudo cargar la conexión online. Recarga.',true);else if(invite)setTimeout(()=>joinGame(invite),0);
+if(typeof Peer==='undefined')status('No se pudo cargar la conexión online. Recarga.',true);else if(invite){setQueueIntent('friendly');setTimeout(()=>joinGame(invite),0);}
 requestAnimationFrame(frame);
