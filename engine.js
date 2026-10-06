@@ -10,7 +10,8 @@ const RARITY_LABEL={common:'COMÚN',rare:'RARO',epic:'ÉPICO',legendary:'LEGENDA
 const MODES={
   duel:{id:'duel',name:'1V1',players:2,win:5,baseHp:150,teams:[0,1]},
   ffa3:{id:'ffa3',name:'1V1V1',players:3,win:4,baseHp:165,teams:null},
-  teams:{id:'teams',name:'2V2',players:4,win:5,baseHp:165,teams:[0,1,0,1]}
+  teams:{id:'teams',name:'2V2',players:4,win:5,baseHp:165,teams:[0,1,0,1]},
+  core:{id:'core',name:'NÚCLEO',players:2,win:4,baseHp:150,teams:[0,1],objective:true}
 };
 
 const GENERAL={
@@ -39,6 +40,10 @@ const CHARACTERS={
   trucks:{
     id:'trucks',name:'TRUCKS',
     abilityUpgrades:{legendary:['trucks_plating','trucks_napalm'],illegal:['trucks_reactive','trucks_firestorm']}
+  },
+  lizzy:{
+    id:'lizzy',name:'LIZZY',
+    abilityUpgrades:{legendary:['lizzy_cloak','lizzy_blade'],illegal:['lizzy_predator','lizzy_execution']}
   }
 };
 
@@ -50,30 +55,34 @@ const ABILITY_UPGRADES={
   trucks_plating:{name:'Blindaje laminado',desc:'Fortificar aumenta su reducción de daño y dura más tiempo.',rarity:'legendary',max:1},
   trucks_napalm:{name:'Compuesto de napalm',desc:'¡Fuego! deja zonas incendiadas más grandes y duraderas y reduce su recarga.',rarity:'legendary',max:1},
   trucks_reactive:{name:'Blindaje reactivo',desc:'El primer impacto recibido durante Fortificar libera una onda que repele a los enemigos cercanos.',rarity:'illegal',max:1},
-  trucks_firestorm:{name:'Tormenta de fuego',desc:'¡Fuego! lanza dos líneas paralelas de proyectiles incendiarios.',rarity:'illegal',max:1}
+  trucks_firestorm:{name:'Tormenta de fuego',desc:'¡Fuego! lanza dos líneas paralelas de proyectiles incendiarios.',rarity:'illegal',max:1},
+  lizzy_cloak:{name:'Camuflaje adaptativo',desc:'Invisibilidad dura más, aumenta el movimiento oculto y reduce su recarga.',rarity:'legendary',max:1},
+  lizzy_blade:{name:'Hoja extendida',desc:'Aumenta alcance y daño del Navajazo y reduce ligeramente su recarga.',rarity:'legendary',max:1},
+  lizzy_predator:{name:'Depredadora',desc:'Salir de invisibilidad con Navajazo potencia el golpe y devuelve parte de la recarga si impacta.',rarity:'illegal',max:1},
+  lizzy_execution:{name:'Ejecución',desc:'Navajazo causa daño adicional contra objetivos con poca vida.',rarity:'illegal',max:1}
 };
 
 const MAPS=[
   {
-    name:'PILARES',bg:'#0b1020',w:1280,h:720,modes:['duel','ffa3','teams'],
+    name:'PILARES',bg:'#0b1020',w:1280,h:720,modes:['duel','ffa3','teams','core'],
     obs:[{x:600,y:155,w:80,h:125},{x:600,y:440,w:80,h:125}],
     pickupSpawns:[[310,150],[970,150],[310,570],[970,570],[640,360]],
     barrels:[[460,360],[820,360],[640,105]]
   },
   {
-    name:'CRUCE',bg:'#10111b',w:1280,h:720,modes:['duel','ffa3'],
+    name:'CRUCE',bg:'#10111b',w:1280,h:720,modes:['duel','ffa3','core'],
     obs:[{x:545,y:325,w:190,h:70},{x:605,y:130,w:70,h:145},{x:605,y:445,w:70,h:145}],
     pickupSpawns:[[250,145],[1030,145],[250,575],[1030,575],[470,360],[810,360]],
     barrels:[[390,255],[890,465],[890,255],[390,465]]
   },
   {
-    name:'CUATRO ESQUINAS',bg:'#0b1218',w:1280,h:720,modes:['duel','ffa3','teams'],
+    name:'CUATRO ESQUINAS',bg:'#0b1218',w:1280,h:720,modes:['duel','ffa3','teams','core'],
     obs:[{x:330,y:190,w:125,h:65},{x:825,y:190,w:125,h:65},{x:330,y:465,w:125,h:65},{x:825,y:465,w:125,h:65}],
     pickupSpawns:[[640,120],[640,600],[220,360],[1060,360],[640,360]],
     barrels:[[500,250],[780,250],[500,470],[780,470]]
   },
   {
-    name:'ARSENAL',bg:'#11100d',w:1380,h:780,modes:['duel','ffa3','teams'],
+    name:'ARSENAL',bg:'#11100d',w:1380,h:780,modes:['duel','ffa3','teams','core'],
     obs:[{x:515,y:130,w:70,h:190},{x:795,y:460,w:70,h:190},{x:620,y:345,w:140,h:70}],
     pickupSpawns:[[230,160],[1150,160],[230,620],[1150,620],[690,180],[690,600]],
     barrels:[[420,390],[960,390],[690,250],[690,530]]
@@ -118,13 +127,14 @@ function playerTeam(index,g=game){const m=modeOf(g);return m.teams?m.teams[index
 function isEnemy(a,b,g=game){if(a===b)return false;const m=modeOf(g);return !m.teams||playerTeam(a,g)!==playerTeam(b,g)}
 
 function characterStats(id){
-  if(id==='trucks')return{spd:158,rate:.70,dmg:11.2,bs:540,size:6.5,n:1,bounce:0,homing:0,boom:0,dash:0,dc:5.6,shield:0,knock:82,fire:0,frost:0,shock:0,leech:0,specialCd:10.2,specialRadius:0,specialKnock:0,dashWave:0,overdrive:0,cluster:0,fortifyReduction:.45,fortifyDuration:1.55,fortifySlow:.58,napalmRadius:42,napalmLife:4.8,reactive:0,firestorm:0};
-  return{spd:225,rate:.52,dmg:10.5,bs:560,size:6,n:1,bounce:0,homing:0,boom:0,dash:610,dc:1.65,shield:0,knock:72,fire:0,frost:0,shock:0,leech:0,specialCd:8.5,specialRadius:124,specialKnock:360,dashWave:0,overdrive:0,cluster:0,fortifyReduction:0,fortifyDuration:0,fortifySlow:1,napalmRadius:0,napalmLife:0,reactive:0,firestorm:0}
+  if(id==='trucks')return{spd:160,rate:.68,dmg:11.2,bs:545,size:6.5,n:1,bounce:0,homing:0,boom:0,dash:0,dc:5.0,shield:0,knock:82,fire:0,frost:0,shock:0,leech:0,specialCd:8.8,specialRadius:0,specialKnock:0,dashWave:0,overdrive:0,cluster:0,fortifyReduction:.42,fortifyDuration:1.45,fortifySlow:.60,napalmRadius:42,napalmLife:4.6,reactive:0,firestorm:0,invisDuration:0,invisSpeed:1,slashRange:0,slashDamage:0,slashArc:0,predator:0,execution:0};
+  if(id==='lizzy')return{spd:258,rate:.44,dmg:8.8,bs:585,size:5.3,n:1,bounce:0,homing:0,boom:0,dash:0,dc:5.4,shield:0,knock:58,fire:0,frost:0,shock:0,leech:0,specialCd:5.8,specialRadius:0,specialKnock:0,dashWave:0,overdrive:0,cluster:0,fortifyReduction:0,fortifyDuration:0,fortifySlow:1,napalmRadius:0,napalmLife:0,reactive:0,firestorm:0,invisDuration:1.85,invisSpeed:1.16,slashRange:118,slashDamage:30,slashArc:.78,predator:0,execution:0};
+  return{spd:225,rate:.52,dmg:10.5,bs:560,size:6,n:1,bounce:0,homing:0,boom:0,dash:610,dc:1.9,shield:0,knock:72,fire:0,frost:0,shock:0,leech:0,specialCd:7.2,specialRadius:124,specialKnock:360,dashWave:0,overdrive:0,cluster:0,fortifyReduction:0,fortifyDuration:0,fortifySlow:1,napalmRadius:0,napalmLife:0,reactive:0,firestorm:0,invisDuration:0,invisSpeed:1,slashRange:0,slashDamage:0,slashArc:0,predator:0,execution:0}
 }
-function characterHp(id,mode){return mode.baseHp+(id==='trucks'?62:5)}
+function characterHp(id,mode){return mode.baseHp+(id==='trucks'?62:(id==='lizzy'?-10:5))}
 function combatStats(){return{shots:0,hits:0,damage:0,pickups:0,dashes:0,kills:0,deaths:0}}
-function makePlayer(i,mode){const character='mix',hp=characterHp(character,mode);return{i,team:mode.teams?mode.teams[i]:i,character,x:0,y:0,vx:0,vy:0,r:character==='trucks'?26:22,hp,max:hp,alive:true,score:0,lossStreak:0,a:i%2?Math.PI:0,shot:0,dc:0,dt:0,inv:0,pd:0,shield:0,s:characterStats(character),powers:{},fx:{burn:0,burnDps:0,burnOwner:null,slow:0,slowFactor:1,shock:0,haste:0,fortify:0,reactiveReady:0},specialCd:0,ps:0,stats:combatStats()}}
-function makeGame(modeId){const m=MODES[modeId]||MODES.duel;return{mode:m.id,phase:'ready',round:1,count:0,t:0,map:Math.floor(Math.random()*MAPS.length),connected:Array(m.players).fill(false),ready:Array(m.players).fill(false),rematch:Array(m.players).fill(false),players:Array.from({length:m.players},(_,i)=>makePlayer(i,m)),teamScore:[0,0],bullets:[],pickups:[],barrels:[],fires:[],effects:[],storm:{elapsed:0,start:34,duration:26,radius:760,minRadius:145,active:false},pickupTimer:7,opts:Array.from({length:m.players},()=>[]),picked:Array(m.players).fill(null),matchWinner:null}}
+function makePlayer(i,mode){const character='mix',hp=characterHp(character,mode);return{i,team:mode.teams?mode.teams[i]:i,character,x:0,y:0,vx:0,vy:0,r:character==='trucks'?26:22,hp,max:hp,alive:true,score:0,lossStreak:0,a:i%2?Math.PI:0,shot:0,dc:0,dt:0,inv:0,pd:0,shield:0,s:characterStats(character),powers:{},fx:{burn:0,burnDps:0,burnOwner:null,slow:0,slowFactor:1,shock:0,haste:0,fortify:0,reactiveReady:0,invisible:0,overcharge:0},specialCd:0,ps:0,stats:combatStats()}}
+function makeGame(modeId){const m=MODES[modeId]||MODES.duel;return{mode:m.id,phase:'ready',round:1,count:0,t:0,map:Math.floor(Math.random()*MAPS.length),connected:Array(m.players).fill(false),ready:Array(m.players).fill(false),rematch:Array(m.players).fill(false),players:Array.from({length:m.players},(_,i)=>makePlayer(i,m)),teamScore:[0,0],bullets:[],pickups:[],barrels:[],fires:[],effects:[],feedback:[],core:{active:false,respawn:10,progress:0,capturer:null,required:2.3},storm:{elapsed:0,start:34,duration:26,radius:760,minRadius:145,active:false},pickupTimer:7,opts:Array.from({length:m.players},()=>[]),picked:Array(m.players).fill(null),matchWinner:null}}
 function connectedCount(){return game?game.connected.filter(Boolean).length:0}
 function allConnected(){const m=modeOf();return !!game&&connectedCount()===m.players}
 function allReady(arr){return allConnected()&&arr.every(Boolean)}
@@ -132,9 +142,9 @@ function allReady(arr){return allConnected()&&arr.every(Boolean)}
 function resetRoomAfterDisconnect(){if(!host||!game)return;const mode=game.mode;const oldConnected=game.connected.slice();game=makeGame(mode);game.connected[0]=true;for(const [seat,c] of hostConnections)game.connected[seat]=!!c.open;for(let i=0;i<oldConnected.length;i++)if(i===0)game.connected[i]=true;view=game;broadcast(true)}
 
 function chooseMap(){const pool=MAPS.map((m,i)=>({m,i})).filter(x=>!x.m.modes||x.m.modes.includes(game.mode)).map(x=>x.i);let n=pool[Math.floor(Math.random()*pool.length)];if(pool.length>1)while(n===game.map)n=pool[Math.floor(Math.random()*pool.length)];game.map=n}
-function spawnFor(i){const w=worldW(),h=worldH(),mode=game.mode;if(mode==='duel')return i===0?[w*.13,h*.5]:[w*.87,h*.5];if(mode==='ffa3')return[[w*.5,h*.13],[w*.16,h*.82],[w*.84,h*.82]][i]||[w*.5,h*.5];return[[w*.12,h*.28],[w*.88,h*.28],[w*.12,h*.72],[w*.88,h*.72]][i]||[w*.5,h*.5]}
+function spawnFor(i){const w=worldW(),h=worldH(),mode=game.mode;if(mode==='duel'||mode==='core')return i===0?[w*.13,h*.5]:[w*.87,h*.5];if(mode==='ffa3')return[[w*.5,h*.13],[w*.16,h*.82],[w*.84,h*.82]][i]||[w*.5,h*.5];return[[w*.12,h*.28],[w*.88,h*.28],[w*.12,h*.72],[w*.88,h*.72]][i]||[w*.5,h*.5]}
 function resetBarrels(){game.barrels=MAPS[game.map].barrels.map((p,i)=>({id:i,x:p[0],y:p[1],r:23,hp:22,max:22,alive:true}))}
-function startRound(first=false){if(first){const allowed=mapDef().modes?.includes(game.mode);if(!allowed)chooseMap()}else chooseMap();game.phase='count';game.count=2.5;game.bullets=[];game.pickups=[];game.fires=[];game.pickupTimer=Math.max(4.8,6.5-(game.round-1)*.18);game.picked=Array(modeOf().players).fill(null);game.opts=Array.from({length:modeOf().players},()=>[]);game.effects=[];game.storm={elapsed:0,start:Math.max(25,34-(game.round-1)*1.15),duration:Math.max(20,26-(game.round-1)*.45),radius:760,minRadius:145,active:false};resetBarrels();game.players.forEach((p,i)=>{const sp=spawnFor(i);p.x=sp[0];p.y=sp[1];p.vx=p.vy=0;p.hp=p.max;p.alive=true;p.shot=p.dc=p.dt=0;p.specialCd=0;p.inv=.45;p.pd=p.ps=0;p.shield=p.s.shield;p.fx={burn:0,burnDps:0,burnOwner:null,slow:0,slowFactor:1,shock:0,haste:0,fortify:0,reactiveReady:p.s.reactive?1:0}});broadcast(true)}
+function startRound(first=false){if(first){const allowed=mapDef().modes?.includes(game.mode);if(!allowed)chooseMap()}else chooseMap();game.phase='count';game.count=2.5;game.bullets=[];game.pickups=[];game.fires=[];game.feedback=[];game.core={active:false,respawn:10,progress:0,capturer:null,required:2.3};game.pickupTimer=Math.max(4.8,6.5-(game.round-1)*.18);game.picked=Array(modeOf().players).fill(null);game.opts=Array.from({length:modeOf().players},()=>[]);game.effects=[];game.storm={elapsed:0,start:Math.max(25,34-(game.round-1)*1.15),duration:Math.max(20,26-(game.round-1)*.45),radius:760,minRadius:145,active:false};resetBarrels();game.players.forEach((p,i)=>{const sp=spawnFor(i);p.x=sp[0];p.y=sp[1];p.vx=p.vy=0;p.hp=p.max;p.alive=true;p.shot=p.dc=p.dt=0;p.specialCd=0;p.inv=.45;p.pd=p.ps=0;p.shield=p.s.shield;p.fx={burn:0,burnDps:0,burnOwner:null,slow:0,slowFactor:1,shock:0,haste:0,fortify:0,reactiveReady:p.s.reactive?1:0,invisible:0,overcharge:0}});broadcast(true)}
 
 function rarityWeights(player){const s=Math.min(3,player.lossStreak||0);const tables=[
   {common:61,rare:30,epic:8.2,legendary:.7,illegal:.1},
@@ -165,7 +175,7 @@ function applyPower(i,id){const p=game.players[i],d=powerDef(id);if(!d)return;p.
     case'caliber':p.s.dmg+=1.6;break;
     case'heavy':p.s.dmg+=3;p.s.size+=1.1;p.s.knock+=16;p.s.bs*=.965;break;
     case'bounce':p.s.bounce++;break;
-    case'dash':p.s.dc*=.90;p.s.specialCd*=.94;if(p.character==='mix')p.s.dash*=1.04;break;
+    case'dash':p.s.dc*=.91;p.s.specialCd*=.91;if(p.character==='mix')p.s.dash*=1.035;break;
     case'shield':p.s.shield++;break;
     case'leech':p.s.leech+=.055;break;
     case'fire':p.s.fire++;break;
@@ -181,12 +191,16 @@ function applyPower(i,id){const p=game.players[i],d=powerDef(id);if(!d)return;p.
     case'trucks_napalm':p.s.specialCd*=.85;p.s.napalmRadius*=1.24;p.s.napalmLife+=1.8;break;
     case'trucks_reactive':p.s.reactive=1;break;
     case'trucks_firestorm':p.s.firestorm=1;break;
+    case'lizzy_cloak':p.s.invisDuration+=.65;p.s.invisSpeed*=1.10;p.s.dc*=.82;break;
+    case'lizzy_blade':p.s.slashRange*=1.24;p.s.slashDamage+=5;p.s.specialCd*=.90;break;
+    case'lizzy_predator':p.s.predator=1;break;
+    case'lizzy_execution':p.s.execution=1;break;
     default: if(typeof d.apply==='function')d.apply(p,game);
   }
 }
 function chooseUpgrade(i,n){if(!host||game.phase!=='pick'||game.picked[i]!=null||!game.connected[i])return;const id=game.opts[i][n];if(!id)return;game.picked[i]=n;applyPower(i,id);if(game.picked.every((x,idx)=>!game.connected[idx]||x!=null))game.t=.9;broadcast(true)}
 
-function setCharacter(i,id){if(!host||game.phase!=='ready'||!game.connected[i]||game.ready[i]||!CHARACTERS[id])return;const old=game.players[i],m=modeOf(),hp=characterHp(id,m);old.character=id;old.max=hp;old.hp=hp;old.r=id==='trucks'?26:22;old.s=characterStats(id);old.powers={};old.specialCd=0;old.dc=0;old.fx={burn:0,burnDps:0,burnOwner:null,slow:0,slowFactor:1,shock:0,haste:0,fortify:0,reactiveReady:0};broadcast(true)}
+function setCharacter(i,id){if(!host||game.phase!=='ready'||!game.connected[i]||game.ready[i]||!CHARACTERS[id])return;const old=game.players[i],m=modeOf(),hp=characterHp(id,m);old.character=id;old.max=hp;old.hp=hp;old.r=id==='trucks'?26:(id==='lizzy'?19:22);old.s=characterStats(id);old.powers={};old.specialCd=0;old.dc=0;old.fx={burn:0,burnDps:0,burnOwner:null,slow:0,slowFactor:1,shock:0,haste:0,fortify:0,reactiveReady:0,invisible:0,overcharge:0};broadcast(true)}
 function setReady(i,kind){if(!host||!game.connected[i])return;
   if(kind==='ready'&&game.phase==='ready'){game.ready[i]=true;if(allReady(game.ready))startRound(true);broadcast(true)}
   if(kind==='rematch'&&game.phase==='end'){game.rematch[i]=true;if(allReady(game.rematch)){const mode=game.mode,chars=game.players.map(p=>p.character);game=makeGame(mode);for(let s=0;s<modeOf().players;s++){game.connected[s]=s===0||!!hostConnections.get(s)?.open;setCharacter(s,chars[s]||'mix')}game.ready=game.connected.slice();startRound(true)}broadcast(true)}
@@ -205,7 +219,7 @@ function checkRoundEnd(){if(game.phase!=='play')return;const m=modeOf(),alive=ga
     if(aliveTeams.length<=1)finishRound(null,aliveTeams.length===1?aliveTeams[0]:null)
   }else if(alive.length<=1)finishRound(alive.length===1?alive[0].i:null,null)
 }
-function eliminate(target,source){if(!target.alive)return;addEffect('eliminate',target.x,target.y,105,PLAYER_COLORS[target.i],.46,source);target.alive=false;target.hp=0;target.stats.deaths++;target.vx=target.vy=0;if(source!=null&&source!==target.i&&game.players[source])game.players[source].stats.kills++;checkRoundEnd()}
+function eliminate(target,source){if(!target.alive)return;addEffect('eliminate',target.x,target.y,105,PLAYER_COLORS[target.i],.46,source);target.alive=false;target.hp=0;target.stats.deaths++;addFeedback('elimination',target.x,target.y,0,source,target.i);target.vx=target.vy=0;if(source!=null&&source!==target.i&&game.players[source])game.players[source].stats.kills++;checkRoundEnd()}
 
 function sim(dt){if(!game)return;
   if(game.phase==='ready'||game.phase==='end')return;
@@ -216,7 +230,7 @@ function sim(dt){if(!game)return;
   game.players.forEach((p,i)=>movePlayer(p,inputFor(i),dt));
   updateStatuses(dt);if(game.phase!=='play')return;
   updateStorm(dt);if(game.phase!=='play')return;
-  updateEffects(dt);updateGroundFires(dt);if(game.phase!=='play')return;
+  updateEffects(dt);updateFeedback(dt);updateCore(dt);updateGroundFires(dt);if(game.phase!=='play')return;
   updateBullets(dt);if(game.phase!=='play')return;
   updatePickups(dt)
 }
@@ -224,9 +238,10 @@ function inputFor(i){if(i===0)return mine;return remoteInputs[i]||blankInput()}
 function updateStatuses(dt){for(const p of game.players){if(!p.alive)continue;
   if(p.fx.burn>0){p.fx.burn-=dt;const amount=p.fx.burnDps*dt;damageRaw(p,amount,p.fx.burnOwner,false,0,0);if(game.phase!=='play')return}
   if(p.fx.slow>0)p.fx.slow-=dt;else p.fx.slowFactor=1;
-  if(p.fx.haste>0)p.fx.haste-=dt;if(p.fx.fortify>0)p.fx.fortify-=dt
+  if(p.fx.haste>0)p.fx.haste-=dt;if(p.fx.fortify>0)p.fx.fortify-=dt;if(p.fx.invisible>0)p.fx.invisible-=dt
 }}
-function movePlayer(p,k,dt){if(!p.alive)return;p.shot=Math.max(0,p.shot-dt);p.dc=Math.max(0,p.dc-dt);p.dt=Math.max(0,p.dt-dt);p.specialCd=Math.max(0,p.specialCd-dt);p.inv=Math.max(0,p.inv-dt);
+function revealPlayer(p){if(p.fx.invisible>0){p.fx.invisible=0;addEffect('reveal',p.x,p.y,54,PLAYER_COLORS[p.i],.22,p.i)}}
+function movePlayer(p,k,dt){if(!p.alive)return;const over=p.fx.overcharge>0?1.35:1;p.shot=Math.max(0,p.shot-dt*over);p.dc=Math.max(0,p.dc-dt*over);p.dt=Math.max(0,p.dt-dt);p.specialCd=Math.max(0,p.specialCd-dt*over);p.inv=Math.max(0,p.inv-dt);
   const ax=k.ax-p.x,ay=k.ay-p.y;if(Math.abs(ax)+Math.abs(ay)>1)p.a=Math.atan2(ay,ax);
   let x=k.r-k.l,y=k.d-k.u,m=Math.hypot(x,y)||1;x/=m;y/=m;
   if(k.dash&&!p.pd&&p.dc<=0){
@@ -234,12 +249,14 @@ function movePlayer(p,k,dt){if(!p.alive)return;p.shot=Math.max(0,p.shot-dt);p.dc
       if(!x&&!y){x=Math.cos(p.a);y=Math.sin(p.a)}p.vx=x*p.s.dash;p.vy=y*p.s.dash;p.dt=.18;p.inv=.16;p.dc=p.s.dc;if(p.s.overdrive)p.dc*=.68;p.stats.dashes++;addEffect('dash',p.x,p.y,70,PLAYER_COLORS[p.i],.24,p.i)
     }else if(p.character==='trucks'){
       p.fx.fortify=p.s.fortifyDuration;p.fx.reactiveReady=p.s.reactive?1:0;p.dc=p.s.dc;addEffect('fortify',p.x,p.y,58,'#b7c1cf',.30,p.i)
+    }else if(p.character==='lizzy'){
+      p.fx.invisible=p.s.invisDuration;p.dc=p.s.dc;addEffect('cloak',p.x,p.y,64,'#aa9cff',.30,p.i)
     }
   }p.pd=k.dash;
-  const pace=tempo(),fortifyMove=p.fx.fortify>0?p.s.fortifySlow:1;
-  if(p.dt<=0){const q=1-Math.exp(-13*dt),speed=p.s.spd*pace*p.fx.slowFactor*(p.fx.haste>0?1.32:1)*fortifyMove;p.vx+=(x*speed-p.vx)*q;p.vy+=(y*speed-p.vy)*q}else{p.vx*=.88;p.vy*=.88}
+  const pace=tempo(),fortifyMove=p.fx.fortify>0?p.s.fortifySlow:1,invisMove=p.fx.invisible>0?p.s.invisSpeed:1,coreMove=p.fx.overcharge>0?1.15:1;
+  if(p.dt<=0){const q=1-Math.exp(-13*dt),speed=p.s.spd*pace*p.fx.slowFactor*(p.fx.haste>0?1.32:1)*fortifyMove*invisMove*coreMove;p.vx+=(x*speed-p.vx)*q;p.vy+=(y*speed-p.vy)*q}else{p.vx*=.88;p.vy*=.88}
   p.x+=p.vx*dt;p.y+=p.vy*dt;collidePlayer(p);
-  if(k.fire&&p.shot<=0){fire(p);p.shot=Math.max(.12,p.s.rate)}
+  if(k.fire&&p.shot<=0){revealPlayer(p);fire(p);p.shot=Math.max(.12,p.s.rate*(p.fx.overcharge>0?.84:1))}
   if(k.special&&!p.ps&&p.specialCd<=0){fireSpecial(p);p.specialCd=p.s.specialCd}p.ps=k.special;
   if(p.character==='mix'&&p.s.dashWave&&p.dt<=0&&p.prevDt>0)dashShockwave(p);p.prevDt=p.dt
 }
@@ -249,9 +266,13 @@ function multiScale(n){return Math.max(.50,1/Math.pow(n,.46))}
 function fire(p){const n=p.s.n,spread=.14*Math.min(5,n-1),scale=multiScale(n);p.stats.shots+=n;for(let i=0;i<n;i++){
   const a=p.a+(n===1?0:(i/(n-1)-.5)*spread),pace=tempo();game.bullets.push({x:p.x+Math.cos(a)*34,y:p.y+Math.sin(a)*34,vx:Math.cos(a)*p.s.bs*pace,vy:Math.sin(a)*p.s.bs*pace,r:p.s.size,owner:p.i,dmg:p.s.dmg*scale,bounces:p.s.bounce,homing:p.s.homing,boom:p.s.boom,fire:p.s.fire,frost:p.s.frost,shock:p.s.shock,life:2.25})
 }}
-function fireSpecial(p){if(p.character==='trucks'){fireTrucksSpecial(p);return}const a=p.a,speed=430*tempo();p.stats.shots++;game.bullets.push({x:p.x+Math.cos(a)*42,y:p.y+Math.sin(a)*42,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:19,owner:p.i,dmg:16,bounces:0,homing:0,boom:0,fire:0,frost:0,shock:0,life:2.5,special:true,specialRadius:p.s.specialRadius,specialKnock:p.s.specialKnock,cluster:p.s.cluster});addEffect('muzzle',p.x+Math.cos(a)*32,p.y+Math.sin(a)*32,52,'#ffd8a8',.18,p.i)}
+function fireSpecial(p){if(p.character==='trucks'){fireTrucksSpecial(p);return}if(p.character==='lizzy'){fireLizzySpecial(p);return}const a=p.a,speed=430*tempo();p.stats.shots++;game.bullets.push({x:p.x+Math.cos(a)*42,y:p.y+Math.sin(a)*42,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:19,owner:p.i,dmg:16,bounces:0,homing:0,boom:0,fire:0,frost:0,shock:0,life:2.5,special:true,specialRadius:p.s.specialRadius,specialKnock:p.s.specialKnock,cluster:p.s.cluster});addEffect('muzzle',p.x+Math.cos(a)*32,p.y+Math.sin(a)*32,52,'#ffd8a8',.18,p.i)}
 function fireTrucksSpecial(p){const rows=p.s.firestorm?[-18,18]:[0],count=6,a=p.a,perp=a+Math.PI/2,pace=tempo();for(const off of rows){for(let k=0;k<count;k++){const delay=k*.09,x=p.x+Math.cos(a)*(30+k*18)+Math.cos(perp)*off,y=p.y+Math.sin(a)*(30+k*18)+Math.sin(perp)*off;game.bullets.push({x,y,vx:Math.cos(a)*(410+18*k)*pace,vy:Math.sin(a)*(410+18*k)*pace,r:8,owner:p.i,dmg:4.5,bounces:0,homing:0,boom:0,fire:0,frost:0,shock:0,life:.72+delay,groundFire:true,napalmRadius:p.s.napalmRadius,napalmLife:p.s.napalmLife})}}p.stats.shots+=count*rows.length;addEffect('muzzle',p.x+Math.cos(a)*36,p.y+Math.sin(a)*36,66,'#ff813d',.24,p.i)}
 function igniteGround(x,y,owner,radius,life){game.fires.push({id:Math.random().toString(36).slice(2),x,y,owner,radius,life,maxLife:life,tick:0})}
+function fireLizzySpecial(p){const wasInvisible=p.fx.invisible>0,predator=wasInvisible&&p.s.predator;revealPlayer(p);const range=p.s.slashRange*(predator?1.12:1),arc=p.s.slashArc,base=p.s.slashDamage+(predator?7:0);let hitAny=false;addEffect('slash',p.x+Math.cos(p.a)*range*.52,p.y+Math.sin(p.a)*range*.52,range,'#e9e4ff',.28,p.i);
+  for(const t of game.players){if(!t.alive||!isEnemy(p.i,t.i))continue;const dx=t.x-p.x,dy=t.y-p.y,d=Math.hypot(dx,dy);if(d>range+t.r)continue;const ang=Math.abs(((Math.atan2(dy,dx)-p.a+Math.PI*3)%(Math.PI*2))-Math.PI);if(ang>arc/2)continue;let damage=base;if(p.s.execution&&t.hp/t.max<.35)damage*=1.38;const fall=Math.max(.72,1-d/(range*2.2));damage*=fall;t.vx+=Math.cos(p.a)*220;t.vy+=Math.sin(p.a)*220;damageRaw(t,damage,p.i,false,0,0);addFeedback('hit',t.x,t.y,damage,p.i,t.i);hitAny=true}
+  if(predator&&hitAny)p.dc=Math.max(0,p.dc-p.s.dc*.45);if(hitAny)shake=Math.max(shake,12)
+}
 function dashShockwave(p){addEffect('shockwave',p.x,p.y,88,PLAYER_COLORS[p.i],.28,p.i);for(const t of game.players){if(!t.alive||!isEnemy(p.i,t.i))continue;const d=Math.hypot(t.x-p.x,t.y-p.y);if(d<88){const fall=1-d/88,dx=(t.x-p.x)/(d||1),dy=(t.y-p.y)/(d||1);damageRaw(t,3.5*fall,p.i,false,dx*160*fall,dy*160*fall)}}}
 function nearestEnemy(owner,x,y){let best=null,dist=Infinity;for(const p of game.players){if(!p.alive||!isEnemy(owner,p.i))continue;const d=Math.hypot(p.x-x,p.y-y);if(d<dist){dist=d;best=p}}return best}
 function updateBullets(dt){for(let i=game.bullets.length-1;i>=0;i--){const b=game.bullets[i];b.life-=dt;if(b.life<=0){if(b.groundFire)igniteGround(b.x,b.y,b.owner,b.napalmRadius,b.napalmLife);game.bullets.splice(i,1);continue}
@@ -278,15 +299,23 @@ function damageBullet(target,b,amount,direct){if(target.inv>0)return;if(target.s
     if(b.frost){target.fx.slow=Math.max(target.fx.slow,1.2+b.frost*.25);target.fx.slowFactor=Math.min(target.fx.slowFactor,Math.max(.60,.88-b.frost*.08))}
     if(b.shock){target.fx.shock+=b.shock;if(target.fx.shock>=3){target.fx.shock-=3;damageRaw(target,4.5+b.shock*2,b.owner,false,0,0)}}
   }
-  const speed=Math.hypot(b.vx,b.vy)||1;damageRaw(target,amount,b.owner,direct,b.vx/speed*attacker.s.knock,b.vy/speed*attacker.s.knock)
+  const speed=Math.hypot(b.vx,b.vy)||1;damageRaw(target,amount,b.owner,direct,b.vx/speed*attacker.s.knock,b.vy/speed*attacker.s.knock);if(direct)addFeedback('hit',target.x,target.y,amount,b.owner,target.i)
 }
 function damageRaw(target,amount,source,allowFriendly,kx,ky){if(!target.alive||amount<=0)return;if(!allowFriendly&&source!=null&&!isEnemy(source,target.i))return;
   if(target.fx?.fortify>0&&source!=null){amount*=1-target.s.fortifyReduction;if(target.s.reactive&&target.fx.reactiveReady&&source!=null&&source!==target.i){target.fx.reactiveReady=0;addEffect('reactive',target.x,target.y,105,'#d5dde8',.35,target.i);for(const p of game.players){if(!p.alive||!isEnemy(target.i,p.i))continue;const d=Math.hypot(p.x-target.x,p.y-target.y);if(d<105){const fall=1-d/105,dx=(p.x-target.x)/(d||1),dy=(p.y-target.y)/(d||1);p.vx+=dx*220*fall;p.vy+=dy*220*fall}}}}
-  target.hp-=amount;if(source!=null&&game.players[source]){const a=game.players[source];a.stats.damage+=amount;if(a.s.leech>0&&source!==target.i)a.hp=Math.min(a.max,a.hp+amount*a.s.leech)}target.vx+=kx||0;target.vy+=ky||0;shake=Math.max(shake,5);if(target.hp<=0)eliminate(target,source)}
+  if(source!=null&&amount>0)revealPlayer(target);target.hp-=amount;if(source!=null&&game.players[source]){const a=game.players[source];a.stats.damage+=amount;if(a.s.leech>0&&source!==target.i)a.hp=Math.min(a.max,a.hp+amount*a.s.leech)}target.vx+=kx||0;target.vy+=ky||0;shake=Math.max(shake,5);if(target.hp<=0)eliminate(target,source)}
 
 function spawnPickup(){const map=MAPS[game.map],pt=map.pickupSpawns[Math.floor(Math.random()*map.pickupSpawns.length)],types=Object.keys(PICKUPS),type=types[Math.floor(Math.random()*types.length)],limit=modeOf().players===4?4:(modeOf().players===3?3:2);if(game.pickups.length<limit)game.pickups.push({id:Math.random().toString(36).slice(2),x:pt[0],y:pt[1],type,life:14})}
 function updatePickups(dt){game.pickupTimer-=dt;if(game.pickupTimer<=0){spawnPickup();game.pickupTimer=Math.max(4.6,8+Math.random()*3.5-(game.round-1)*.28)}for(let i=game.pickups.length-1;i>=0;i--){const it=game.pickups[i];it.life-=dt;if(it.life<=0){game.pickups.splice(i,1);continue}for(const p of game.players){if(!p.alive)continue;if(Math.hypot(p.x-it.x,p.y-it.y)<p.r+18){if(it.type==='heal')p.hp=Math.min(p.max,p.hp+32);if(it.type==='shield')p.shield=Math.min(p.s.shield+2,p.shield+1);if(it.type==='haste')p.fx.haste=6;p.stats.pickups++;game.pickups.splice(i,1);break}}}}
 function addEffect(type,x,y,radius,color,duration,owner=null){if(!game.effects)game.effects=[];game.effects.push({id:Math.random().toString(36).slice(2),type,x,y,radius,color,duration,life:duration,owner})}
 function updateEffects(dt){if(!game.effects)return;for(let i=game.effects.length-1;i>=0;i--){game.effects[i].life-=dt;if(game.effects[i].life<=0)game.effects.splice(i,1)}}
+function addFeedback(type,x,y,value=0,owner=null,target=null){if(!game.feedback)game.feedback=[];game.feedback.push({id:Math.random().toString(36).slice(2),type,x,y,value,owner,target,life:type==='elimination'?1.05:.48,maxLife:type==='elimination'?1.05:.48})}
+function updateFeedback(dt){if(!game.feedback)return;for(let i=game.feedback.length-1;i>=0;i--){game.feedback[i].life-=dt;if(game.feedback[i].life<=0)game.feedback.splice(i,1)}}
+function updateCore(dt){if(game.mode!=='core'||!game.core)return;const core=game.core;for(const p of game.players)if(p.fx.overcharge>0)p.fx.overcharge=Math.max(0,p.fx.overcharge-dt);
+  if(!core.active){core.respawn-=dt;if(core.respawn<=0){core.active=true;core.progress=0;core.capturer=null;addEffect('coreSpawn',worldW()/2,worldH()/2,105,'#7df9ff',.55,null)}return}
+  const cx=worldW()/2,cy=worldH()/2,radius=92,inside=game.players.filter(p=>p.alive&&Math.hypot(p.x-cx,p.y-cy)<radius);
+  if(inside.length===1){const seat=inside[0].i;if(core.capturer!==seat){core.capturer=seat;core.progress=Math.max(0,core.progress-.35)}core.progress+=dt;if(core.progress>=core.required){inside[0].fx.overcharge=8;core.active=false;core.respawn=13;core.progress=0;core.capturer=null;addEffect('coreCapture',cx,cy,125,PLAYER_COLORS[seat],.65,seat);addFeedback('core',cx,cy,0,seat,null)}}
+  else{core.capturer=null;core.progress=Math.max(0,core.progress-dt*.75)}
+}
 function updateGroundFires(dt){for(let i=game.fires.length-1;i>=0;i--){const f=game.fires[i];f.life-=dt;f.tick-=dt;if(f.life<=0){game.fires.splice(i,1);continue}if(f.tick<=0){f.tick=.25;for(const p of game.players){if(!p.alive||!isEnemy(f.owner,p.i))continue;if(Math.hypot(p.x-f.x,p.y-f.y)<f.radius+p.r*.35)damageRaw(p,.7,f.owner,false,0,0)}}}}
 function updateStorm(dt){const st=game.storm;if(!st)return;const startRadius=Math.hypot(worldW(),worldH())/2-42;st.elapsed+=dt;if(st.elapsed<st.start){st.active=false;st.radius=startRadius;return}st.active=true;const t=Math.min(1,(st.elapsed-st.start)/st.duration);st.radius=startRadius+(st.minRadius-startRadius)*t;const dps=8+18*t;for(const p of game.players){if(!p.alive)continue;const ww=worldW(),hh=worldH(),dx=p.x-ww/2,dy=p.y-hh/2,d=Math.hypot(dx,dy);if(d>st.radius){const over=Math.min(1,(d-st.radius)/140),push=50+120*t;p.vx+=(-dx/(d||1))*push*dt;p.vy+=(-dy/(d||1))*push*dt;damageRaw(p,dps*(.55+.45*over)*dt,null,true,0,0)}}}
