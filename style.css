@@ -103,3 +103,161 @@
 #loadoutWarning.bad{color:#ff7081}
 .rarity-illegal{--rarity:#ff365d;background:linear-gradient(180deg,#241015,#0d0c12)}
 @media(max-width:760px){.workshop{grid-template-columns:1fr}.ready-overlay{justify-content:flex-start}.module-slot small{min-height:0}.character-picker{grid-template-columns:1fr}}
+
+
+/* ==========================================================
+   VISUAL GARAGE / SINGLE-ROOM MENU
+   Deliberately built with CSS/DOM shapes: no SVG assets.
+   ========================================================== */
+.garage-lobby{
+  position:relative;display:grid;grid-template-columns:250px minmax(460px,1fr) 300px;gap:12px;
+  min-height:690px;padding:12px;overflow:hidden;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.018),transparent 20%),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0 1px,transparent 1px 80px),
+    #090c11;
+  border-color:#2a2e34
+}
+.garage-lobby:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent 49.8%,rgba(255,255,255,.018) 50%,transparent 50.2%);opacity:.6}
+.garage-side,.machine-bay{position:relative;z-index:1;border:1px solid #272d34;background:#0d1117;border-radius:14px}
+.garage-side{padding:13px;display:flex;flex-direction:column;gap:12px}
+.machine-bay{display:flex;flex-direction:column;min-width:0;padding:14px;background:linear-gradient(180deg,#10151c,#0a0e13 68%,#0b0e12)}
+.garage-profile{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:11px;border-bottom:1px solid #242a31}
+.garage-profile strong{display:block;font-size:17px;letter-spacing:-.03em}.garage-profile small{display:block;color:#747d89;font-size:9px;margin-top:2px}
+.garage-icon-btn{border:1px solid #323944;background:#141a22;color:#d9dee6;border-radius:9px;min-width:34px;height:34px;font-weight:900;font-size:17px}
+.garage-icon-btn:hover{border-color:#596474;background:#1a212b}
+.garage-profile-edit{display:grid;grid-template-columns:1fr auto;gap:6px}.garage-profile-edit input{min-width:0;border:1px solid #333b47;background:#090d12;color:#fff;border-radius:9px;padding:9px 10px}
+.party-card{border:1px solid #262d35;background:#0a0e13;border-radius:12px;padding:10px}
+.garage-section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.garage-section-head span{font-size:9px;font-weight:950;letter-spacing:.14em;color:#d1d6de}.garage-section-head small{font-size:8px;color:#697482}
+.party-slots,.ready-party{display:grid;gap:6px}
+.party-slot{display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:center;border:1px solid #29313a;background:#10161d;border-radius:10px;padding:8px}
+.party-avatar{width:30px;height:30px;display:grid;place-items:center;border:1px solid #48535f;border-radius:7px;background:#1b232c;color:#d7dde4;font-size:9px;font-weight:950}
+.party-slot b{display:block;font-size:11px}.party-slot small{display:block;color:#727e8c;font-size:8px;margin-top:2px}
+.party-note{margin:8px 2px 0!important;color:#67717d!important;font-size:9px!important;line-height:1.35}
+.garage-shortcuts{margin-top:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.garage-tab{border:1px solid #2c333c;background:#10151c;color:#8f99a6;border-radius:8px;padding:9px 4px;font-size:8px;font-weight:950;letter-spacing:.07em}
+.garage-tab:hover{color:#fff;border-color:#4b5664}
+
+.machine-bay-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 4px 9px;border-bottom:1px solid #242a31}
+.machine-bay-head strong{display:block;font-size:27px;letter-spacing:-.055em}.machine-bay-head small{display:block;color:#727c88;font-size:9px}
+.chassis-switch{display:flex;gap:5px}.chassis-switch button,.ready-chassis-strip>button{width:38px;height:38px;border:1px solid #343c46;border-radius:9px;background:#151b22;color:#eef1f5;font-size:24px;line-height:1}
+.machine-stage{position:relative;flex:1;min-height:470px;overflow:hidden}
+.garage-floor{position:absolute;left:12%;right:12%;bottom:11%;height:28%;border:1px solid #202730;border-radius:50%;transform:perspective(500px) rotateX(62deg);background:repeating-linear-gradient(90deg,#111820 0 2px,#0a0f14 2px 44px);box-shadow:inset 0 0 60px #000}
+.garage-floor:after{content:"";position:absolute;left:12%;right:12%;top:45%;height:2px;background:#59636d;opacity:.28}
+
+.garage-machine{position:absolute;left:50%;top:52%;width:210px;height:190px;transform:translate(-50%,-50%);filter:drop-shadow(0 22px 16px rgba(0,0,0,.55));transition:.22s ease}
+.gm-body,.gm-track,.gm-core,.gm-weapon,.gm-special,.gm-system{position:absolute;transition:.22s ease}
+.gm-body{left:48px;top:55px;width:116px;height:88px;border:3px solid #626e79;border-radius:34px;background:linear-gradient(160deg,#343e49,#161d25 66%);box-shadow:inset 0 0 0 7px #0f141a}
+.gm-body i{position:absolute;inset:14px;border:1px solid #697782;border-radius:22px;background:#1c252e}
+.gm-core{left:89px;top:83px;width:32px;height:32px;border:4px solid #9da9b4;border-radius:50%;background:#202934;box-shadow:0 0 18px rgba(198,214,226,.22)}
+.gm-track{display:none;top:48px;width:36px;height:105px;border:3px solid #525c65;border-radius:16px;background:repeating-linear-gradient(180deg,#242c34 0 10px,#0c1015 10px 17px)}
+.gm-track-left{left:28px}.gm-track-right{right:28px}
+
+/* chassis silhouettes */
+.garage-machine[data-chassis="trucks"] .gm-track{display:block}
+.garage-machine[data-chassis="trucks"] .gm-body{left:42px;top:50px;width:126px;height:100px;border-radius:22px;border-color:#707982;background:linear-gradient(160deg,#3c454e,#171d23)}
+.garage-machine[data-chassis="trucks"] .gm-core{top:84px}
+.garage-machine[data-chassis="lizzy"]{width:180px;height:170px}
+.garage-machine[data-chassis="lizzy"] .gm-body{left:47px;top:55px;width:86px;height:70px;border-radius:42% 42% 55% 55%;transform:rotate(0deg)}
+.garage-machine[data-chassis="lizzy"] .gm-core{left:76px;top:74px;width:28px;height:28px}
+.garage-machine[data-chassis="mix"] .gm-body{clip-path:polygon(16% 0,84% 0,100% 28%,88% 100%,12% 100%,0 28%)}
+
+/* weapon silhouettes */
+.gm-weapon{left:100px;top:91px;width:78px;height:14px;transform-origin:0 50%;border:2px solid #69747f;background:#252f38;border-radius:4px}
+.garage-machine[data-weapon=""] .gm-weapon{display:none}
+.garage-machine[data-weapon="rivet"] .gm-weapon:after{content:"";position:absolute;right:-13px;top:2px;width:14px;height:6px;background:#87929c}
+.garage-machine[data-weapon="lance"] .gm-weapon{width:108px;height:10px;top:93px}.garage-machine[data-weapon="lance"] .gm-weapon:after{content:"";position:absolute;right:-19px;top:-4px;width:22px;height:14px;border:2px solid #737f8a;background:#171d23}
+.garage-machine[data-weapon="scrapshot"] .gm-weapon{width:67px;height:26px;top:84px;background:repeating-linear-gradient(180deg,#89939c 0 3px,#202832 3px 8px)}
+.garage-machine[data-weapon="sunline"] .gm-weapon{height:18px;top:89px;border-color:#94505a;background:#3b2027;box-shadow:inset 0 0 0 4px #201318}.garage-machine[data-weapon="sunline"] .gm-weapon:after{content:"";position:absolute;right:4px;top:4px;width:26px;height:6px;background:#d86b78}
+.garage-machine[data-weapon="piston"] .gm-weapon{width:66px;height:32px;top:82px;background:#3a3324;border-color:#80745a}.garage-machine[data-weapon="piston"] .gm-weapon:after{content:"";position:absolute;right:-24px;top:-5px;width:27px;height:38px;border:2px solid #8b8068;background:#d1c6ae}
+.garage-machine[data-weapon="grinder"] .gm-weapon{width:56px;height:10px;top:93px}.garage-machine[data-weapon="grinder"] .gm-weapon:after{content:"";position:absolute;right:-31px;top:-26px;width:50px;height:50px;border:7px dashed #98a2aa;border-radius:50%;background:#1a2027}
+
+/* visible mounted special/system blocks */
+.gm-special{display:none;left:42px;top:30px;width:34px;height:30px;border:2px solid #69747d;background:#242d35;border-radius:6px}
+.garage-machine:not([data-special=""]) .gm-special{display:block}
+.garage-machine[data-special="helltrail"] .gm-special{background:#46281c;border-color:#8a5d42}
+.garage-machine[data-special="deadtrack"] .gm-special{width:46px;background:repeating-linear-gradient(90deg,#272d34 0 10px,#a7893e 10px 12px)}
+.garage-machine[data-special="hound"] .gm-special{width:48px;border-radius:12px;background:#25343e}
+.garage-machine[data-special="trinity"] .gm-special{border-radius:50%;border-style:dashed}
+.gm-system{display:none;left:61px;top:136px;width:28px;height:22px;border:2px solid #66717b;background:#1d252d;border-radius:5px}
+.garage-machine:not([data-system=""]) .gm-system{display:block}
+.garage-machine[data-system="plating"] .gm-body{box-shadow:inset 0 0 0 10px #0f141a,0 0 0 5px #5e6871}
+.garage-machine[data-system="siphon"] .gm-system{border-color:#755966;background:#36232b}
+.garage-machine[data-system="overclock"] .gm-system{border-color:#99734a;background:#3b2a1d}
+.garage-machine[data-system="cooling"] .gm-system{border-color:#5b7c89;background:#1d3038}
+
+.mount-point{position:absolute;z-index:3;min-width:132px;border:1px dashed #49535e;background:#11171dcc;color:#c4ccd5;border-radius:11px;padding:9px 11px;text-align:left;backdrop-filter:blur(5px)}
+.mount-point:hover{border-style:solid;border-color:#7b8793;background:#161d25}.mount-point.filled{border-style:solid}
+.mount-plus{display:inline-grid;place-items:center;width:22px;height:22px;margin-right:7px;border:1px solid #6a7580;border-radius:6px;font-size:16px;vertical-align:middle}.filled .mount-plus{font-size:0}.filled .mount-plus:after{content:"✓";font-size:11px}
+.mount-label{display:inline-block;color:#77828e;font-size:7px;font-weight:950;letter-spacing:.12em;vertical-align:middle}.mount-point b{display:block;margin:5px 0 0;font-size:10px;letter-spacing:.03em}
+.mount-weapon{right:2%;top:43%}.mount-special{left:4%;top:21%}.mount-system{left:3%;bottom:17%}
+.mount-weapon:before,.mount-special:before,.mount-system:before{content:"";position:absolute;height:1px;background:#535d67;opacity:.55}
+.mount-weapon:before{right:100%;width:80px;top:50%}.mount-special:before{left:100%;width:75px;top:50%}.mount-system:before{left:100%;width:85px;top:50%}
+.garage-capacity{margin:4px 5px 0;width:auto}.capacity-track{background:#161c23}.capacity-track i{background:#9ca8b3}.capacity-track i.over{background:#d95f58}
+#garageLoadoutWarning{display:block;color:#737d88;font-size:9px;margin-top:5px}#garageLoadoutWarning.bad{color:#d97770}
+
+.garage-mode-grid{grid-template-columns:1fr 1fr;margin:0}.garage-mode-grid .mode-card{padding:10px}.garage-mode-grid .mode-card strong{font-size:13px}.garage-mode-grid .mode-card span{font-size:8px}
+.garage-mode-grid .mode-card.selected{border-color:#8b969f;box-shadow:inset 0 0 0 1px #8b969f;background:#171d24}
+.garage-mode-grid .mode-card.special-mode{border-color:#425866}.garage-mode-grid .mode-card.special-mode strong{color:#b8c8d2}
+.garage-play{margin-top:2px;padding:17px 14px;background:#b8403f;border-radius:10px;box-shadow:none}
+.garage-play span{display:block;font-size:17px}.garage-play small{display:block;font-size:8px;opacity:.72;margin-top:2px}
+.garage-play:disabled{filter:grayscale(.75);opacity:.4}.garage-friendly{padding:11px;background:#1a2028}
+.join-compact{margin-top:auto;padding-top:10px;border-top:1px solid #252b32}.join-compact .join-row{grid-template-columns:1fr 72px}.join-compact .join-row input{font-size:10px;padding:10px}
+.match-side .status{font-size:9px;margin:4px 0 0}
+
+.garage-drawer{position:absolute;z-index:20;left:12px;right:12px;bottom:12px;min-height:230px;max-height:360px;border:1px solid #39424c;background:#0b1016f5;border-radius:13px;padding:12px;box-shadow:0 -18px 45px #000b;backdrop-filter:blur(10px)}
+.drawer-head{display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:1px solid #252c34}.drawer-head strong{font-size:11px;letter-spacing:.11em}
+.drawer-panel{max-height:275px;overflow:auto}.drawer-panel .room-list,.drawer-panel .leaderboard-list,.drawer-panel .recent-list{max-height:none}
+
+.module-picker{position:fixed;z-index:100;inset:0;display:grid;place-items:center;padding:18px;background:#05080bd9;backdrop-filter:blur(8px)}
+.module-picker-panel{width:min(920px,100%);max-height:min(720px,92vh);overflow:auto;border:1px solid #343d47;background:#0d1218;border-radius:15px;padding:14px;box-shadow:0 30px 90px #000}
+.module-picker-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.module-picker-head strong{display:block;font-size:24px;letter-spacing:-.04em}
+.module-picker-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.module-choice{position:relative;display:grid;grid-template-columns:58px 1fr auto;gap:10px;align-items:center;min-height:96px;border:1px solid #2d353e;border-radius:11px;background:#11171e;color:#f0f3f6;padding:10px;text-align:left}
+.module-choice:hover:not(:disabled){border-color:#65717d;background:#171e26}.module-choice.selected{box-shadow:inset 0 0 0 1px #8c98a4;border-color:#8c98a4}.module-choice.locked{opacity:.34}
+.module-glyph{position:relative;width:52px;height:52px;display:grid;place-items:center;border:1px solid #46515c;border-radius:10px;background:#0a0e13;color:#aeb7bf;font-size:28px;font-weight:300;overflow:hidden}
+.module-choice-copy b{display:block;font-size:13px}.module-choice-copy small{display:block;color:#7d8792;font-size:9px;line-height:1.35;margin-top:3px}.module-choice-copy em{display:block;color:#a3abb4;font-style:normal;font-size:8px;font-weight:900;letter-spacing:.06em;margin-top:6px}.module-choice>strong{font-size:13px;color:#c4cbd2}
+.module-remove{grid-template-columns:58px 1fr}.module-remove>strong{display:none}
+/* CSS module glyphs, intentionally primitive until bespoke PNG/sprites exist */
+.module-glyph:before,.module-glyph:after{content:"";position:absolute;background:#8f9aa4}
+.glyph-rivet:before,.glyph-lance:before,.glyph-scrapshot:before,.glyph-sunline:before{left:8px;right:8px;height:7px;top:22px}.glyph-lance:before{height:4px;right:3px}.glyph-scrapshot:before{height:17px;top:17px;background:repeating-linear-gradient(180deg,#8f9aa4 0 3px,transparent 3px 6px)}.glyph-sunline:before{background:#b35c66;box-shadow:0 0 10px #8f3d49}.glyph-piston:before{width:27px;height:20px;left:8px;top:16px}.glyph-piston:after{width:13px;height:30px;right:5px;top:11px}.glyph-grinder:before{width:32px;height:32px;border:6px dashed #8f9aa4;border-radius:50%;background:transparent;left:4px;top:4px}
+.glyph-atlas:before,.glyph-hound:before{width:32px;height:14px;left:9px;top:19px;border-radius:8px}.glyph-helltrail:before{width:28px;height:28px;left:11px;top:11px;clip-path:polygon(50% 0,90% 70%,60% 100%,22% 80%,10% 42%)}.glyph-shiv:before{width:38px;height:6px;left:7px;top:22px;transform:rotate(-35deg)}.glyph-deadtrack:before{width:30px;height:30px;left:10px;top:10px;border-radius:50%;background:repeating-conic-gradient(#8f9aa4 0 12deg,transparent 12deg 25deg)}.glyph-trinity:before{width:32px;height:32px;left:10px;top:10px;border:5px dashed #8f9aa4;border-radius:50%;background:transparent}
+.glyph-plating:before{width:34px;height:30px;left:8px;top:11px;clip-path:polygon(50% 0,100% 18%,85% 85%,50% 100%,15% 85%,0 18%)}.glyph-siphon:before{width:24px;height:34px;left:14px;top:9px;border-radius:50% 50% 55% 55%;background:#815e6a}.glyph-overclock:before{width:32px;height:32px;left:10px;top:10px;border-radius:50%;background:conic-gradient(#a17e50 0 75%,#222 75%)}.glyph-servos:before{width:34px;height:12px;left:9px;top:20px;transform:skewX(-28deg)}.glyph-cooling:before{width:34px;height:34px;left:9px;top:9px;background:repeating-linear-gradient(90deg,#678391 0 5px,transparent 5px 9px)}.glyph-stabilizer:before{width:36px;height:8px;left:8px;top:22px}.glyph-stabilizer:after{width:8px;height:36px;left:22px;top:8px}
+
+/* Ready room reuses garage language */
+.ready-overlay{justify-content:center;padding:14px;background:#070a0deF}
+.ready-garage{width:min(1050px,100%);display:grid;grid-template-columns:1fr 220px;grid-template-areas:"top party" "builder party" "button party" "state party";gap:9px 14px;align-items:start}
+.ready-top{grid-area:top;display:flex;justify-content:space-between;text-align:left}.ready-top h2{font-size:34px!important}.ready-top p{margin:3px 0!important}
+.ready-party{grid-area:party;align-self:stretch;border:1px solid #29313a;border-radius:12px;background:#0d1218;padding:9px;align-content:start}
+.ready-party-slot{display:grid;grid-template-columns:30px 1fr;gap:7px;align-items:center;border:1px solid #29313a;border-radius:9px;background:#10161d;padding:8px;text-align:left}
+.ready-party-slot>span{grid-row:1/3;width:27px;height:27px;display:grid;place-items:center;border:1px solid var(--pc,#48535f);border-radius:7px;font-size:8px;color:#cdd3da}.ready-party-slot b{font-size:10px}.ready-party-slot small{font-size:7px;color:#727d89}.ready-party-slot.empty{opacity:.45}
+.ready-builder{grid-area:builder;border:1px solid #29313a;border-radius:12px;background:#0d1218;padding:10px}
+.ready-chassis-strip{display:grid;grid-template-columns:38px 1fr 38px;gap:8px;align-items:center}.ready-chassis-strip strong{display:block;font-size:18px}.ready-chassis-strip small{display:block;color:#727c88;font-size:8px}
+.ready-machine-stage{position:relative;height:235px}.compact-machine{transform:translate(-50%,-50%) scale(.72);top:48%}
+.ready-mounts{position:absolute;right:5px;top:24px;display:grid;gap:6px;width:155px}.ready-mount{border:1px solid #303944;background:#121820;color:#fff;border-radius:9px;padding:8px;text-align:left}.ready-mount span{display:block;color:#747f8b;font-size:7px;letter-spacing:.1em}.ready-mount b{display:block;font-size:9px;margin-top:3px}.ready-mount.filled{border-color:#65717c}
+.ready-play{grid-area:button}.ready-state{grid-area:state;margin:0}
+#loadoutWarning{display:block;color:#747e89;font-size:8px;margin-top:4px}#loadoutWarning.bad{color:#d36e68}
+
+/* mobile / tablet garage */
+@media(max-width:1050px){
+  .garage-lobby{grid-template-columns:220px 1fr;grid-template-areas:"party machine" "match machine"}
+  .party-side{grid-area:party}.machine-bay{grid-area:machine}.match-side{grid-area:match}
+  .garage-side{min-height:0}.machine-stage{min-height:520px}
+}
+@media(max-width:760px){
+  .shell{width:min(100% - 10px,1480px)}
+  .garage-lobby{display:flex;flex-direction:column;padding:7px;gap:7px;min-height:0}
+  .machine-bay{order:1;padding:9px}.party-side{order:2}.match-side{order:3}
+  .garage-profile-edit{grid-template-columns:1fr}.garage-shortcuts{margin-top:4px}
+  .machine-bay-head strong{font-size:22px}.machine-stage{min-height:390px}
+  .garage-machine{top:48%;transform:translate(-50%,-50%) scale(.82)}
+  .mount-point{min-width:105px;padding:7px}.mount-point b{font-size:8px}.mount-label{font-size:6px}.mount-plus{width:19px;height:19px}
+  .mount-weapon{right:0;top:42%}.mount-special{left:0;top:15%}.mount-system{left:0;bottom:12%}
+  .mount-weapon:before,.mount-special:before,.mount-system:before{width:38px}
+  .garage-mode-grid{grid-template-columns:1fr 1fr}.garage-play{padding:14px}
+  .garage-drawer{position:fixed;left:6px;right:6px;bottom:6px;max-height:65vh}
+  .module-picker{padding:6px;align-items:end}.module-picker-panel{border-radius:15px 15px 8px 8px;max-height:82vh}.module-picker-grid{grid-template-columns:1fr}
+  .module-choice{min-height:82px;grid-template-columns:50px 1fr auto}.module-glyph{width:44px;height:44px}
+  .ready-garage{grid-template-columns:1fr;grid-template-areas:"top" "party" "builder" "button" "state";max-height:96%;overflow:auto}.ready-party{grid-template-columns:1fr 1fr}.ready-machine-stage{height:220px}.ready-mounts{width:130px}
+}
