@@ -18,9 +18,8 @@
       <div class="hero-copy">
         <p class="eyebrow">1V1 · BROWSER · SIN INSTALAR</p>
         <h1>Empieza limpio.<br><span>Termina ridículo.</span></h1>
-        <p class="lead">Cada ronda eliges un poder. Se acumulan. El primero en ganar 5 rondas se lleva la partida.</p>
+        <p class="lead">Cada ronda eliges un poder. Se acumulan. Más vida, mejores mapas y tiempo para construir una auténtica aberración.</p>
       </div>
-
       <div class="lobby-actions">
         <button class="primary big" id="hostBtn" type="button">CREAR PARTIDA</button>
         <div class="or"><span></span><b>o</b><span></span></div>
@@ -31,7 +30,6 @@
         </form>
         <p class="status" id="lobbyStatus">Crea una sala y pasa el enlace. Ya está.</p>
       </div>
-
       <div class="how-grid" aria-label="Controles">
         <div><kbd>WASD</kbd><span>mover</span></div>
         <div><kbd>RATÓN</kbd><span>apuntar</span></div>
@@ -45,6 +43,10 @@
         <div>
           <span class="mini-label">SALA</span>
           <strong class="room-code" id="roomCode">------</strong>
+        </div>
+        <div class="room-meta">
+          <span class="mini-label">MAPA</span>
+          <strong id="mapName">PILARES</strong>
         </div>
         <div class="room-actions">
           <button class="secondary compact" id="copyBtn" type="button">COPIAR ENLACE</button>
@@ -72,6 +74,14 @@
         <canvas id="game" width="960" height="540" aria-label="Arena de Fight Random"></canvas>
         <div class="center-message hidden" id="centerMessage"></div>
 
+        <div class="ready-overlay hidden" id="readyOverlay">
+          <p class="eyebrow">LOS DOS DECIDEN CUÁNDO EMPIEZA</p>
+          <h2 id="readyTitle">¿PREPARADO?</h2>
+          <p id="readySubtitle">La partida no empieza hasta que los dos den a listo.</p>
+          <button class="primary" id="readyBtn" type="button">ESTOY LISTO</button>
+          <div class="ready-state" id="readyState">TÚ … · RIVAL …</div>
+        </div>
+
         <div class="upgrade-overlay hidden" id="upgradeOverlay">
           <div class="upgrade-head">
             <span id="upgradeKicker">ELIGE TU PODER</span>
@@ -85,7 +95,14 @@
           <p class="eyebrow">FIN DE PARTIDA</p>
           <h2 id="matchTitle">VICTORIA</h2>
           <p id="matchSubtitle">La arena ha sobrevivido de milagro.</p>
-          <button class="primary" id="rematchBtn" type="button">REVANCHA</button>
+          <div class="stats-grid">
+            <div><span>DAÑO</span><strong id="statDamage">0</strong></div>
+            <div><span>PRECISIÓN</span><strong id="statAccuracy">0%</strong></div>
+            <div><span>PICKUPS</span><strong id="statPickups">0</strong></div>
+            <div><span>DAÑO RIVAL</span><strong id="statRivalDamage">0</strong></div>
+          </div>
+          <button class="primary" id="rematchBtn" type="button">LISTO PARA REVANCHA</button>
+          <p class="pick-status" id="rematchStatus">La revancha empieza cuando ambos acepten.</p>
         </div>
       </div>
 
@@ -93,6 +110,7 @@
         <span><b>WASD</b> mover</span>
         <span><b>CLICK</b> disparar</span>
         <span><b>SPACE</b> dash</span>
+        <span><b>OBJETOS</b> curación · escudo · velocidad</span>
         <span class="danger">cada ronda = +1 poder</span>
       </div>
     </section>
