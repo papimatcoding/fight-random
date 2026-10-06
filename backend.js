@@ -46,8 +46,8 @@ function frBackendIndicator(on){
 }
 function frPlayerName(){return FRStore.profile?.nickname||localStorage.getItem('fr-nickname')||'Jugador'}
 function frCurrentCharacter(){
-  const state=window.host?window.game:window.view;
-  const seat=window.me;
+  const state=typeof host!=='undefined'&&host?game:view;
+  const seat=typeof me!=='undefined'?me:null;
   return seat!=null&&state?.players?.[seat]?.character||'mix'
 }
 function frVisibility(){return document.getElementById('roomVisibility')?.value==='private'?'private':'public'}
@@ -74,7 +74,7 @@ function frRenderLobby(){
     for(const r of list){
       const row=document.createElement('button');row.type='button';row.className='room-row';
       row.innerHTML='<span><b>'+frModeLabel(r.mode)+'</b><small>'+escapeHtml(r.host)+' · '+r.hostRating+' rating</small></span><strong>'+r.players+'/'+r.maxPlayers+'</strong>';
-      row.onclick=()=>window.joinGame?.(r.code);
+      row.onclick=()=>joinGame?.(r.code);
       rooms.appendChild(row);
     }
   }
@@ -150,7 +150,7 @@ function frStartHeartbeat(code){
   clearInterval(FRStore.heartbeat);FRStore.roomCode=code;
   const beat=async()=>{
     if(!FRStore.roomCode)return;
-    const state=window.host?window.game:window.view;
+    const state=typeof host!=='undefined'&&host?game:view;
     const phase=state?.phase;
     const status=phase&&phase!=='ready'&&phase!=='end'?'playing':'waiting';
     try{await frApi('heartbeat',{code:FRStore.roomCode,status,character:frCurrentCharacter()},4500)}catch(e){console.warn('heartbeat',e)}
@@ -167,12 +167,12 @@ async function frQuickPlay(){
   const btn=document.getElementById('quickPlayBtn');if(btn)btn.disabled=true;
   try{
     await frInit();const lobby=await frRefreshLobby();
-    const room=(lobby.rooms||[]).find(r=>r.mode===window.selectedMode&&r.players<r.maxPlayers);
-    if(room)window.joinGame?.(room.code);else window.hostGame?.();
+    const room=(lobby.rooms||[]).find(r=>r.mode===selectedMode&&r.players<r.maxPlayers);
+    if(room)joinGame?.(room.code);else hostGame?.();
   }finally{if(btn)setTimeout(()=>btn.disabled=false,700)}
 }
 async function frRecordMatch(g){
-  if(!window.host||!g?.clientMatchId||FRStore.recorded.has(g.clientMatchId)||!FRStore.roomCode)return;
+  if(!(typeof host!=='undefined'&&host)||!g?.clientMatchId||FRStore.recorded.has(g.clientMatchId)||!FRStore.roomCode)return;
   FRStore.recorded.add(g.clientMatchId);
   const winnerSeat=g.matchWinner?.type==='player'?g.matchWinner.seat:null;
   const winnerTeam=g.matchWinner?.type==='team'?g.matchWinner.team:null;
