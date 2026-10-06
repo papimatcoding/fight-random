@@ -66,7 +66,7 @@ function openModulePicker(slot,context='garage'){
   if(!p)return;
   const table=moduleTable(slot),grid=$('modulePickerGrid'),c=CHASSIS[p.character]||CHASSIS.mix;grid.innerHTML='';
   $('modulePickerKicker').textContent=moduleLabel(slot);$('modulePickerTitle').textContent='MONTA UNA PIEZA';
-  const remove=document.createElement('button');remove.className='module-choice module-remove';remove.innerHTML='<span class="module-glyph">−</span><b>DESMONTAR</b><small>libera capacidad</small>';remove.onclick=()=>chooseModule(null);grid.appendChild(remove);
+  if(context==='garage'){const remove=document.createElement('button');remove.className='module-choice module-remove';remove.innerHTML='<span class="module-glyph">−</span><b>DESMONTAR</b><small>libera capacidad</small>';remove.onclick=()=>chooseModule(null);grid.appendChild(remove)}
   for(const d of Object.values(table)){
     const candidate={...(p.loadout||{}),[slot]:d.id},compatible=moduleAllowed(p.character,d),fits=moduleCost(candidate)<=c.capacity,disabled=!compatible||!fits;
     const bt=document.createElement('button');bt.className='module-choice'+(disabled?' locked':'')+(p.loadout?.[slot]===d.id?' selected':'');bt.disabled=disabled;
@@ -247,7 +247,7 @@ $('joinForm').onsubmit=e=>{e.preventDefault();setQueueIntent('friendly');joinGam
 $('roomInput').oninput=e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
 $('leaveBtn').onclick=()=>{const u=new URL(location.href);u.searchParams.delete('room');history.replaceState({},'',u);setQueueIntent('idle');clean();renderGarage()};
 $('copyBtn').onclick=async()=>{const u=new URL(location.href);u.searchParams.set('room',code);try{await navigator.clipboard.writeText(u.toString());$('copyBtn').textContent='COPIADO';setTimeout(()=>$('copyBtn').textContent='COPIAR ENLACE',1200)}catch{prompt('Copia el enlace:',u.toString())}};
-$('readyBtn').onclick=()=>{if(me==null)return;if(host)setReady(me,'ready');else conn?.send({type:'ready'})};
+$('readyBtn').onclick=()=>{if(me==null)return;const state=host?game:view,p=state?.players?.[me];if(p&&loadoutValid(p)){garageBuild={character:p.character,loadout:clone(p.loadout)};saveGarageBuild()}if(host)setReady(me,'ready');else conn?.send({type:'ready'})};
 $('rematchBtn').onclick=()=>{if(me==null)return;if(host)setReady(me,'rematch');else conn?.send({type:'rematch'})};
 $('fullscreenBtn').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('canvasFrame').requestFullscreen()}catch(e){console.warn(e)}};
 document.addEventListener('fullscreenchange',()=>{$('fullscreenBtn').textContent=document.fullscreenElement?'SALIR DE PANTALLA COMPLETA':'PANTALLA COMPLETA'});
