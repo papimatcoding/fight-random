@@ -14,11 +14,13 @@ jobs:
         run: |
           node --check backend.js
           node --check engine.js
+          node --check machine.js
           node --check network.js
           node --check game.js
       - name: Check required browser scripts
         run: |
           grep -q 'backend.js' index.html
           grep -q 'engine.js' index.html
+          grep -q 'machine.js' index.html
           grep -q 'network.js' index.html
           grep -q 'game.js' index.html
