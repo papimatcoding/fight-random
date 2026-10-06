@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#090b12" />
+  <title>Fight Random — 1v1 online</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="Fight Random">FIGHT <span>RANDOM</span></a>
+      <div class="net-pill" id="netPill"><span class="dot"></span><span id="netText">offline</span></div>
+    </header>
+
+    <section class="lobby panel" id="lobby">
+      <div class="hero-copy">
+        <p class="eyebrow">1V1 · BROWSER · SIN INSTALAR</p>
+        <h1>Empieza limpio.<br><span>Termina ridículo.</span></h1>
+        <p class="lead">Cada ronda eliges un poder. Se acumulan. El primero en ganar 5 rondas se lleva la partida.</p>
+      </div>
+
+      <div class="lobby-actions">
+        <button class="primary big" id="hostBtn" type="button">CREAR PARTIDA</button>
+        <div class="or"><span></span><b>o</b><span></span></div>
+        <form id="joinForm" class="join-row">
+          <label class="sr-only" for="roomInput">Código de sala</label>
+          <input id="roomInput" autocomplete="off" maxlength="6" placeholder="CÓDIGO" inputmode="text" />
+          <button class="secondary" type="submit">ENTRAR</button>
+        </form>
+        <p class="status" id="lobbyStatus">Crea una sala y pasa el enlace. Ya está.</p>
+      </div>
+
+      <div class="how-grid" aria-label="Controles">
+        <div><kbd>WASD</kbd><span>mover</span></div>
+        <div><kbd>RATÓN</kbd><span>apuntar</span></div>
+        <div><kbd>CLICK</kbd><span>disparar</span></div>
+        <div><kbd>SPACE</kbd><span>dash</span></div>
+      </div>
+    </section>
+
+    <section class="room panel hidden" id="roomPanel">
+      <div class="room-line">
+        <div>
+          <span class="mini-label">SALA</span>
+          <strong class="room-code" id="roomCode">------</strong>
+        </div>
+        <div class="room-actions">
+          <button class="secondary compact" id="copyBtn" type="button">COPIAR ENLACE</button>
+          <button class="ghost compact" id="leaveBtn" type="button">SALIR</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="game-wrap hidden" id="gameWrap">
+      <div class="hud" id="hud">
+        <div class="fighter-card p1-card">
+          <div class="fighter-meta"><span id="p1Name">P1</span><b id="p1Score">0</b></div>
+          <div class="hp-track"><i id="p1Hp"></i></div>
+          <small id="p1Build">sin poderes</small>
+        </div>
+        <div class="round-box"><span>RONDA</span><strong id="roundNum">1</strong></div>
+        <div class="fighter-card p2-card">
+          <div class="fighter-meta"><b id="p2Score">0</b><span id="p2Name">P2</span></div>
+          <div class="hp-track"><i id="p2Hp"></i></div>
+          <small id="p2Build">sin poderes</small>
+        </div>
+      </div>
+
+      <div class="canvas-frame" id="canvasFrame">
+        <canvas id="game" width="960" height="540" aria-label="Arena de Fight Random"></canvas>
+        <div class="center-message hidden" id="centerMessage"></div>
+
+        <div class="upgrade-overlay hidden" id="upgradeOverlay">
+          <div class="upgrade-head">
+            <span id="upgradeKicker">ELIGE TU PODER</span>
+            <strong id="upgradeTitle">Hazlo peor.</strong>
+          </div>
+          <div class="cards" id="upgradeCards"></div>
+          <p class="pick-status" id="pickStatus"></p>
+        </div>
+
+        <div class="match-overlay hidden" id="matchOverlay">
+          <p class="eyebrow">FIN DE PARTIDA</p>
+          <h2 id="matchTitle">VICTORIA</h2>
+          <p id="matchSubtitle">La arena ha sobrevivido de milagro.</p>
+          <button class="primary" id="rematchBtn" type="button">REVANCHA</button>
+        </div>
+      </div>
+
+      <div class="tips">
+        <span><b>WASD</b> mover</span>
+        <span><b>CLICK</b> disparar</span>
+        <span><b>SPACE</b> dash</span>
+        <span class="danger">cada ronda = +1 poder</span>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
+  <script src="game.js" defer></script>
+</body>
+</html>
