@@ -1,47 +1,143 @@
 'use strict';
 function buildText(p){const entries=Object.entries(p.powers);return entries.length?entries.slice(-3).map(([id,v])=>{const d=powerDef(id);return(d?d.name:id)+(v>1?' ×'+v:'')}).join(' · '):'sin mejoras'}
 function scoreData(s){const m=modeOf(s);if(m.id==='teams')return[{label:'EQUIPO AZUL',score:s.teamScore[0],color:TEAM_COLORS[0]},{label:'EQUIPO ROSA',score:s.teamScore[1],color:TEAM_COLORS[1]}];return s.players.map(p=>({label:(p.i===me?'TÚ · ':'')+(p.name||('P'+(p.i+1))),score:p.score,color:PLAYER_COLORS[p.i]}))}
-function syncUI(s){if(!s)return;const m=modeOf(s);$('modeName').textContent=m.name;$('roundNum').textContent=s.round;
+const GARAGE_KEY='fr-garage-build';
+const CHASSIS_ORDER=['mix','trucks','lizzy'];
+let garageBuild=loadGarageBuild(),pickerContext='garage',pickerSlot=null;
+window.frQueueIntent='idle';
+
+function blankGarageBuild(){return{character:'mix',loadout:{weapon:null,special:null,system:null}}}
+function loadGarageBuild(){
+  try{
+    const x=JSON.parse(localStorage.getItem(GARAGE_KEY)||'null');if(!x||!CHASSIS[x.character])return blankGarageBuild();
+    return{character:x.character,loadout:{weapon:WEAPONS[x.loadout?.weapon]?x.loadout.weapon:null,special:SPECIALS[x.loadout?.special]?x.loadout.special:null,system:SYSTEMS[x.loadout?.system]?x.loadout.system:null}}
+  }catch{return blankGarageBuild()}
+}
+function saveGarageBuild(){try{localStorage.setItem(GARAGE_KEY,JSON.stringify(garageBuild))}catch{}}
+function garageCanQueue(){return loadoutValid(garageBuild)}
+function moduleTable(slot){return slot==='weapon'?WEAPONS:slot==='special'?SPECIALS:SYSTEMS}
+function moduleLabel(slot){return slot==='weapon'?'ARMA':slot==='special'?'ESPECIAL':'SISTEMA'}
+function chassisMeta(id){const c=CHASSIS[id]||CHASSIS.mix;return c.capacity+' puntos · '+c.ability}
+function moduleName(slot,id){return moduleTable(slot)[id]?.name||'AÑADIR'}
+function machineData(el,p){
+  if(!el||!p)return;el.dataset.chassis=p.character||'mix';el.dataset.weapon=p.loadout?.weapon||'';el.dataset.special=p.loadout?.special||'';el.dataset.system=p.loadout?.system||''
+}
+function normalizeGarageForChassis(){
+  const c=CHASSIS[garageBuild.character]||CHASSIS.mix;
+  for(const slot of['weapon','special','system']){
+    const table=moduleTable(slot),id=garageBuild.loadout[slot];
+    if(id&&!moduleAllowed(garageBuild.character,table[id]))garageBuild.loadout[slot]=null
+  }
+  for(const slot of['system','special','weapon']){
+    if(moduleCost(garageBuild.loadout)<=c.capacity)break;
+    garageBuild.loadout[slot]=null
+  }
+}
+function garageSetChassis(id){
+  if(!CHASSIS[id])return;garageBuild.character=id;normalizeGarageForChassis();saveGarageBuild();renderGarage()
+}
+function garageCycle(dir){
+  const i=CHASSIS_ORDER.indexOf(garageBuild.character),n=(i+dir+CHASSIS_ORDER.length)%CHASSIS_ORDER.length;garageSetChassis(CHASSIS_ORDER[n])
+}
+function renderGarage(){
+  const c=CHASSIS[garageBuild.character]||CHASSIS.mix,cost=moduleCost(garageBuild.loadout),ok=garageCanQueue();
+  machineData($('garageMachine'),garageBuild);
+  $('garageChassisName').textContent=c.name;$('garageChassisMeta').textContent=chassisMeta(c.id);
+  $('garageWeaponName').textContent=moduleName('weapon',garageBuild.loadout.weapon);
+  $('garageSpecialName').textContent=moduleName('special',garageBuild.loadout.special);
+  $('garageSystemName').textContent=moduleName('system',garageBuild.loadout.system);
+  for(const b of document.querySelectorAll('[data-garage-slot]'))b.classList.toggle('filled',!!garageBuild.loadout[b.dataset.garageSlot]);
+  $('garageCapacityText').textContent=cost+' / '+c.capacity;$('garageCapacityFill').style.width=Math.min(100,cost/c.capacity*100)+'%';
+  $('garageCapacityFill').classList.toggle('over',cost>c.capacity);
+  $('garageLoadoutWarning').textContent=ok?'Máquina lista para combatir.':(cost>c.capacity?'Capacidad superada. Desmonta una pieza.':'Monta arma, especial y sistema.');
+  $('garageLoadoutWarning').classList.toggle('bad',!ok);
+  $('quickPlayBtn').disabled=!ok;$('hostBtn').disabled=!ok;
+  $('partyModeLabel').textContent=(MODES[selectedMode]?.name||selectedMode)+' · QUICKPLAY';
+  const self=$('partySelfName');if(self)self.textContent=typeof frPlayerName==='function'?frPlayerName():'Jugador'
+}
+function moduleCardStats(d,slot){
+  if(slot==='weapon')return [d.range?'RANGO '+d.range:null,d.rate?'CAD '+d.rate.toFixed(2)+'s':null,d.recoil?'RETRO '+d.recoil:null].filter(Boolean).join(' · ');
+  if(slot==='special')return 'CD '+d.cd.toFixed(1)+'s';
+  return 'PASIVA'
+}
+function openModulePicker(slot,context='garage'){
+  pickerContext=context;pickerSlot=slot;
+  const state=context==='ready'?(host?game:view):null,p=context==='ready'&&me!=null?state?.players?.[me]:garageBuild;
+  if(!p)return;
+  const table=moduleTable(slot),grid=$('modulePickerGrid'),c=CHASSIS[p.character]||CHASSIS.mix;grid.innerHTML='';
+  $('modulePickerKicker').textContent=moduleLabel(slot);$('modulePickerTitle').textContent='MONTA UNA PIEZA';
+  if(context==='garage'){const remove=document.createElement('button');remove.className='module-choice module-remove';remove.innerHTML='<span class="module-glyph">−</span><b>DESMONTAR</b><small>libera capacidad</small>';remove.onclick=()=>chooseModule(null);grid.appendChild(remove)}
+  for(const d of Object.values(table)){
+    const candidate={...(p.loadout||{}),[slot]:d.id},compatible=moduleAllowed(p.character,d),fits=moduleCost(candidate)<=c.capacity,disabled=!compatible||!fits;
+    const bt=document.createElement('button');bt.className='module-choice'+(disabled?' locked':'')+(p.loadout?.[slot]===d.id?' selected':'');bt.disabled=disabled;
+    bt.innerHTML='<span class="module-glyph glyph-'+d.id+'"></span><span class="module-choice-copy"><b>'+d.name+'</b><small>'+d.desc+'</small><em>'+moduleCardStats(d,slot)+'</em></span><strong>'+d.cost+'P</strong>';
+    bt.onclick=()=>chooseModule(d.id);grid.appendChild(bt)
+  }
+  $('modulePicker').classList.remove('hidden')
+}
+function closeModulePicker(){$('modulePicker').classList.add('hidden');pickerSlot=null}
+function chooseModule(id){
+  if(!pickerSlot)return;
+  if(pickerContext==='garage'){
+    garageBuild.loadout[pickerSlot]=id;saveGarageBuild();renderGarage()
+  }else{
+    if(me==null)return;
+    if(id==null)return;
+    if(host)setLoadout(me,pickerSlot,id);else conn?.send({type:'loadout',slot:pickerSlot,id});
+    garageBuild.character=(host?game:view)?.players?.[me]?.character||garageBuild.character;garageBuild.loadout[pickerSlot]=id;saveGarageBuild()
+  }
+  closeModulePicker()
+}
+function renderReadyParty(s){
+  const box=$('readyPartySlots');box.innerHTML='';const m=modeOf(s),friendly=window.frQueueIntent==='friendly';
+  for(let i=0;i<m.players;i++){
+    if(!friendly&&!s.connected[i])continue;
+    const p=s.players[i],connected=!!s.connected[i],el=document.createElement('div');el.className='ready-party-slot'+(connected?' connected':' empty');
+    el.innerHTML=connected?'<span style="--pc:'+PLAYER_COLORS[i]+'">'+(i+1)+'</span><b>'+escapeGarage(p.name||('P'+(i+1)))+'</b><small>'+String(p.character||'mix').toUpperCase()+' · '+(s.ready[i]?'LISTO':'PREPARANDO')+'</small>':'<span>+</span><b>INVITAR</b><small>slot libre</small>';
+    box.appendChild(el)
+  }
+}
+function escapeGarage(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function renderReadyMachine(p,locked){
+  if(!p)return;const c=CHASSIS[p.character]||CHASSIS.mix,cost=moduleCost(p.loadout),ok=loadoutValid(p);
+  machineData($('readyMachine'),p);$('readyChassisName').textContent=c.name;$('readyChassisMeta').textContent=chassisMeta(c.id);
+  $('readyWeaponName').textContent=moduleName('weapon',p.loadout?.weapon);$('readySpecialName').textContent=moduleName('special',p.loadout?.special);$('readySystemName').textContent=moduleName('system',p.loadout?.system);
+  for(const b of document.querySelectorAll('[data-ready-slot]')){b.disabled=locked;b.classList.toggle('filled',!!p.loadout?.[b.dataset.readySlot])}
+  $('readyChassisPrev').disabled=locked;$('readyChassisNext').disabled=locked;
+  $('capacityText').textContent=cost+' / '+c.capacity;$('capacityFill').style.width=Math.min(100,cost/c.capacity*100)+'%';$('capacityFill').classList.toggle('over',cost>c.capacity);
+  $('loadoutWarning').textContent=ok?loadoutSummary(p):(cost>c.capacity?'Capacidad superada.':'Monta los tres módulos.');$('loadoutWarning').classList.toggle('bad',!ok)
+}
+function readyCycleChassis(dir){
+  const state=host?game:view,p=me!=null?state?.players?.[me]:null;if(!p)return;const i=CHASSIS_ORDER.indexOf(p.character),id=CHASSIS_ORDER[(i+dir+CHASSIS_ORDER.length)%CHASSIS_ORDER.length];
+  if(host)setCharacter(me,id);else conn?.send({type:'character',id});
+  garageBuild.character=id;garageBuild.loadout=clone(DEFAULT_LOADOUT[id]);saveGarageBuild()
+}
+function applyGarageToLocalGame(){
+  if(!garageCanQueue()||me==null)return false;
+  if(host){
+    setCharacter(me,garageBuild.character);
+    for(const slot of['weapon','special','system'])setLoadout(me,slot,garageBuild.loadout[slot])
+  }else{
+    conn?.send({type:'character',id:garageBuild.character});
+    for(const slot of['weapon','special','system'])conn?.send({type:'loadout',slot,id:garageBuild.loadout[slot]})
+  }
+  return true
+}
+function setQueueIntent(kind){window.frQueueIntent=kind||'idle'}
+window.applyGarageToLocalGame=applyGarageToLocalGame;window.garageCanQueue=garageCanQueue;window.setQueueIntent=setQueueIntent;
+
+function syncUI(s){if(!s)return;const m=modeOf(s);$('modeName').textContent=m.name;$('roundNum').textContent=s.round;$('mapName').textContent=mapDef(s).name;
   const sb=$('scoreboard');sb.innerHTML='';for(const item of scoreData(s)){const el=document.createElement('div');el.className='score-pill';el.style.borderColor=item.color+'66';el.innerHTML='<span style="color:'+item.color+'">'+item.label+'</span><b>'+item.score+'</b>';sb.appendChild(el)}
   const msg=$('centerMessage');if(s.phase==='count'){msg.textContent=Math.ceil(s.count);msg.classList.remove('hidden')}else if(s.phase==='round'){msg.textContent='RONDA TERMINADA';msg.classList.remove('hidden')}else msg.classList.add('hidden');
   readyUI(s);draftUI(s);endUI(s)
 }
-function fillModuleSelect(el,table,p,slot,locked){
-  const sig=p.character+'|'+slot+'|'+Object.keys(table).join(',');
-  if(el.dataset.sig!==sig){
-    el.dataset.sig=sig;el.innerHTML='';
-    for(const d of Object.values(table)){
-      if(!moduleAllowed(p.character,d))continue;
-      const o=document.createElement('option');o.value=d.id;o.textContent=d.name+' · '+d.cost+'P';el.appendChild(o)
-    }
-  }
-  el.value=p.loadout?.[slot]||'';el.disabled=locked
-}
-function workshopUI(p,locked){
-  if(!p)return;
-  fillModuleSelect($('weaponSelect'),WEAPONS,p,'weapon',locked);
-  fillModuleSelect($('specialSelect'),SPECIALS,p,'special',locked);
-  fillModuleSelect($('systemSelect'),SYSTEMS,p,'system',locked);
-  const w=WEAPONS[p.loadout?.weapon],sp=SPECIALS[p.loadout?.special],sy=SYSTEMS[p.loadout?.system],c=CHASSIS[p.character]||CHASSIS.mix,cost=moduleCost(p.loadout),ok=loadoutValid(p);
-  $('weaponDetail').textContent=w?(w.desc+' · alcance '+w.range+(w.recoil?' · retroceso '+w.recoil:'')):'';
-  $('specialDetail').textContent=sp?(sp.desc+' · CD '+sp.cd.toFixed(1)+' s'):'';
-  $('systemDetail').textContent=sy?sy.desc:'';
-  $('capacityText').textContent=cost+' / '+c.capacity;
-  $('capacityFill').style.width=Math.min(100,cost/c.capacity*100)+'%';
-  $('capacityFill').classList.toggle('over',cost>c.capacity);
-  $('loadoutWarning').textContent=ok?loadoutSummary(p):(cost>c.capacity?'Te pasas de capacidad. Cambia una pieza.':'Hay una pieza incompatible con este chasis.');
-  $('loadoutWarning').classList.toggle('bad',!ok)
-}
 function readyUI(s){
   const o=$('readyOverlay');if(s.phase!=='ready'){o.classList.add('hidden');return}
-  o.classList.remove('hidden');
-  const m=modeOf(s),connected=s.connected.filter(Boolean).length,full=connected===m.players,mineReady=me!=null&&!!s.ready[me],readyCount=s.ready.filter(Boolean).length,p=me!=null?s.players[me]:null,valid=!!p&&loadoutValid(p);
-  $('readyTitle').textContent=!full?'TALLER ABIERTO':(mineReady?'MÁQUINA CERRADA':'MONTA TU MÁQUINA');
-  $('readySubtitle').textContent=!full?'Puedes preparar la build mientras llega el resto.':(mineReady?'Esperando a que el resto confirme.':'El chasis da la habilidad SPACE. El resto lo decides tú.');
-  document.querySelectorAll('.character-card').forEach(b=>{b.classList.toggle('selected',!!p&&p.character===b.dataset.character);b.disabled=mineReady||me==null});
-  workshopUI(p,mineReady||me==null);
-  $('readyBtn').disabled=!full||mineReady||me==null||!valid;
-  $('readyBtn').textContent=!full?'ESPERANDO JUGADORES':(mineReady?'LISTO ✓':(!valid?'CONFIGURACIÓN INVÁLIDA':'ENTRAR A LA ARENA'));
+  o.classList.remove('hidden');const m=modeOf(s),connected=s.connected.filter(Boolean).length,full=connected===m.players,mineReady=me!=null&&!!s.ready[me],readyCount=s.ready.filter(Boolean).length,p=me!=null?s.players[me]:null,valid=!!p&&loadoutValid(p),quick=window.frQueueIntent==='quick';
+  renderReadyParty(s);renderReadyMachine(p,mineReady||me==null);
+  $('readyTitle').textContent=!full?(quick?'BUSCANDO...':'SALA AMISTOSA'):(mineReady?'MÁQUINA CERRADA':'ÚLTIMO AJUSTE');
+  $('readySubtitle').textContent=!full?(quick?'Tu máquina ya está en cola. El rival/equipo aparecerá al encontrarlo.':'Comparte el código de sala e invita a quien quieras.'):(mineReady?'Esperando al resto.':'Revisa la máquina y confirma.');
+  $('readyBtn').disabled=!full||mineReady||me==null||!valid;$('readyBtn').textContent=!full?(quick?'BUSCANDO RIVALES':'ESPERANDO JUGADORES'):(mineReady?'LISTO ✓':'LISTO');
   $('readyState').textContent=connected+' / '+m.players+' conectados · '+readyCount+' / '+m.players+' listos'
 }
 function draftUI(s){const o=$('upgradeOverlay');if(s.phase!=='pick'||me==null){o.classList.add('hidden');o.dataset.sig='';pickLock=false;return}o.classList.remove('hidden');const opts=s.opts[me]||[],chosen=s.picked[me],p=s.players[me],sig=opts.join('|')+'|'+chosen+'|'+p.lossStreak;if(o.dataset.sig===sig)return;o.dataset.sig=sig;$('upgradeCards').innerHTML='';opts.forEach((id,n)=>{const d=powerDef(id);if(!d)return;const bt=document.createElement('button');bt.className='power-card rarity-'+d.rarity;bt.disabled=chosen!=null;const unlock=SYNERGIES.find(sy=>sy.requires.includes(id)&&!hasSynergy(p,sy.id)&&sy.requires.every(req=>req===id||(p.powers[req]||0)>0));bt.innerHTML='<span class="rarity">'+RARITY_LABEL[d.rarity]+'</span><h3>'+d.name+'</h3><p>'+d.desc+'</p>'+(unlock?'<span class="synergy-hint">SINERGIA → '+unlock.name+'</span>':'')+'<span class="lvl">NIVEL '+(p.powers[id]||0)+' / '+(d.max||1)+'</span>';bt.onclick=()=>{if(pickLock)return;pickLock=true;if(host)chooseUpgrade(0,n);else conn?.send({type:'pick',n})};$('upgradeCards').appendChild(bt)});const luck=p.lossStreak?(' · Comeback luck +'+p.lossStreak):'';$('upgradeKicker').textContent='ELIGE TU MEJORA'+luck;$('pickStatus').textContent=chosen==null?'El draft solo ofrece modificaciones compatibles con tu chasis y los módulos montados. Mercado Negro altera las reglas de una pieza.':'Elegido. Esperando al resto…'}
@@ -118,8 +214,8 @@ function drawEffects(s){if(!s?.effects)return;for(const e of s.effects){if(!seen
 function drawStorm(s){const st=s?.storm;if(!st)return;const remain=st.start-st.elapsed;if(st.active){ctx.save();ctx.fillStyle='rgba(91,38,130,.23)';ctx.beginPath();ctx.rect(0,0,worldW(s),worldH(s));ctx.arc(worldW(s)/2,worldH(s)/2,Math.max(0,st.radius),0,Math.PI*2,true);ctx.fill('evenodd');ctx.strokeStyle='#bd67ff';ctx.shadowColor='#bd67ff';ctx.shadowBlur=16;ctx.lineWidth=4;ctx.beginPath();ctx.arc(worldW(s)/2,worldH(s)/2,st.radius,0,Math.PI*2);ctx.stroke();ctx.restore();ctx.save();ctx.font='900 13px system-ui';ctx.textAlign='center';ctx.fillStyle='#d59aff';ctx.fillText('TORMENTA',worldW(s)/2,54);ctx.restore()}else if(remain<=8&&remain>0){ctx.save();ctx.font='900 13px system-ui';ctx.textAlign='center';ctx.fillStyle='#c79be6';ctx.fillText('TORMENTA EN '+Math.ceil(remain)+' s',worldW(s)/2,54);ctx.restore()}}
 function drawPickup(it,n){const d=PICKUPS[it.type],pulse=1+Math.sin(n*.006+it.x*.01)*.08;ctx.save();ctx.translate(it.x,it.y);ctx.scale(pulse,pulse);ctx.shadowColor=d.color;ctx.shadowBlur=18;ctx.fillStyle='#080c13dd';ctx.strokeStyle=d.color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,22,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle=d.color;ctx.strokeStyle=d.color;ctx.lineWidth=5;ctx.lineCap='round';ctx.lineJoin='round';if(it.type==='heal'){ctx.fillRect(-4,-13,8,26);ctx.fillRect(-13,-4,26,8)}else if(it.type==='haste'){for(const y of [6,-5]){ctx.beginPath();ctx.moveTo(-10,y+7);ctx.lineTo(0,y-3);ctx.lineTo(10,y+7);ctx.stroke()}}else{ctx.beginPath();ctx.moveTo(0,-13);ctx.lineTo(12,-8);ctx.lineTo(10,6);ctx.quadraticCurveTo(0,16,-10,6);ctx.lineTo(-12,-8);ctx.closePath();ctx.fill()}ctx.restore()}
 function drawGroundFires(s,n){for(const f of s.fires||[]){const life=f.life/f.maxLife;ctx.save();ctx.globalCompositeOperation='lighter';const g=ctx.createRadialGradient(f.x,f.y,3,f.x,f.y,f.radius);g.addColorStop(0,'rgba(255,205,96,'+(.45*life)+')');g.addColorStop(.5,'rgba(255,94,34,'+(.30*life)+')');g.addColorStop(1,'rgba(255,54,18,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(f.x,f.y,f.radius,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(255,116,52,'+(.55*life)+')';ctx.lineWidth=2;for(let k=0;k<5;k++){const a=k*1.27+n*.0015+f.x*.01,r=f.radius*(.25+(k%3)*.14);ctx.beginPath();ctx.moveTo(f.x+Math.cos(a)*r*.35,f.y+Math.sin(a)*r*.35);ctx.quadraticCurveTo(f.x+Math.cos(a+.3)*r*.7,f.y+Math.sin(a+.3)*r*.7-8,f.x+Math.cos(a)*r,f.y+Math.sin(a)*r);ctx.stroke()}ctx.restore()}}
-function drawCore(s,n){if(s.mode!=='core'||!s.core)return;const core=s.core,cx=worldW(s)/2,cy=worldH(s)/2;ctx.save();if(core.active){const pulse=1+Math.sin(n*.007)*.05;ctx.translate(cx,cy);ctx.scale(pulse,pulse);ctx.shadowColor='#7df9ff';ctx.shadowBlur=24;ctx.strokeStyle='#7df9ff';ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,0,92,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle='#7df9ff22';ctx.beginPath();ctx.arc(0,0,82,0,Math.PI*2);ctx.fill();if(core.capturer!=null&&core.progress>0){ctx.strokeStyle=PLAYER_COLORS[core.capturer];ctx.lineWidth=9;ctx.beginPath();ctx.arc(0,0,101,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,core.progress/core.required));ctx.stroke()}ctx.fillStyle='#dffcff';ctx.font='900 12px system-ui';ctx.textAlign='center';ctx.fillText('NÚCLEO',0,4)}else if(core.respawn<=5){ctx.fillStyle='#83cbd4';ctx.font='900 12px system-ui';ctx.textAlign='center';ctx.fillText('NÚCLEO EN '+Math.ceil(core.respawn)+' s',cx,cy)}ctx.restore()}
-function drawFeedback(s){for(const f of s.feedback||[]){const first=!seenFeedback.has(f.id);if(first){seenFeedback.add(f.id);if(f.owner===me&&f.type==='hit')sound(f.value>=24?420:300,.045,f.value>=24?.04:.022);if(f.owner===me&&f.type==='elimination')sound(150,.13,.055,'sawtooth');if(f.owner===me&&f.type==='core')sound(620,.12,.04,'sine');if(f.owner===me&&f.type==='rarity'){sound(f.label?.includes('MERCADO NEGRO')?110:520,.34,.045,f.label?.includes('MERCADO NEGRO')?'sawtooth':'sine',f.label?.includes('MERCADO NEGRO')?55:880)}if(f.owner===me&&f.type==='synergy')sound(330,.22,.035,'triangle',660)}const life=Math.max(0,f.life/f.maxLife),rise=(1-life)*28;if(f.type==='hit'&&f.owner===me){ctx.save();ctx.globalAlpha=life;ctx.translate(f.x,f.y-rise);ctx.strokeStyle=f.value>=24?'#ffd166':'#ffffff';ctx.lineWidth=f.value>=24?4:2.5;const d=f.value>=24?12:8;ctx.beginPath();ctx.moveTo(-d,-d);ctx.lineTo(-3,-3);ctx.moveTo(d,-d);ctx.lineTo(3,-3);ctx.moveTo(-d,d);ctx.lineTo(-3,3);ctx.moveTo(d,d);ctx.lineTo(3,3);ctx.stroke();ctx.font=(f.value>=24?'950 20px':'900 14px')+' system-ui';ctx.textAlign='center';ctx.fillStyle=f.value>=24?'#ffd166':'#f7f9ff';ctx.fillText(Math.round(f.value),0,-16);ctx.restore()}else if(f.type==='elimination'&&(f.owner===me||f.target===me)){ctx.save();ctx.globalAlpha=Math.min(1,life*1.8);ctx.font='950 30px system-ui';ctx.textAlign='center';ctx.fillStyle=f.owner===me?'#ffd166':'#ff596f';ctx.fillText(f.owner===me?'ELIMINACIÓN':'ELIMINADO',worldW(s)/2,worldH(s)*.22);ctx.restore()}else if(f.type==='core'&&f.owner===me){ctx.save();ctx.globalAlpha=life;ctx.font='950 28px system-ui';ctx.textAlign='center';ctx.fillStyle='#7df9ff';ctx.fillText('SOBRECARGA',worldW(s)/2,worldH(s)*.28);ctx.restore()}else if((f.type==='rarity'||f.type==='synergy')&&f.owner===me){ctx.save();ctx.globalAlpha=Math.min(1,life*1.5);ctx.textAlign='center';ctx.font='950 13px system-ui';ctx.fillStyle=f.type==='synergy'?'#7df9ff':(f.label?.includes('MERCADO NEGRO')?'#ff4f68':'#ffbf55');ctx.fillText(f.type==='synergy'?'SINERGIA ACTIVADA':'MEJORA ESPECIAL',worldW(s)/2,worldH(s)*.20);ctx.font='950 30px system-ui';ctx.fillText(f.label||'',worldW(s)/2,worldH(s)*.20+38);ctx.restore()}}}
+function drawCore(s,n){if(s.mode!=='core'||!s.core)return;const core=s.core,[cx,cy]=corePoint(s);ctx.save();if(core.active){const pulse=1+Math.sin(n*.007)*.05;ctx.translate(cx,cy);ctx.scale(pulse,pulse);ctx.shadowColor='#7df9ff';ctx.shadowBlur=24;ctx.strokeStyle='#7df9ff';ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,0,92,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle='#7df9ff22';ctx.beginPath();ctx.arc(0,0,82,0,Math.PI*2);ctx.fill();if(core.capturer!=null&&core.progress>0){ctx.strokeStyle=PLAYER_COLORS[core.capturer];ctx.lineWidth=9;ctx.beginPath();ctx.arc(0,0,101,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,core.progress/core.required));ctx.stroke()}ctx.fillStyle='#dffcff';ctx.font='900 12px system-ui';ctx.textAlign='center';ctx.fillText('NÚCLEO',0,4)}else if(core.respawn<=5){ctx.fillStyle='#83cbd4';ctx.font='900 12px system-ui';ctx.textAlign='center';ctx.fillText('NÚCLEO EN '+Math.ceil(core.respawn)+' s',cx,cy)}ctx.restore()}
+function drawFeedback(s){for(const f of s.feedback||[]){const first=!seenFeedback.has(f.id);if(first){seenFeedback.add(f.id);if(seenFeedback.size>1400)seenFeedback.clear();if(f.owner===me&&f.type==='hit')sound(f.value>=24?420:300,.045,f.value>=24?.04:.022);if(f.owner===me&&f.type==='elimination')sound(150,.13,.055,'sawtooth');if(f.owner===me&&f.type==='core')sound(620,.12,.04,'sine');if(f.owner===me&&f.type==='rarity'){sound(f.label?.includes('MERCADO NEGRO')?110:520,.34,.045,f.label?.includes('MERCADO NEGRO')?'sawtooth':'sine',f.label?.includes('MERCADO NEGRO')?55:880)}if(f.owner===me&&f.type==='synergy')sound(330,.22,.035,'triangle',660)}const life=Math.max(0,f.life/f.maxLife),rise=(1-life)*28;if(f.type==='hit'&&f.owner===me){ctx.save();ctx.globalAlpha=life;ctx.translate(f.x,f.y-rise);ctx.strokeStyle=f.value>=24?'#ffd166':'#ffffff';ctx.lineWidth=f.value>=24?4:2.5;const d=f.value>=24?12:8;ctx.beginPath();ctx.moveTo(-d,-d);ctx.lineTo(-3,-3);ctx.moveTo(d,-d);ctx.lineTo(3,-3);ctx.moveTo(-d,d);ctx.lineTo(-3,3);ctx.moveTo(d,d);ctx.lineTo(3,3);ctx.stroke();ctx.font=(f.value>=24?'950 20px':'900 14px')+' system-ui';ctx.textAlign='center';ctx.fillStyle=f.value>=24?'#ffd166':'#f7f9ff';ctx.fillText(Math.round(f.value),0,-16);ctx.restore()}else if(f.type==='elimination'&&(f.owner===me||f.target===me)){ctx.save();ctx.globalAlpha=Math.min(1,life*1.8);ctx.font='950 30px system-ui';ctx.textAlign='center';ctx.fillStyle=f.owner===me?'#ffd166':'#ff596f';ctx.fillText(f.owner===me?'ELIMINACIÓN':'ELIMINADO',worldW(s)/2,worldH(s)*.22);ctx.restore()}else if(f.type==='core'&&f.owner===me){ctx.save();ctx.globalAlpha=life;ctx.font='950 28px system-ui';ctx.textAlign='center';ctx.fillStyle='#7df9ff';ctx.fillText('SOBRECARGA',worldW(s)/2,worldH(s)*.28);ctx.restore()}else if((f.type==='rarity'||f.type==='synergy')&&f.owner===me){ctx.save();ctx.globalAlpha=Math.min(1,life*1.5);ctx.textAlign='center';ctx.font='950 13px system-ui';ctx.fillStyle=f.type==='synergy'?'#7df9ff':(f.label?.includes('MERCADO NEGRO')?'#ff4f68':'#ffbf55');ctx.fillText(f.type==='synergy'?'SINERGIA ACTIVADA':'MEJORA ESPECIAL',worldW(s)/2,worldH(s)*.20);ctx.font='950 30px system-ui';ctx.fillText(f.label||'',worldW(s)/2,worldH(s)*.20+38);ctx.restore()}}}
 function drawKillfeed(s){const list=(s.killfeed||[]).slice(0,4);if(!list.length)return;ctx.save();ctx.textAlign='right';let y=82;for(const k of list){const killer=k.killer==null?'ENTORNO':(s.players[k.killer]?.name||('P'+(k.killer+1))),victim=s.players[k.victim]?.name||('P'+(k.victim+1)),alpha=Math.min(1,k.life/.5);ctx.globalAlpha=alpha;ctx.font='900 11px system-ui';const text=killer+'  →  '+victim,w=ctx.measureText(text).width+18,x=worldW(s)-58;ctx.fillStyle='#070a11cc';ctx.fillRect(x-w,y-15,w,24);ctx.fillStyle=k.killer==null?'#9ba5b7':PLAYER_COLORS[k.killer];ctx.fillText(killer,x-ctx.measureText('  →  '+victim).width,y);ctx.fillStyle='#758198';ctx.fillText('  →  ',x-ctx.measureText(victim).width,y);ctx.fillStyle=PLAYER_COLORS[k.victim]||'#fff';ctx.fillText(victim,x,y);y+=29}ctx.restore()}
 function drawMine(m,n){
   const armed=m.arm<=0,pulse=1+Math.sin(n*.01+m.x)*.05;ctx.save();ctx.translate(m.x,m.y);ctx.scale(pulse,pulse);ctx.shadowColor=armed?'#ffcf5c':'#7d8797';ctx.shadowBlur=armed?10:3;ctx.fillStyle='#171b22';ctx.strokeStyle=armed?'#ffcf5c':'#7d8797';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,m.r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle=armed?'#ffcf5c':'#7d8797';ctx.beginPath();ctx.arc(0,0,4,0,Math.PI*2);ctx.fill();ctx.restore()
@@ -133,19 +229,29 @@ addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==
 addEventListener('keyup',e=>{if(e.code==='KeyW')mine.u=0;if(e.code==='KeyS')mine.d=0;if(e.code==='KeyA')mine.l=0;if(e.code==='KeyD')mine.r=0;if(e.code==='Space')mine.dash=0;if(e.code==='KeyE')mine.special=0});
 cv.onpointermove=pointerPos;cv.addEventListener('pointerdown',()=>{try{ensureAudio()?.resume?.()}catch{}},{once:true});cv.onpointerdown=e=>{pointerPos(e);if(e.button===0)mine.fire=1};addEventListener('pointerup',()=>mine.fire=0);addEventListener('blur',()=>{mine.u=mine.d=mine.l=mine.r=mine.fire=mine.dash=mine.special=0});
 
-for(const b of document.querySelectorAll('.mode-card'))b.addEventListener('click',()=>{selectedMode=b.dataset.mode;document.querySelectorAll('.mode-card').forEach(x=>x.classList.toggle('selected',x===b))});
-for(const b of document.querySelectorAll('.character-card'))b.addEventListener('click',()=>{if(me==null)return;const id=b.dataset.character;if(host)setCharacter(0,id);else conn?.send({type:'character',id})});
-for(const [id,slot] of [['weaponSelect','weapon'],['specialSelect','special'],['systemSelect','system']])$(id).addEventListener('change',e=>{if(me==null)return;const value=e.target.value;if(host)setLoadout(0,slot,value);else conn?.send({type:'loadout',slot,id:value})});
-$('hostBtn').onclick=hostGame;
-$('joinForm').onsubmit=e=>{e.preventDefault();joinGame($('roomInput').value)};
+for(const b of document.querySelectorAll('.mode-card'))b.addEventListener('click',()=>{selectedMode=b.dataset.mode;document.querySelectorAll('.mode-card').forEach(x=>x.classList.toggle('selected',x===b));renderGarage()});
+for(const b of document.querySelectorAll('[data-garage-slot]'))b.addEventListener('click',()=>openModulePicker(b.dataset.garageSlot,'garage'));
+for(const b of document.querySelectorAll('[data-ready-slot]'))b.addEventListener('click',()=>openModulePicker(b.dataset.readySlot,'ready'));
+$('garageChassisPrev').onclick=()=>garageCycle(-1);$('garageChassisNext').onclick=()=>garageCycle(1);
+$('readyChassisPrev').onclick=()=>readyCycleChassis(-1);$('readyChassisNext').onclick=()=>readyCycleChassis(1);
+$('modulePickerClose').onclick=closeModulePicker;$('modulePicker').addEventListener('pointerdown',e=>{if(e.target===$('modulePicker'))closeModulePicker()});
+$('editProfileBtn').onclick=()=>$('profileEdit').classList.toggle('hidden');
+for(const b of document.querySelectorAll('.garage-tab'))b.onclick=()=>{
+  const key=b.dataset.garagePanel,title=key==='rooms'?'SALAS PÚBLICAS':key==='ranking'?'RANKING':'HISTORIAL';
+  $('drawerTitle').textContent=title;$('garageDrawer').classList.remove('hidden');
+  $('drawerRooms').classList.toggle('hidden',key!=='rooms');$('drawerRanking').classList.toggle('hidden',key!=='ranking');$('drawerHistory').classList.toggle('hidden',key!=='history')
+};
+$('closeGarageDrawer').onclick=()=>$('garageDrawer').classList.add('hidden');
+$('hostBtn').onclick=()=>{if(!garageCanQueue()){status('Completa una máquina válida.',true);return}$('roomVisibility').value='private';setQueueIntent('friendly');hostGame()};
+$('joinForm').onsubmit=e=>{e.preventDefault();setQueueIntent('friendly');joinGame($('roomInput').value)};
 $('roomInput').oninput=e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
-$('leaveBtn').onclick=()=>{const u=new URL(location.href);u.searchParams.delete('room');history.replaceState({},'',u);clean()};
+$('leaveBtn').onclick=()=>{const u=new URL(location.href);u.searchParams.delete('room');history.replaceState({},'',u);setQueueIntent('idle');clean();renderGarage()};
 $('copyBtn').onclick=async()=>{const u=new URL(location.href);u.searchParams.set('room',code);try{await navigator.clipboard.writeText(u.toString());$('copyBtn').textContent='COPIADO';setTimeout(()=>$('copyBtn').textContent='COPIAR ENLACE',1200)}catch{prompt('Copia el enlace:',u.toString())}};
-$('readyBtn').onclick=()=>{if(me==null)return;if(host)setReady(0,'ready');else conn?.send({type:'ready'})};
-$('rematchBtn').onclick=()=>{if(me==null)return;if(host)setReady(0,'rematch');else conn?.send({type:'rematch'})};
+$('readyBtn').onclick=()=>{if(me==null)return;const state=host?game:view,p=state?.players?.[me];if(p&&loadoutValid(p)){garageBuild={character:p.character,loadout:clone(p.loadout)};saveGarageBuild()}if(host)setReady(me,'ready');else conn?.send({type:'ready'})};
+$('rematchBtn').onclick=()=>{if(me==null)return;if(host)setReady(me,'rematch');else conn?.send({type:'rematch'})};
 $('fullscreenBtn').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('canvasFrame').requestFullscreen()}catch(e){console.warn(e)}};
 document.addEventListener('fullscreenchange',()=>{$('fullscreenBtn').textContent=document.fullscreenElement?'SALIR DE PANTALLA COMPLETA':'PANTALLA COMPLETA'});
-
+renderGarage();
 const invite=new URL(location.href).searchParams.get('room');if(invite)$('roomInput').value=invite.toUpperCase().slice(0,6);
-if(typeof Peer==='undefined')status('No se pudo cargar la conexión online. Recarga.',true);else if(invite)setTimeout(()=>joinGame(invite),0);
+if(typeof Peer==='undefined')status('No se pudo cargar la conexión online. Recarga.',true);else if(invite){setQueueIntent('friendly');setTimeout(()=>joinGame(invite),0);}
 requestAnimationFrame(frame);

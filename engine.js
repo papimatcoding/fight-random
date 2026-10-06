@@ -74,25 +74,25 @@ const MAPS=[
     name:'PILARES',bg:'#0b1020',w:1280,h:720,modes:['duel','ffa3','teams','core'],
     obs:[{x:600,y:155,w:80,h:125},{x:600,y:440,w:80,h:125}],
     pickupSpawns:[[310,150],[970,150],[310,570],[970,570],[640,360]],
-    barrels:[[460,360],[820,360],[640,105]]
+    barrels:[[460,360],[820,360],[640,105]],coreSpawns:[[430,360],[850,360]]
   },
   {
     name:'CRUCE',bg:'#10111b',w:1280,h:720,modes:['duel','ffa3','core'],
     obs:[{x:545,y:325,w:190,h:70},{x:605,y:130,w:70,h:145},{x:605,y:445,w:70,h:145}],
     pickupSpawns:[[250,145],[1030,145],[250,575],[1030,575],[470,360],[810,360]],
-    barrels:[[390,255],[890,465],[890,255],[390,465]]
+    barrels:[[390,255],[890,465],[890,255],[390,465]],coreSpawns:[[400,360],[880,360]]
   },
   {
     name:'CUATRO ESQUINAS',bg:'#0b1218',w:1280,h:720,modes:['duel','ffa3','teams','core'],
     obs:[{x:330,y:190,w:125,h:65},{x:825,y:190,w:125,h:65},{x:330,y:465,w:125,h:65},{x:825,y:465,w:125,h:65}],
     pickupSpawns:[[640,120],[640,600],[220,360],[1060,360],[640,360]],
-    barrels:[[500,250],[780,250],[500,470],[780,470]]
+    barrels:[[500,250],[780,250],[500,470],[780,470]],coreSpawns:[[640,360]]
   },
   {
     name:'ARSENAL',bg:'#11100d',w:1380,h:780,modes:['duel','ffa3','teams','core'],
     obs:[{x:515,y:130,w:70,h:190},{x:795,y:460,w:70,h:190},{x:620,y:345,w:140,h:70}],
     pickupSpawns:[[230,160],[1150,160],[230,620],[1150,620],[690,180],[690,600]],
-    barrels:[[420,390],[960,390],[690,250],[690,530]]
+    barrels:[[420,390],[960,390],[690,250],[690,530]],coreSpawns:[[690,180],[690,600]]
   },
   {
     name:'HANGAR',bg:'#0d1114',w:1600,h:900,modes:['ffa3','teams'],
@@ -105,6 +105,60 @@ const MAPS=[
     obs:[{x:360,y:150,w:120,h:250},{x:1220,y:150,w:120,h:250},{x:360,y:560,w:120,h:250},{x:1220,y:560,w:120,h:250},{x:710,y:210,w:280,h:75},{x:710,y:675,w:280,h:75}],
     pickupSpawns:[[240,170],[1460,170],[240,790],[1460,790],[850,130],[850,830],[570,480],[1130,480]],
     barrels:[[560,310],[1140,310],[560,650],[1140,650],[850,360],[850,600]]
+  },
+  {
+    name:'VÍA MUERTA',bg:'#0d1117',w:1500,h:840,modes:['duel','ffa3','core'],
+    obs:[{x:480,y:145,w:70,h:220},{x:950,y:475,w:70,h:220},{x:690,y:330,w:120,h:180}],
+    pickupSpawns:[[250,150],[1250,690],[250,690],[1250,150],[750,160],[750,680]],
+    barrels:[[390,420],[1110,420],[750,255],[750,585]],coreSpawns:[[750,180],[750,660]]
+  },
+  {
+    name:'SILO',bg:'#10120f',w:1500,h:840,modes:['duel','teams','core'],
+    obs:[{x:390,y:210,w:150,h:95},{x:960,y:210,w:150,h:95},{x:390,y:535,w:150,h:95},{x:960,y:535,w:150,h:95}],
+    pickupSpawns:[[750,120],[750,720],[260,420],[1240,420],[750,420]],
+    barrels:[[605,260],[895,260],[605,580],[895,580]],coreSpawns:[[750,420]]
+  },
+  {
+    name:'ANILLO',bg:'#0b1115',w:1600,h:900,modes:['duel','ffa3','teams','core'],
+    obs:[{x:540,y:205,w:180,h:65},{x:880,y:205,w:180,h:65},{x:540,y:630,w:180,h:65},{x:880,y:630,w:180,h:65},{x:470,y:355,w:65,h:190},{x:1065,y:355,w:65,h:190}],
+    pickupSpawns:[[800,145],[800,755],[340,450],[1260,450],[800,450]],
+    barrels:[[620,335],[980,335],[620,565],[980,565]],coreSpawns:[[800,450]]
+  },
+  {
+    name:'TALLER',bg:'#11110f',w:1600,h:900,modes:['duel','ffa3','teams'],
+    obs:[{x:330,y:180,w:170,h:70},{x:1100,y:650,w:170,h:70},{x:665,y:180,w:70,h:220},{x:865,y:500,w:70,h:220}],
+    pickupSpawns:[[230,160],[1370,740],[230,740],[1370,160],[800,125],[800,775]],
+    barrels:[[560,450],[1040,450],[800,310],[800,590]]
+  },
+  {
+    name:'FOSA',bg:'#0d0f14',w:1500,h:850,modes:['duel','teams','core'],
+    obs:[{x:300,y:275,w:390,h:75},{x:810,y:275,w:390,h:75},{x:300,y:500,w:390,h:75},{x:810,y:500,w:390,h:75}],
+    pickupSpawns:[[220,150],[1280,150],[220,700],[1280,700],[750,425]],
+    barrels:[[520,425],[980,425],[750,205],[750,645]],coreSpawns:[[750,150],[750,700]]
+  },
+  {
+    name:'PATIO',bg:'#0c1110',w:1800,h:1000,modes:['ffa3','teams'],
+    obs:[{x:420,y:210,w:150,h:110},{x:1230,y:210,w:150,h:110},{x:420,y:680,w:150,h:110},{x:1230,y:680,w:150,h:110},{x:825,y:410,w:150,h:180}],
+    pickupSpawns:[[250,160],[1550,160],[250,840],[1550,840],[900,150],[900,850],[250,500],[1550,500]],
+    barrels:[[650,300],[1150,300],[650,700],[1150,700],[900,300],[900,700]]
+  },
+  {
+    name:'MUELLE',bg:'#101115',w:1750,h:980,modes:['ffa3','teams'],
+    obs:[{x:370,y:150,w:90,h:300},{x:1290,y:530,w:90,h:300},{x:690,y:250,w:370,h:70},{x:690,y:660,w:370,h:70}],
+    pickupSpawns:[[240,170],[1510,170],[240,810],[1510,810],[875,150],[875,830]],
+    barrels:[[560,490],[1190,490],[875,390],[875,590]]
+  },
+  {
+    name:'SUBNIVEL',bg:'#0b0d13',w:1500,h:850,modes:['duel','core'],
+    obs:[{x:440,y:110,w:75,h:260},{x:985,y:480,w:75,h:260},{x:650,y:365,w:200,h:120}],
+    pickupSpawns:[[230,150],[1270,700],[230,700],[1270,150],[750,170],[750,680]],
+    barrels:[[350,425],[1150,425],[600,240],[900,610]],coreSpawns:[[750,165],[750,685]]
+  },
+  {
+    name:'REACTOR',bg:'#101014',w:1650,h:930,modes:['duel','ffa3','teams','core'],
+    obs:[{x:545,y:265,w:140,h:80},{x:965,y:265,w:140,h:80},{x:545,y:585,w:140,h:80},{x:965,y:585,w:140,h:80}],
+    pickupSpawns:[[825,145],[825,785],[270,465],[1380,465],[825,465]],
+    barrels:[[735,315],[915,315],[735,615],[915,615]],coreSpawns:[[825,465]]
   }
 ];
 
@@ -128,6 +182,7 @@ function characterDef(p){return CHARACTERS[p.character]||CHARACTERS.mix}
 function mapDef(g=game){return MAPS[g?.map||0]||MAPS[0]}
 function worldW(g=game){return mapDef(g).w||W}
 function worldH(g=game){return mapDef(g).h||H}
+function corePoint(g=game){const m=mapDef(g),pts=m.coreSpawns&&m.coreSpawns.length?m.coreSpawns:[[m.w/2,m.h/2]],round=Math.max(1,g?.round||1);return pts[(round-1)%pts.length]}
 function tempo(g=game){return 1+Math.min(.16,Math.max(0,(g?.round||1)-1)*.022)}
 function powerDef(id){return GENERAL[id]||ABILITY_UPGRADES[id]||null}
 function playerTeam(index,g=game){const m=modeOf(g);return m.teams?m.teams[index]:index}
@@ -332,9 +387,9 @@ function addEffect(type,x,y,radius,color,duration,owner=null){if(!game.effects)g
 function updateEffects(dt){if(!game.effects)return;for(let i=game.effects.length-1;i>=0;i--){game.effects[i].life-=dt;if(game.effects[i].life<=0)game.effects.splice(i,1)}}
 function addFeedback(type,x,y,value=0,owner=null,target=null,label=''){if(!game.feedback)game.feedback=[];const long=type==='elimination'?1.05:(type==='rarity'||type==='synergy'?1.8:.48);game.feedback.push({id:Math.random().toString(36).slice(2),type,x,y,value,owner,target,label,life:long,maxLife:long})}
 function updateFeedback(dt){if(game.feedback)for(let i=game.feedback.length-1;i>=0;i--){game.feedback[i].life-=dt;if(game.feedback[i].life<=0)game.feedback.splice(i,1)}if(game.killfeed)for(let i=game.killfeed.length-1;i>=0;i--){game.killfeed[i].life-=dt;if(game.killfeed[i].life<=0)game.killfeed.splice(i,1)}}
-function updateCore(dt){if(game.mode!=='core'||!game.core)return;const core=game.core;for(const p of game.players)if(p.fx.overcharge>0)p.fx.overcharge=Math.max(0,p.fx.overcharge-dt);
-  if(!core.active){core.respawn-=dt;if(core.respawn<=0){core.active=true;core.progress=0;core.capturer=null;addEffect('coreSpawn',worldW()/2,worldH()/2,105,'#7df9ff',.55,null)}return}
-  const cx=worldW()/2,cy=worldH()/2,radius=92,inside=game.players.filter(p=>p.alive&&Math.hypot(p.x-cx,p.y-cy)<radius);
+function updateCore(dt){if(game.mode!=='core'||!game.core)return;const core=game.core,[cx,cy]=corePoint(game);for(const p of game.players)if(p.fx.overcharge>0)p.fx.overcharge=Math.max(0,p.fx.overcharge-dt);
+  if(!core.active){core.respawn-=dt;if(core.respawn<=0){core.active=true;core.progress=0;core.capturer=null;addEffect('coreSpawn',cx,cy,105,'#7df9ff',.55,null)}return}
+  const radius=92,inside=game.players.filter(p=>p.alive&&Math.hypot(p.x-cx,p.y-cy)<radius);
   if(inside.length===1){const seat=inside[0].i;if(core.capturer!==seat){core.capturer=seat;core.progress=Math.max(0,core.progress-.35)}core.progress+=dt;if(core.progress>=core.required){inside[0].fx.overcharge=8;core.active=false;core.respawn=13;core.progress=0;core.capturer=null;addEffect('coreCapture',cx,cy,125,PLAYER_COLORS[seat],.65,seat);addFeedback('core',cx,cy,0,seat,null)}}
   else{core.capturer=null;core.progress=Math.max(0,core.progress-dt*.75)}
 }

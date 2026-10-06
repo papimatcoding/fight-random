@@ -56,9 +56,15 @@ Mercado Negro se reserva para modificaciones que alteran de forma fuerte el comp
 ## Multiplayer / persistencia
 
 - 1v1, 1v1v1, 2v2 y NÚCLEO.
+- 15 arenas con geometría sencilla, varios tamaños y pools por modo.
+- El lobby principal funciona como garaje visual: chasis al centro, puntos de montaje y selector de módulos por tarjetas.
 - P2P host-authoritative para combate.
 - Perfil persistente, salas públicas/privadas, quick play, rating, leaderboard e historial mediante Supabase.
 - Si el backend persistente falla, las partidas P2P por enlace siguen funcionando.
+
+## Lobby / taller
+
+Quickplay muestra solo tu slot antes de buscar partida. Las partidas amistosas muestran los huecos de invitación. Arma, especial y sistema se montan desde puntos visuales sobre la máquina; no se usan desplegables.
 
 ## Controles
 

@@ -18,75 +18,138 @@
       </div>
     </header>
 
-    <section class="lobby panel" id="lobby">
-      <div class="hero-copy">
-        <p class="eyebrow">ARENA ONLINE · 2–4 JUGADORES · SIN INSTALAR</p>
-        <h1>Elige torreta.<br><span>Rompe la arena.</span></h1>
-        <p class="lead">Entra directo por enlace o busca una sala pública. Tu perfil, rating e historial se guardan; el combate sigue siendo rápido y sin instalaciones.</p>
-      </div>
-
-      <div class="lobby-actions">
-        <div class="profile-strip">
-          <div class="profile-main">
-            <span class="mini-label">PERFIL</span>
+    <section class="garage-lobby panel" id="lobby">
+      <aside class="garage-side party-side">
+        <div class="garage-profile">
+          <div>
+            <span class="mini-label">PILOTO</span>
             <strong id="profileName">Jugador</strong>
             <small id="profileMeta">perfil local</small>
           </div>
-          <div class="profile-edit">
-            <input id="nicknameInput" maxlength="18" autocomplete="off" placeholder="APODO" />
-            <button class="ghost compact" id="saveNicknameBtn" type="button">GUARDAR</button>
+          <button class="garage-icon-btn" id="editProfileBtn" type="button" aria-label="Editar perfil">✎</button>
+        </div>
+        <div class="profile-edit garage-profile-edit hidden" id="profileEdit">
+          <input id="nicknameInput" maxlength="18" autocomplete="off" placeholder="APODO" />
+          <button class="ghost compact" id="saveNicknameBtn" type="button">GUARDAR</button>
+        </div>
+        <span class="profile-message" id="profileMessage"></span>
+
+        <div class="party-card">
+          <div class="garage-section-head">
+            <span>GRUPO</span>
+            <small id="partyModeLabel">1V1 · QUICKPLAY</small>
           </div>
-          <span class="profile-message" id="profileMessage"></span>
+          <div class="party-slots" id="partySlots">
+            <div class="party-slot self">
+              <span class="party-avatar">01</span>
+              <span><b id="partySelfName">Jugador</b><small>TÚ · PREPARANDO MÁQUINA</small></span>
+            </div>
+          </div>
+          <p class="party-note" id="partyNote">En Quickplay solo ves tu slot. El resto aparece al encontrar partida.</p>
         </div>
 
-        <span class="mini-label">MODO DE LA SALA</span>
-        <div class="mode-grid" id="modeGrid">
-          <button class="mode-card selected" type="button" data-mode="duel"><strong>1V1</strong><span>Clásico · 2 jugadores</span></button>
-          <button class="mode-card" type="button" data-mode="ffa3"><strong>1V1V1</strong><span>Todos contra todos · 3</span></button>
-          <button class="mode-card" type="button" data-mode="teams"><strong>2V2</strong><span>Equipos · 4 jugadores</span></button>
-          <button class="mode-card special-mode" type="button" data-mode="core"><strong>NÚCLEO</strong><span>Especial · objetivo central · 1v1</span></button>
+        <div class="garage-shortcuts">
+          <button class="garage-tab" type="button" data-garage-panel="rooms">SALAS</button>
+          <button class="garage-tab" type="button" data-garage-panel="ranking">RANKING</button>
+          <button class="garage-tab" type="button" data-garage-panel="history">HISTORIAL</button>
         </div>
-        <div class="create-row">
-          <select id="roomVisibility" aria-label="Visibilidad de la sala">
-            <option value="public">SALA PÚBLICA</option>
-            <option value="private">SALA PRIVADA</option>
-          </select>
-          <button class="secondary" id="quickPlayBtn" type="button">PARTIDA RÁPIDA</button>
-          <button class="primary big" id="hostBtn" type="button">CREAR SALA</button>
+      </aside>
+
+      <section class="machine-bay">
+        <div class="machine-bay-head">
+          <div>
+            <span class="mini-label">CHASIS</span>
+            <strong id="garageChassisName">MIX</strong>
+            <small id="garageChassisMeta">10 puntos · Dash</small>
+          </div>
+          <div class="chassis-switch">
+            <button id="garageChassisPrev" type="button" aria-label="Chasis anterior">‹</button>
+            <button id="garageChassisNext" type="button" aria-label="Chasis siguiente">›</button>
+          </div>
         </div>
 
-        <div class="or"><span></span><b>o</b><span></span></div>
-        <form id="joinForm" class="join-row">
-          <label class="sr-only" for="roomInput">Código de sala</label>
-          <input id="roomInput" autocomplete="off" maxlength="6" placeholder="CÓDIGO" inputmode="text" />
-          <button class="secondary" type="submit">ENTRAR</button>
-        </form>
-        <p class="status" id="lobbyStatus">El modo lo elige quien crea la sala.</p>
-      </div>
+        <div class="machine-stage">
+          <div class="garage-floor"></div>
+          <div class="garage-machine" id="garageMachine" data-chassis="mix" data-weapon="" data-special="" data-system="">
+            <div class="gm-track gm-track-left"></div>
+            <div class="gm-track gm-track-right"></div>
+            <div class="gm-body"><i></i></div>
+            <div class="gm-core"></div>
+            <div class="gm-weapon"></div>
+            <div class="gm-special"></div>
+            <div class="gm-system"></div>
+          </div>
 
-      <div class="how-grid" aria-label="Controles">
-        <div><kbd>WASD</kbd><span>mover</span></div>
-        <div><kbd>RATÓN</kbd><span>apuntar</span></div>
-        <div><kbd>CLICK</kbd><span>disparar</span></div>
-        <div><kbd>SPACE</kbd><span>habilidad básica</span></div>
-        <div><kbd>E</kbd><span>habilidad especial</span></div>
-      </div>
+          <button class="mount-point mount-weapon" type="button" data-garage-slot="weapon">
+            <span class="mount-plus">+</span><span class="mount-label">ARMA</span><b id="garageWeaponName">AÑADIR</b>
+          </button>
+          <button class="mount-point mount-special" type="button" data-garage-slot="special">
+            <span class="mount-plus">+</span><span class="mount-label">ESPECIAL</span><b id="garageSpecialName">AÑADIR</b>
+          </button>
+          <button class="mount-point mount-system" type="button" data-garage-slot="system">
+            <span class="mount-plus">+</span><span class="mount-label">SISTEMA</span><b id="garageSystemName">AÑADIR</b>
+          </button>
+        </div>
 
-      <div class="lobby-meta">
-        <article class="meta-card">
-          <div class="meta-head"><span>SALAS PÚBLICAS</span><small>click para entrar</small></div>
+        <div class="capacity garage-capacity">
+          <div class="capacity-line"><span>CAPACIDAD DEL CHASIS</span><strong id="garageCapacityText">0 / 10</strong></div>
+          <div class="capacity-track"><i id="garageCapacityFill"></i></div>
+          <small id="garageLoadoutWarning">Añade arma, especial y sistema.</small>
+        </div>
+      </section>
+
+      <aside class="garage-side match-side">
+        <div class="garage-section-head"><span>COMBATE</span><small>15 arenas · mapa aleatorio</small></div>
+        <div class="mode-grid garage-mode-grid" id="modeGrid">
+          <button class="mode-card selected" type="button" data-mode="duel"><strong>DUELO</strong><span>1V1 · por rondas</span></button>
+          <button class="mode-card" type="button" data-mode="teams"><strong>EQUIPOS</strong><span>2V2 · por rondas</span></button>
+          <button class="mode-card special-mode" type="button" data-mode="core"><strong>NÚCLEO</strong><span>1V1 · control</span></button>
+          <button class="mode-card" type="button" data-mode="ffa3"><strong>TRIPLE</strong><span>1V1V1 · caos</span></button>
+        </div>
+
+        <input type="hidden" id="roomVisibility" value="public" />
+        <button class="primary garage-play" id="quickPlayBtn" type="button">
+          <span>QUICKPLAY</span><small>buscar rivales automáticamente</small>
+        </button>
+        <button class="secondary garage-friendly" id="hostBtn" type="button">CREAR PARTIDA AMISTOSA</button>
+
+        <div class="join-compact">
+          <span class="mini-label">UNIRSE A AMISTOSA</span>
+          <form id="joinForm" class="join-row">
+            <label class="sr-only" for="roomInput">Código de sala</label>
+            <input id="roomInput" autocomplete="off" maxlength="6" placeholder="CÓDIGO" inputmode="text" />
+            <button class="ghost" type="submit">ENTRAR</button>
+          </form>
+        </div>
+        <p class="status" id="lobbyStatus">Monta tu máquina y entra.</p>
+      </aside>
+
+      <div class="garage-drawer hidden" id="garageDrawer">
+        <div class="drawer-head">
+          <strong id="drawerTitle">SALAS</strong>
+          <button class="garage-icon-btn" id="closeGarageDrawer" type="button">×</button>
+        </div>
+        <div class="drawer-panel" id="drawerRooms">
           <div class="room-list" id="publicRooms"><div class="empty-state">Conectando lobby…</div></div>
-        </article>
-        <article class="meta-card">
-          <div class="meta-head"><span>RANKING</span><small>rating</small></div>
+        </div>
+        <div class="drawer-panel hidden" id="drawerRanking">
           <div class="leaderboard-list" id="leaderboardRows"><div class="empty-state">Cargando…</div></div>
-        </article>
-        <article class="meta-card">
-          <div class="meta-head"><span>TUS ÚLTIMAS</span><small>historial</small></div>
+        </div>
+        <div class="drawer-panel hidden" id="drawerHistory">
           <div class="recent-list" id="recentMatches"><div class="empty-state">Sin partidas todavía.</div></div>
-        </article>
+        </div>
       </div>
     </section>
+
+    <div class="module-picker hidden" id="modulePicker" aria-modal="true" role="dialog">
+      <div class="module-picker-panel">
+        <div class="module-picker-head">
+          <div><span class="mini-label" id="modulePickerKicker">ARMA</span><strong id="modulePickerTitle">ELIGE MÓDULO</strong></div>
+          <button class="garage-icon-btn" id="modulePickerClose" type="button">×</button>
+        </div>
+        <div class="module-picker-grid" id="modulePickerGrid"></div>
+      </div>
+    </div>
 
     <section class="room panel hidden" id="roomPanel">
       <div class="room-line">
@@ -109,6 +172,7 @@
       <div class="match-header">
         <div class="scoreboard" id="scoreboard"></div>
         <div class="round-chip"><span>RONDA</span><strong id="roundNum">1</strong></div>
+        <div class="round-chip map-chip"><span>ARENA</span><strong id="mapName">—</strong></div>
       </div>
 
       <div class="canvas-frame" id="canvasFrame">
@@ -116,50 +180,46 @@
         <div class="center-message hidden" id="centerMessage"></div>
 
         <div class="ready-overlay hidden" id="readyOverlay">
-          <p class="eyebrow">TALLER · MONTA TU MÁQUINA ANTES DE ENTRAR</p>
-          <h2 id="readyTitle">¿PREPARADO?</h2>
-          <p id="readySubtitle">Esperando jugadores.</p>
-          <div class="character-picker" id="characterPicker">
-            <button class="character-card selected" type="button" data-character="mix">
-              <strong>MIX</strong>
-              <span>Chasis medio · 10 puntos · SPACE Dash</span>
-            </button>
-            <button class="character-card" type="button" data-character="trucks">
-              <strong>TRUCKS</strong>
-              <span>Chasis pesado · 14 puntos · SPACE Fortificar</span>
-            </button>
-            <button class="character-card" type="button" data-character="lizzy">
-              <strong>LIZZY</strong>
-              <span>Chasis ligero · 7 puntos · SPACE Invisibilidad</span>
-            </button>
-          </div>
-
-          <div class="workshop" id="workshop">
-            <div class="module-slot">
-              <span class="mini-label">ARMA · CLICK</span>
-              <select id="weaponSelect"></select>
-              <small id="weaponDetail"></small>
+          <div class="ready-garage">
+            <div class="ready-top">
+              <div>
+                <p class="eyebrow">SALA DE COMBATE</p>
+                <h2 id="readyTitle">PREPARANDO</h2>
+                <p id="readySubtitle">Esperando jugadores.</p>
+              </div>
+              <div class="ready-party" id="readyPartySlots"></div>
             </div>
-            <div class="module-slot">
-              <span class="mini-label">ESPECIAL · E</span>
-              <select id="specialSelect"></select>
-              <small id="specialDetail"></small>
-            </div>
-            <div class="module-slot">
-              <span class="mini-label">SISTEMA · PASIVA</span>
-              <select id="systemSelect"></select>
-              <small id="systemDetail"></small>
-            </div>
-          </div>
 
-          <div class="capacity">
-            <div class="capacity-line"><span>CAPACIDAD</span><strong id="capacityText">0 / 10</strong></div>
-            <div class="capacity-track"><i id="capacityFill"></i></div>
-            <small id="loadoutWarning">Monta una configuración válida.</small>
-          </div>
+            <div class="ready-builder">
+              <div class="ready-chassis-strip">
+                <button id="readyChassisPrev" type="button">‹</button>
+                <div><span class="mini-label">CHASIS</span><strong id="readyChassisName">MIX</strong><small id="readyChassisMeta"></small></div>
+                <button id="readyChassisNext" type="button">›</button>
+              </div>
 
-          <button class="primary" id="readyBtn" type="button">ENTRAR A LA ARENA</button>
-          <div class="ready-state" id="readyState">1 / 2 conectados</div>
+              <div class="ready-machine-stage">
+                <div class="garage-machine compact-machine" id="readyMachine" data-chassis="mix" data-weapon="" data-special="" data-system="">
+                  <div class="gm-track gm-track-left"></div><div class="gm-track gm-track-right"></div>
+                  <div class="gm-body"><i></i></div><div class="gm-core"></div>
+                  <div class="gm-weapon"></div><div class="gm-special"></div><div class="gm-system"></div>
+                </div>
+                <div class="ready-mounts">
+                  <button class="ready-mount" type="button" data-ready-slot="weapon"><span>ARMA</span><b id="readyWeaponName">+</b></button>
+                  <button class="ready-mount" type="button" data-ready-slot="special"><span>ESPECIAL</span><b id="readySpecialName">+</b></button>
+                  <button class="ready-mount" type="button" data-ready-slot="system"><span>SISTEMA</span><b id="readySystemName">+</b></button>
+                </div>
+              </div>
+
+              <div class="capacity">
+                <div class="capacity-line"><span>CAPACIDAD</span><strong id="capacityText">0 / 10</strong></div>
+                <div class="capacity-track"><i id="capacityFill"></i></div>
+                <small id="loadoutWarning">Monta una configuración válida.</small>
+              </div>
+            </div>
+
+            <button class="primary ready-play" id="readyBtn" type="button">LISTO</button>
+            <div class="ready-state" id="readyState">1 / 2 conectados</div>
+          </div>
         </div>
 
         <div class="upgrade-overlay hidden" id="upgradeOverlay">

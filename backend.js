@@ -1,7 +1,7 @@
 'use strict';
 
 const FR_API='https://xtekdrkqgfjnnwawyoim.supabase.co/functions/v1/fight-random-api';
-const FR_BUILD='2026.10-live-1';
+const FR_BUILD='2026.10-garage-1';
 const FRStore={
   token:'',
   profile:null,
@@ -59,7 +59,7 @@ function frProfileText(p){
 function frRenderProfile(){
   const p=FRStore.profile;
   const name=document.getElementById('profileName'),meta=document.getElementById('profileMeta'),input=document.getElementById('nicknameInput');
-  if(name)name.textContent=p?.nickname||'Jugador';
+  if(name)name.textContent=p?.nickname||'Jugador';const party=document.getElementById('partySelfName');if(party)party.textContent=p?.nickname||'Jugador';
   if(meta)meta.textContent=p?frProfileText(p):'perfil local';
   if(input&&!input.matches(':focus'))input.value=p?.nickname||localStorage.getItem('fr-nickname')||'';
 }
@@ -74,7 +74,7 @@ function frRenderLobby(){
     for(const r of list){
       const row=document.createElement('button');row.type='button';row.className='room-row';
       row.innerHTML='<span><b>'+frModeLabel(r.mode)+'</b><small>'+escapeHtml(r.host)+' · '+r.hostRating+' rating</small></span><strong>'+r.players+'/'+r.maxPlayers+'</strong>';
-      row.onclick=()=>joinGame?.(r.code);
+      row.onclick=()=>{if(typeof garageCanQueue==='function'&&!garageCanQueue()){if(typeof status==='function')status('Completa una máquina válida antes de entrar.',true);return}if(typeof setQueueIntent==='function')setQueueIntent('quick');joinGame?.(r.code)};
       rooms.appendChild(row);
     }
   }
@@ -164,12 +164,16 @@ async function frLeaveRoom(){
   setTimeout(frRefreshLobby,350);
 }
 async function frQuickPlay(){
-  const btn=document.getElementById('quickPlayBtn');if(btn)btn.disabled=true;
+  const btn=document.getElementById('quickPlayBtn');
+  if(typeof garageCanQueue==='function'&&!garageCanQueue()){if(typeof status==='function')status('Completa una máquina válida.',true);return}
+  if(btn)btn.disabled=true;
+  const visibility=document.getElementById('roomVisibility');if(visibility)visibility.value='public';
+  if(typeof setQueueIntent==='function')setQueueIntent('quick');
   try{
     await frInit();const lobby=await frRefreshLobby();
     const room=(lobby.rooms||[]).find(r=>r.mode===selectedMode&&r.players<r.maxPlayers);
     if(room)joinGame?.(room.code);else hostGame?.();
-  }finally{if(btn)setTimeout(()=>btn.disabled=false,700)}
+  }finally{if(btn)setTimeout(()=>{btn.disabled=typeof garageCanQueue==='function'?!garageCanQueue():false},700)}
 }
 async function frRecordMatch(g){
   if(!(typeof host!=='undefined'&&host)||!g?.clientMatchId||FRStore.recorded.has(g.clientMatchId)||!FRStore.roomCode)return;
