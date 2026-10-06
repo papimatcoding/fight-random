@@ -51,3 +51,5 @@ button:disabled{opacity:.6;cursor:default}
 .stats-grid strong{display:block;font-size:22px;margin-top:3px}
 @media(max-width:780px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.room-meta{margin:0}}
+
+button:disabled:hover{transform:none;filter:none}
