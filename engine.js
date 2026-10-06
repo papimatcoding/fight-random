@@ -45,7 +45,7 @@ const CHARACTERS={
 const ABILITY_UPGRADES={
   mix_vector:{name:'Vector reforzado',desc:'El dash gana un 22% de impulso, reduce su recarga un 18% y genera una onda de retroceso al finalizar.',rarity:'legendary',max:1},
   mix_shell:{name:'Recámara de asedio',desc:'La Bola de cañón reduce su recarga un 18% y aumenta el radio y el retroceso de su explosión.',rarity:'legendary',max:1},
-  mix_overdrive:{name:'Sobrecarga cinética',desc:'El dash obtiene una segunda carga virtual: si se usa al estar listo, su siguiente recarga se reduce drásticamente.',rarity:'illegal',max:1},
+  mix_overdrive:{name:'Sobrecarga cinética',desc:'El dash reduce de forma drástica su tiempo de recarga y mantiene su ventana de invulnerabilidad.',rarity:'illegal',max:1},
   mix_cluster:{name:'Munición de racimo',desc:'La Bola de cañón libera tres explosiones secundarias de menor potencia tras detonar.',rarity:'illegal',max:1}
 };
 
@@ -176,7 +176,7 @@ function checkRoundEnd(){if(game.phase!=='play')return;const m=modeOf(),alive=ga
     if(aliveTeams.length<=1)finishRound(null,aliveTeams.length===1?aliveTeams[0]:null)
   }else if(alive.length<=1)finishRound(alive.length===1?alive[0].i:null,null)
 }
-function eliminate(target,source){if(!target.alive)return;target.alive=false;target.hp=0;target.stats.deaths++;target.vx=target.vy=0;if(source!=null&&source!==target.i&&game.players[source])game.players[source].stats.kills++;checkRoundEnd()}
+function eliminate(target,source){if(!target.alive)return;addEffect('eliminate',target.x,target.y,105,PLAYER_COLORS[target.i],.46,source);target.alive=false;target.hp=0;target.stats.deaths++;target.vx=target.vy=0;if(source!=null&&source!==target.i&&game.players[source])game.players[source].stats.kills++;checkRoundEnd()}
 
 function sim(dt){if(!game)return;
   if(game.phase==='ready'||game.phase==='end')return;
