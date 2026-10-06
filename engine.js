@@ -62,6 +62,13 @@ const ABILITY_UPGRADES={
   lizzy_execution:{name:'Ejecución',desc:'Navajazo causa daño adicional contra objetivos con poca vida.',rarity:'illegal',max:1}
 };
 
+const SYNERGIES=[
+  {id:'inferno',name:'INFERNO',requires:['fire','boom'],desc:'Las explosiones dejan una zona de fuego breve.'},
+  {id:'kinetic',name:'MASA CINÉTICA',requires:['heavy','bounce'],desc:'Los proyectiles que rebotan ganan daño y retroceso.'},
+  {id:'siphon',name:'NÚCLEO VAMPÍRICO',requires:['leech','caliber'],desc:'Aumenta la curación obtenida por daño infligido.'},
+  {id:'hunter',name:'CAZADOR CRIO',requires:['frost','homing'],desc:'El guiado se intensifica contra objetivos ralentizados.'}
+];
+
 const MAPS=[
   {
     name:'PILARES',bg:'#0b1020',w:1280,h:720,modes:['duel','ffa3','teams','core'],
@@ -133,18 +140,18 @@ function characterStats(id){
 }
 function characterHp(id,mode){return mode.baseHp+(id==='trucks'?62:(id==='lizzy'?-10:5))}
 function combatStats(){return{shots:0,hits:0,damage:0,pickups:0,dashes:0,kills:0,deaths:0}}
-function makePlayer(i,mode){const character='mix',hp=characterHp(character,mode);return{i,team:mode.teams?mode.teams[i]:i,character,x:0,y:0,vx:0,vy:0,r:character==='trucks'?26:22,hp,max:hp,alive:true,score:0,lossStreak:0,a:i%2?Math.PI:0,shot:0,dc:0,dt:0,inv:0,pd:0,shield:0,s:characterStats(character),powers:{},fx:{burn:0,burnDps:0,burnOwner:null,slow:0,slowFactor:1,shock:0,haste:0,fortify:0,reactiveReady:0,invisible:0,overcharge:0},specialCd:0,ps:0,stats:combatStats()}}
-function makeGame(modeId){const m=MODES[modeId]||MODES.duel;return{mode:m.id,phase:'ready',round:1,count:0,t:0,map:Math.floor(Math.random()*MAPS.length),connected:Array(m.players).fill(false),ready:Array(m.players).fill(false),rematch:Array(m.players).fill(false),players:Array.from({length:m.players},(_,i)=>makePlayer(i,m)),teamScore:[0,0],bullets:[],pickups:[],barrels:[],fires:[],effects:[],feedback:[],core:{active:false,respawn:10,progress:0,capturer:null,required:2.3},storm:{elapsed:0,start:34,duration:26,radius:760,minRadius:145,active:false},pickupTimer:7,opts:Array.from({length:m.players},()=>[]),picked:Array(m.players).fill(null),matchWinner:null}}
+function makePlayer(i,mode){const character='mix',hp=characterHp(character,mode);return{i,name:'P'+(i+1),team:mode.teams?mode.teams[i]:i,character,x:0,y:0,vx:0,vy:0,r:character==='trucks'?26:22,hp,max:hp,alive:true,score:0,lossStreak:0,a:i%2?Math.PI:0,shot:0,dc:0,dt:0,inv:0,pd:0,shield:0,s:characterStats(character),powers:{},synergies:[],fx:{burn:0,burnDps:0,burnOwner:null,slow:0,slowFactor:1,shock:0,haste:0,fortify:0,reactiveReady:0,invisible:0,overcharge:0},specialCd:0,ps:0,stats:combatStats()}}
+function makeGame(modeId){const m=MODES[modeId]||MODES.duel;return{clientMatchId:crypto.randomUUID(),startedAt:null,mode:m.id,phase:'ready',round:1,count:0,t:0,map:Math.floor(Math.random()*MAPS.length),connected:Array(m.players).fill(false),ready:Array(m.players).fill(false),rematch:Array(m.players).fill(false),players:Array.from({length:m.players},(_,i)=>makePlayer(i,m)),teamScore:[0,0],bullets:[],pickups:[],barrels:[],fires:[],effects:[],feedback:[],killfeed:[],core:{active:false,respawn:10,progress:0,capturer:null,required:2.3},storm:{elapsed:0,start:34,duration:26,radius:760,minRadius:145,active:false},pickupTimer:7,opts:Array.from({length:m.players},()=>[]),picked:Array(m.players).fill(null),matchWinner:null}}
 function connectedCount(){return game?game.connected.filter(Boolean).length:0}
 function allConnected(){const m=modeOf();return !!game&&connectedCount()===m.players}
 function allReady(arr){return allConnected()&&arr.every(Boolean)}
 
-function resetRoomAfterDisconnect(){if(!host||!game)return;const mode=game.mode;const oldConnected=game.connected.slice();game=makeGame(mode);game.connected[0]=true;for(const [seat,c] of hostConnections)game.connected[seat]=!!c.open;for(let i=0;i<oldConnected.length;i++)if(i===0)game.connected[i]=true;view=game;broadcast(true)}
+function resetRoomAfterDisconnect(){if(!host||!game)return;const mode=game.mode,oldConnected=game.connected.slice(),oldPlayers=game.players.map(p=>({name:p.name,character:p.character}));game=makeGame(mode);game.connected[0]=true;for(const [seat,c] of hostConnections)game.connected[seat]=!!c.open;for(let i=0;i<oldConnected.length;i++){if(i===0)game.connected[i]=true;if(oldPlayers[i]){game.players[i].name=oldPlayers[i].name;setCharacter(i,oldPlayers[i].character)}}view=game;broadcast(true)}
 
 function chooseMap(){const pool=MAPS.map((m,i)=>({m,i})).filter(x=>!x.m.modes||x.m.modes.includes(game.mode)).map(x=>x.i);let n=pool[Math.floor(Math.random()*pool.length)];if(pool.length>1)while(n===game.map)n=pool[Math.floor(Math.random()*pool.length)];game.map=n}
 function spawnFor(i){const w=worldW(),h=worldH(),mode=game.mode;if(mode==='duel'||mode==='core')return i===0?[w*.13,h*.5]:[w*.87,h*.5];if(mode==='ffa3')return[[w*.5,h*.13],[w*.16,h*.82],[w*.84,h*.82]][i]||[w*.5,h*.5];return[[w*.12,h*.28],[w*.88,h*.28],[w*.12,h*.72],[w*.88,h*.72]][i]||[w*.5,h*.5]}
 function resetBarrels(){game.barrels=MAPS[game.map].barrels.map((p,i)=>({id:i,x:p[0],y:p[1],r:23,hp:22,max:22,alive:true}))}
-function startRound(first=false){if(first){const allowed=mapDef().modes?.includes(game.mode);if(!allowed)chooseMap()}else chooseMap();game.phase='count';game.count=2.5;game.bullets=[];game.pickups=[];game.fires=[];game.feedback=[];game.core={active:false,respawn:10,progress:0,capturer:null,required:2.3};game.pickupTimer=Math.max(4.8,6.5-(game.round-1)*.18);game.picked=Array(modeOf().players).fill(null);game.opts=Array.from({length:modeOf().players},()=>[]);game.effects=[];game.storm={elapsed:0,start:Math.max(25,34-(game.round-1)*1.15),duration:Math.max(20,26-(game.round-1)*.45),radius:760,minRadius:145,active:false};resetBarrels();game.players.forEach((p,i)=>{const sp=spawnFor(i);p.x=sp[0];p.y=sp[1];p.vx=p.vy=0;p.hp=p.max;p.alive=true;p.shot=p.dc=p.dt=0;p.specialCd=0;p.inv=.45;p.pd=p.ps=0;p.shield=p.s.shield;p.fx={burn:0,burnDps:0,burnOwner:null,slow:0,slowFactor:1,shock:0,haste:0,fortify:0,reactiveReady:p.s.reactive?1:0,invisible:0,overcharge:0}});broadcast(true)}
+function startRound(first=false){if(first&&!game.startedAt)game.startedAt=Date.now();if(first){const allowed=mapDef().modes?.includes(game.mode);if(!allowed)chooseMap()}else chooseMap();game.phase='count';game.count=2.5;game.bullets=[];game.pickups=[];game.fires=[];game.feedback=[];game.core={active:false,respawn:10,progress:0,capturer:null,required:2.3};game.pickupTimer=Math.max(4.8,6.5-(game.round-1)*.18);game.picked=Array(modeOf().players).fill(null);game.opts=Array.from({length:modeOf().players},()=>[]);game.effects=[];game.storm={elapsed:0,start:Math.max(25,34-(game.round-1)*1.15),duration:Math.max(20,26-(game.round-1)*.45),radius:760,minRadius:145,active:false};resetBarrels();game.players.forEach((p,i)=>{const sp=spawnFor(i);p.x=sp[0];p.y=sp[1];p.vx=p.vy=0;p.hp=p.max;p.alive=true;p.shot=p.dc=p.dt=0;p.specialCd=0;p.inv=.45;p.pd=p.ps=0;p.shield=p.s.shield;p.fx={burn:0,burnDps:0,burnOwner:null,slow:0,slowFactor:1,shock:0,haste:0,fortify:0,reactiveReady:p.s.reactive?1:0,invisible:0,overcharge:0}});broadcast(true)}
 
 function rarityWeights(player){const s=Math.min(3,player.lossStreak||0);const tables=[
   {common:61,rare:30,epic:8.2,legendary:.7,illegal:.1},
@@ -166,6 +173,17 @@ function makeOptions(i){const out=[];for(let slot=0;slot<3;slot++){
   if(!pool.length)break;
   out.push(pool[Math.floor(Math.random()*pool.length)])
 }return out}
+function hasSynergy(p,id){return (p.synergies||[]).includes(id)}
+function updateSynergies(p){
+  const before=new Set(p.synergies||[]);
+  const next=SYNERGIES.filter(x=>x.requires.every(id=>(p.powers[id]||0)>0)).map(x=>x.id);
+  p.synergies=next;
+  for(const id of next){
+    if(before.has(id))continue;
+    const d=SYNERGIES.find(x=>x.id===id);
+    addFeedback('synergy',p.x,p.y,0,p.i,null,d?.name||id);
+  }
+}
 function applyPower(i,id){const p=game.players[i],d=powerDef(id);if(!d)return;p.powers[id]=(p.powers[id]||0)+1;
   switch(id){
     case'multi':p.s.n++;break;
@@ -197,20 +215,22 @@ function applyPower(i,id){const p=game.players[i],d=powerDef(id);if(!d)return;p.
     case'lizzy_execution':p.s.execution=1;break;
     default: if(typeof d.apply==='function')d.apply(p,game);
   }
+  updateSynergies(p);
+  if(d.rarity==='legendary'||d.rarity==='illegal')addFeedback('rarity',p.x,p.y,0,p.i,null,d.name+' · '+RARITY_LABEL[d.rarity]);
 }
 function chooseUpgrade(i,n){if(!host||game.phase!=='pick'||game.picked[i]!=null||!game.connected[i])return;const id=game.opts[i][n];if(!id)return;game.picked[i]=n;applyPower(i,id);if(game.picked.every((x,idx)=>!game.connected[idx]||x!=null))game.t=.9;broadcast(true)}
 
 function setCharacter(i,id){if(!host||game.phase!=='ready'||!game.connected[i]||game.ready[i]||!CHARACTERS[id])return;const old=game.players[i],m=modeOf(),hp=characterHp(id,m);old.character=id;old.max=hp;old.hp=hp;old.r=id==='trucks'?26:(id==='lizzy'?19:22);old.s=characterStats(id);old.powers={};old.specialCd=0;old.dc=0;old.fx={burn:0,burnDps:0,burnOwner:null,slow:0,slowFactor:1,shock:0,haste:0,fortify:0,reactiveReady:0,invisible:0,overcharge:0};broadcast(true)}
 function setReady(i,kind){if(!host||!game.connected[i])return;
   if(kind==='ready'&&game.phase==='ready'){game.ready[i]=true;if(allReady(game.ready))startRound(true);broadcast(true)}
-  if(kind==='rematch'&&game.phase==='end'){game.rematch[i]=true;if(allReady(game.rematch)){const mode=game.mode,chars=game.players.map(p=>p.character);game=makeGame(mode);for(let s=0;s<modeOf().players;s++){game.connected[s]=s===0||!!hostConnections.get(s)?.open;setCharacter(s,chars[s]||'mix')}game.ready=game.connected.slice();startRound(true)}broadcast(true)}
+  if(kind==='rematch'&&game.phase==='end'){game.rematch[i]=true;if(allReady(game.rematch)){const mode=game.mode,chars=game.players.map(p=>p.character),names=game.players.map(p=>p.name);game=makeGame(mode);for(let s=0;s<modeOf().players;s++){game.connected[s]=s===0||!!hostConnections.get(s)?.open;game.players[s].name=names[s]||('P'+(s+1));setCharacter(s,chars[s]||'mix')}game.ready=game.connected.slice();startRound(true)}broadcast(true)}
 }
 
 function updateLossStreaks(winners){game.players.forEach(p=>{if(winners.includes(p.i))p.lossStreak=0;else p.lossStreak=Math.min(3,(p.lossStreak||0)+1)})}
 function finishRound(winnerSeat=null,winnerTeam=null){if(game.phase!=='play')return;const m=modeOf();let winners=[];
   if(m.id==='teams'){
-    if(winnerTeam!=null){game.teamScore[winnerTeam]++;winners=game.players.filter(p=>p.team===winnerTeam).map(p=>p.i);updateLossStreaks(winners);if(game.teamScore[winnerTeam]>=m.win){game.phase='end';game.matchWinner={type:'team',team:winnerTeam};game.rematch=Array(m.players).fill(false);broadcast(true);return}}
-  }else if(winnerSeat!=null){game.players[winnerSeat].score++;winners=[winnerSeat];updateLossStreaks(winners);if(game.players[winnerSeat].score>=m.win){game.phase='end';game.matchWinner={type:'player',seat:winnerSeat};game.rematch=Array(m.players).fill(false);broadcast(true);return}}
+    if(winnerTeam!=null){game.teamScore[winnerTeam]++;winners=game.players.filter(p=>p.team===winnerTeam).map(p=>p.i);updateLossStreaks(winners);if(game.teamScore[winnerTeam]>=m.win){game.phase='end';game.matchWinner={type:'team',team:winnerTeam};game.rematch=Array(m.players).fill(false);broadcast(true);if(typeof frRecordMatch==='function')queueMicrotask(()=>frRecordMatch(game));return}}
+  }else if(winnerSeat!=null){game.players[winnerSeat].score++;winners=[winnerSeat];updateLossStreaks(winners);if(game.players[winnerSeat].score>=m.win){game.phase='end';game.matchWinner={type:'player',seat:winnerSeat};game.rematch=Array(m.players).fill(false);broadcast(true);if(typeof frRecordMatch==='function')queueMicrotask(()=>frRecordMatch(game));return}}
   game.phase='round';game.t=1.45;broadcast(true)
 }
 function checkRoundEnd(){if(game.phase!=='play')return;const m=modeOf(),alive=game.players.filter(p=>p.alive);
@@ -219,7 +239,7 @@ function checkRoundEnd(){if(game.phase!=='play')return;const m=modeOf(),alive=ga
     if(aliveTeams.length<=1)finishRound(null,aliveTeams.length===1?aliveTeams[0]:null)
   }else if(alive.length<=1)finishRound(alive.length===1?alive[0].i:null,null)
 }
-function eliminate(target,source){if(!target.alive)return;addEffect('eliminate',target.x,target.y,105,PLAYER_COLORS[target.i],.46,source);target.alive=false;target.hp=0;target.stats.deaths++;addFeedback('elimination',target.x,target.y,0,source,target.i);target.vx=target.vy=0;if(source!=null&&source!==target.i&&game.players[source])game.players[source].stats.kills++;checkRoundEnd()}
+function eliminate(target,source){if(!target.alive)return;addEffect('eliminate',target.x,target.y,105,PLAYER_COLORS[target.i],.46,source);target.alive=false;target.hp=0;target.stats.deaths++;addFeedback('elimination',target.x,target.y,0,source,target.i);game.killfeed=game.killfeed||[];game.killfeed.unshift({id:Math.random().toString(36).slice(2),killer:source,victim:target.i,life:4,maxLife:4});game.killfeed=game.killfeed.slice(0,5);target.vx=target.vy=0;if(source!=null&&source!==target.i&&game.players[source])game.players[source].stats.kills++;checkRoundEnd()}
 
 function sim(dt){if(!game)return;
   if(game.phase==='ready'||game.phase==='end')return;
@@ -264,7 +284,7 @@ function obstacles(){return MAPS[game?.map||0].obs}
 function collidePlayer(p){const ww=worldW(),hh=worldH();p.x=Math.max(58,Math.min(ww-58,p.x));p.y=Math.max(58,Math.min(hh-58,p.y));for(const o of obstacles()){const nx=Math.max(o.x,Math.min(p.x,o.x+o.w)),ny=Math.max(o.y,Math.min(p.y,o.y+o.h));let dx=p.x-nx,dy=p.y-ny,d=Math.hypot(dx,dy);if(d<p.r){if(d<.1){dx=p.x<W/2?-1:1;dy=0;d=1}p.x+=dx/d*(p.r-d);p.y+=dy/d*(p.r-d)}}}
 function lineBlocked(ax,ay,bx,by){const d=Math.hypot(bx-ax,by-ay),steps=Math.max(2,Math.ceil(d/14));for(let i=1;i<steps;i++){const t=i/steps,x=ax+(bx-ax)*t,y=ay+(by-ay)*t;for(const o of obstacles())if(x>o.x&&x<o.x+o.w&&y>o.y&&y<o.y+o.h)return true}return false}
 function multiScale(n){return Math.max(.50,1/Math.pow(n,.46))}
-function fire(p){const n=p.s.n,spread=.14*Math.min(5,n-1),scale=multiScale(n);p.stats.shots+=n;for(let i=0;i<n;i++){
+function fire(p){const n=p.s.n,spread=.14*Math.min(5,n-1),scale=multiScale(n);p.stats.shots+=n;addEffect('shot',p.x+Math.cos(p.a)*28,p.y+Math.sin(p.a)*28,24,PLAYER_COLORS[p.i],.08,p.i);for(let i=0;i<n;i++){
   const a=p.a+(n===1?0:(i/(n-1)-.5)*spread),pace=tempo();game.bullets.push({x:p.x+Math.cos(a)*34,y:p.y+Math.sin(a)*34,vx:Math.cos(a)*p.s.bs*pace,vy:Math.sin(a)*p.s.bs*pace,r:p.s.size,owner:p.i,dmg:p.s.dmg*scale,bounces:p.s.bounce,homing:p.s.homing,boom:p.s.boom,fire:p.s.fire,frost:p.s.frost,shock:p.s.shock,life:2.25})
 }}
 function fireSpecial(p){if(p.character==='trucks'){fireTrucksSpecial(p);return}if(p.character==='lizzy'){fireLizzySpecial(p);return}const a=p.a,speed=430*tempo();p.stats.shots++;game.bullets.push({x:p.x+Math.cos(a)*42,y:p.y+Math.sin(a)*42,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:19,owner:p.i,dmg:16,bounces:0,homing:0,boom:0,fire:0,frost:0,shock:0,life:2.5,special:true,specialRadius:p.s.specialRadius,specialKnock:p.s.specialKnock,cluster:p.s.cluster});addEffect('muzzle',p.x+Math.cos(a)*32,p.y+Math.sin(a)*32,52,'#ffd8a8',.18,p.i)}
@@ -284,7 +304,7 @@ function updateBullets(dt){for(let i=game.bullets.length-1;i>=0;i--){const b=gam
   let hit=null;for(const p of game.players){if(!p.alive||!isEnemy(b.owner,p.i))continue;if(Math.hypot(b.x-p.x,b.y-p.y)<b.r+p.r){hit=p;break}}
   if(hit){game.bullets.splice(i,1);damageBullet(hit,b,b.dmg,true);if(b.special)specialExplosion(b,b.x,b.y,hit.i);else splash(b,b.x,b.y);if(b.groundFire)igniteGround(b.x,b.y,b.owner,b.napalmRadius,b.napalmLife)}
 }}
-function bounceBullet(b,axis){if(b.bounces>0){b.bounces--;b[axis]*=-1}else b.dead=true}
+function bounceBullet(b,axis){if(b.bounces>0){b.bounces--;b[axis]*=-1;b.ricochet=(b.ricochet||0)+1;const owner=game.players[b.owner];if(owner&&hasSynergy(owner,'kinetic')){b.dmg*=1.10;b.vx*=1.04;b.vy*=1.04}}else b.dead=true}
 function wallBullet(b){const ww=worldW(),hh=worldH();let hit=false;if(b.x<48||b.x>ww-48){b.x=Math.max(48,Math.min(ww-48,b.x));bounceBullet(b,'vx');hit=true}if(!b.dead&&(b.y<48||b.y>hh-48)){b.y=Math.max(48,Math.min(hh-48,b.y));bounceBullet(b,'vy');hit=true}return hit}
 function obstacleBullet(b){for(const o of obstacles()){if(b.x>o.x-b.r&&b.x<o.x+o.w+b.r&&b.y>o.y-b.r&&b.y<o.y+o.h+b.r){const dx=Math.min(Math.abs(b.x-o.x),Math.abs(b.x-o.x-o.w)),dy=Math.min(Math.abs(b.y-o.y),Math.abs(b.y-o.y-o.h));bounceBullet(b,dx<dy?'vx':'vy');return true}}return false}
 function hitBarrel(b){for(const barrel of game.barrels){if(!barrel.alive)continue;if(Math.hypot(b.x-barrel.x,b.y-barrel.y)<b.r+barrel.r){barrel.hp-=b.dmg;if(barrel.hp<=0)explodeBarrel(barrel,b.owner);else shake=Math.max(shake,2);return true}}return false}
@@ -292,7 +312,7 @@ function explodeBarrel(barrel,source){if(!barrel.alive)return;barrel.alive=false
   for(const p of game.players){if(!p.alive)continue;const d=Math.hypot(p.x-barrel.x,p.y-barrel.y);if(d<radius){const fall=1-d/radius,damage=12+27*fall,dx=(p.x-barrel.x)/(d||1),dy=(p.y-barrel.y)/(d||1);damageRaw(p,damage,source,true,dx*330*fall,dy*330*fall);if(source!=null&&damage>=12)addFeedback('hit',p.x,p.y,damage,source,p.i)}}
   for(const other of game.barrels){if(other.alive&&Math.hypot(other.x-barrel.x,other.y-barrel.y)<175){other.hp-=26;if(other.hp<=0)explodeBarrel(other,source)}}
 }
-function splash(b,x,y){if(!b.boom)return;const radius=58+b.boom*15;addEffect('explosion',x,y,radius,'#ff9a52',.32,b.owner);for(const p of game.players){if(!p.alive||!isEnemy(b.owner,p.i))continue;const d=Math.hypot(p.x-x,p.y-y);if(d<radius){const fall=1-d/radius,damage=(4.5+b.boom*2.2)*fall,dx=(p.x-x)/(d||1),dy=(p.y-y)/(d||1);damageRaw(p,damage,b.owner,false,dx*(120+b.boom*35)*fall,dy*(120+b.boom*35)*fall)}}}
+function splash(b,x,y){if(!b.boom)return;const radius=58+b.boom*15;if(hasSynergy(game.players[b.owner],'inferno'))igniteGround(x,y,b.owner,30,1.4);addEffect('explosion',x,y,radius,'#ff9a52',.32,b.owner);for(const p of game.players){if(!p.alive||!isEnemy(b.owner,p.i))continue;const d=Math.hypot(p.x-x,p.y-y);if(d<radius){const fall=1-d/radius,damage=(4.5+b.boom*2.2)*fall,dx=(p.x-x)/(d||1),dy=(p.y-y)/(d||1);damageRaw(p,damage,b.owner,false,dx*(120+b.boom*35)*fall,dy*(120+b.boom*35)*fall)}}}
 function specialExplosion(b,x,y,directSeat=null){const radius=b.specialRadius||124;shake=Math.max(shake,26);addEffect('cannon',x,y,radius,'#ffd19a',.58,b.owner);for(const p of game.players){if(!p.alive)continue;if(!isEnemy(b.owner,p.i)&&p.i!==directSeat)continue;const d=Math.hypot(p.x-x,p.y-y);if(d<radius){const fall=Math.max(0,1-d/radius),damage=(p.i===directSeat?10:0)+26*fall,dx=(p.x-x)/(d||1),dy=(p.y-y)/(d||1);damageRaw(p,damage,b.owner,false,dx*(b.specialKnock||360)*fall,dy*(b.specialKnock||360)*fall);if(damage>=12)addFeedback('hit',p.x,p.y,damage,b.owner,p.i)}}if(b.cluster){for(let k=0;k<3;k++){const a=(Math.PI*2/3)*k+0.4,ex=x+Math.cos(a)*70,ey=y+Math.sin(a)*70;addEffect('cluster',ex,ey,72,'#ffac6e',.34,b.owner);for(const p of game.players){if(!p.alive||!isEnemy(b.owner,p.i))continue;const d=Math.hypot(p.x-ex,p.y-ey);if(d<72){const fall=1-d/72,dx=(p.x-ex)/(d||1),dy=(p.y-ey)/(d||1);damageRaw(p,7*fall,b.owner,false,dx*150*fall,dy*150*fall)}}}}}
 function damageBullet(target,b,amount,direct){if(target.inv>0)return;if(target.shield>0&&direct){target.shield--;target.inv=.14;return}const attacker=game.players[b.owner];
   if(direct){attacker.stats.hits++;
@@ -300,18 +320,18 @@ function damageBullet(target,b,amount,direct){if(target.inv>0)return;if(target.s
     if(b.frost){target.fx.slow=Math.max(target.fx.slow,1.2+b.frost*.25);target.fx.slowFactor=Math.min(target.fx.slowFactor,Math.max(.60,.88-b.frost*.08))}
     if(b.shock){target.fx.shock+=b.shock;if(target.fx.shock>=3){target.fx.shock-=3;damageRaw(target,4.5+b.shock*2,b.owner,false,0,0)}}
   }
-  const speed=Math.hypot(b.vx,b.vy)||1;damageRaw(target,amount,b.owner,direct,b.vx/speed*attacker.s.knock,b.vy/speed*attacker.s.knock);if(direct&&!b.special)addFeedback('hit',target.x,target.y,amount,b.owner,target.i)
+  const speed=Math.hypot(b.vx,b.vy)||1,ricochetKnock=(b.ricochet&&hasSynergy(attacker,'kinetic'))?1.30:1;damageRaw(target,amount,b.owner,direct,b.vx/speed*attacker.s.knock*ricochetKnock,b.vy/speed*attacker.s.knock*ricochetKnock);if(direct&&!b.special)addFeedback('hit',target.x,target.y,amount,b.owner,target.i)
 }
 function damageRaw(target,amount,source,allowFriendly,kx,ky){if(!target.alive||amount<=0)return;if(!allowFriendly&&source!=null&&!isEnemy(source,target.i))return;
   if(target.fx?.fortify>0&&source!=null){amount*=1-target.s.fortifyReduction;if(target.s.reactive&&target.fx.reactiveReady&&source!=null&&source!==target.i){target.fx.reactiveReady=0;addEffect('reactive',target.x,target.y,105,'#d5dde8',.35,target.i);for(const p of game.players){if(!p.alive||!isEnemy(target.i,p.i))continue;const d=Math.hypot(p.x-target.x,p.y-target.y);if(d<105){const fall=1-d/105,dx=(p.x-target.x)/(d||1),dy=(p.y-target.y)/(d||1);p.vx+=dx*220*fall;p.vy+=dy*220*fall}}}}
-  if(source!=null&&amount>0)revealPlayer(target);target.hp-=amount;if(source!=null&&game.players[source]){const a=game.players[source];a.stats.damage+=amount;if(a.s.leech>0&&source!==target.i)a.hp=Math.min(a.max,a.hp+amount*a.s.leech)}target.vx+=kx||0;target.vy+=ky||0;shake=Math.max(shake,5);if(target.hp<=0)eliminate(target,source)}
+  if(source!=null&&amount>0)revealPlayer(target);target.hp-=amount;if(source!=null&&game.players[source]){const a=game.players[source];a.stats.damage+=amount;if(a.s.leech>0&&source!==target.i){const bonus=hasSynergy(a,'siphon')?.025:0;a.hp=Math.min(a.max,a.hp+amount*(a.s.leech+bonus))}}target.vx+=kx||0;target.vy+=ky||0;shake=Math.max(shake,5);if(target.hp<=0)eliminate(target,source)}
 
 function spawnPickup(){const map=MAPS[game.map],pt=map.pickupSpawns[Math.floor(Math.random()*map.pickupSpawns.length)],types=Object.keys(PICKUPS),type=types[Math.floor(Math.random()*types.length)],limit=modeOf().players===4?4:(modeOf().players===3?3:2);if(game.pickups.length<limit)game.pickups.push({id:Math.random().toString(36).slice(2),x:pt[0],y:pt[1],type,life:14})}
 function updatePickups(dt){game.pickupTimer-=dt;if(game.pickupTimer<=0){spawnPickup();game.pickupTimer=Math.max(4.6,8+Math.random()*3.5-(game.round-1)*.28)}for(let i=game.pickups.length-1;i>=0;i--){const it=game.pickups[i];it.life-=dt;if(it.life<=0){game.pickups.splice(i,1);continue}for(const p of game.players){if(!p.alive)continue;if(Math.hypot(p.x-it.x,p.y-it.y)<p.r+18){if(it.type==='heal')p.hp=Math.min(p.max,p.hp+32);if(it.type==='shield')p.shield=Math.min(p.s.shield+2,p.shield+1);if(it.type==='haste')p.fx.haste=6;p.stats.pickups++;game.pickups.splice(i,1);break}}}}
 function addEffect(type,x,y,radius,color,duration,owner=null){if(!game.effects)game.effects=[];game.effects.push({id:Math.random().toString(36).slice(2),type,x,y,radius,color,duration,life:duration,owner})}
 function updateEffects(dt){if(!game.effects)return;for(let i=game.effects.length-1;i>=0;i--){game.effects[i].life-=dt;if(game.effects[i].life<=0)game.effects.splice(i,1)}}
-function addFeedback(type,x,y,value=0,owner=null,target=null){if(!game.feedback)game.feedback=[];game.feedback.push({id:Math.random().toString(36).slice(2),type,x,y,value,owner,target,life:type==='elimination'?1.05:.48,maxLife:type==='elimination'?1.05:.48})}
-function updateFeedback(dt){if(!game.feedback)return;for(let i=game.feedback.length-1;i>=0;i--){game.feedback[i].life-=dt;if(game.feedback[i].life<=0)game.feedback.splice(i,1)}}
+function addFeedback(type,x,y,value=0,owner=null,target=null,label=''){if(!game.feedback)game.feedback=[];const long=type==='elimination'?1.05:(type==='rarity'||type==='synergy'?1.8:.48);game.feedback.push({id:Math.random().toString(36).slice(2),type,x,y,value,owner,target,label,life:long,maxLife:long})}
+function updateFeedback(dt){if(game.feedback)for(let i=game.feedback.length-1;i>=0;i--){game.feedback[i].life-=dt;if(game.feedback[i].life<=0)game.feedback.splice(i,1)}if(game.killfeed)for(let i=game.killfeed.length-1;i>=0;i--){game.killfeed[i].life-=dt;if(game.killfeed[i].life<=0)game.killfeed.splice(i,1)}}
 function updateCore(dt){if(game.mode!=='core'||!game.core)return;const core=game.core;for(const p of game.players)if(p.fx.overcharge>0)p.fx.overcharge=Math.max(0,p.fx.overcharge-dt);
   if(!core.active){core.respawn-=dt;if(core.respawn<=0){core.active=true;core.progress=0;core.capturer=null;addEffect('coreSpawn',worldW()/2,worldH()/2,105,'#7df9ff',.55,null)}return}
   const cx=worldW()/2,cy=worldH()/2,radius=92,inside=game.players.filter(p=>p.alive&&Math.hypot(p.x-cx,p.y-cy)<radius);
