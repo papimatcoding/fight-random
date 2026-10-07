@@ -57,14 +57,14 @@ Mercado Negro se reserva para modificaciones que alteran de forma fuerte el comp
 
 - 1v1, 1v1v1, 2v2 y NÚCLEO.
 - 15 arenas con geometría sencilla, varios tamaños y pools por modo.
-- El lobby principal funciona como garaje visual: chasis al centro, puntos de montaje y selector de módulos por tarjetas.
+- El lobby principal es un menú compacto. El Hangar vive en una vista separada y concentra el montaje de la máquina.
 - P2P host-authoritative para combate.
 - Perfil persistente, salas públicas/privadas, quick play, rating, leaderboard e historial mediante Supabase.
 - Si el backend persistente falla, las partidas P2P por enlace siguen funcionando.
 
 ## Lobby / taller
 
-Quickplay muestra solo tu slot antes de buscar partida. Las partidas amistosas muestran los huecos de invitación. Arma, especial y sistema se montan desde puntos visuales sobre la máquina; no se usan desplegables.
+Quickplay muestra solo tu slot antes de buscar partida. El menú principal da acceso a Hangar, Salas, Ranking e Historial sin cargar todos esos paneles a la vez. En el Hangar, arma, especial y sistema se eligen por slots; por ahora las piezas se muestran solo por nombre/coste, sin arte provisional.
 
 ## Controles
 
