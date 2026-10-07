@@ -9,6 +9,8 @@ const FRStore={
   pendingInviteFriend:'',
   heartbeat:null,
   roomCode:'',
+  roomVisibility:'',
+  partyQueued:false,
   recorded:new Set(),
   online:false,
   initPromise:null
@@ -120,8 +122,9 @@ function frRenderSocial(){
   const friendBox=document.getElementById('friendsList'),picker=document.getElementById('friendPickerList');
   const renderFriend=(x,forPicker=false)=>{
     const row=document.createElement('div');row.className='friend-row';
-    row.innerHTML='<span class="friend-status '+(x.online?'online':'')+'"></span><span class="friend-copy"><b>'+escapeHtml(x.nickname)+'</b><small>'+x.rating+' rating · '+(x.online?'online':'offline')+'</small></span><span class="friend-actions"><button class="secondary compact" data-play>'+(forPicker?'INVITAR':'AMISTOSA')+'</button>'+(forPicker?'':'<button class="ghost compact" data-remove>×</button>')+'</span>';
+    row.innerHTML='<span class="friend-status '+(x.online?'online':'')+'"></span><span class="friend-copy"><b>'+escapeHtml(x.nickname)+'</b><small>'+x.rating+' rating · '+(x.online?'online':'offline')+'</small></span><span class="friend-actions"><button class="secondary compact" data-play>'+(forPicker?'INVITAR':'AMISTOSA')+'</button>'+(forPicker?'':'<button class="secondary compact party-button" data-party>PARTY 2V2</button><button class="ghost compact" data-remove>×</button>')+'</span>';
     row.querySelector('[data-play]').onclick=()=>forPicker?frInviteFriend(x.id):frStartFriendlyWithFriend(x.id);
+    const party=row.querySelector('[data-party]');if(party)party.onclick=()=>frStartPartyWithFriend(x.id);
     const remove=row.querySelector('[data-remove]');if(remove)remove.onclick=()=>frFriendRemove(x.friendshipId);
     return row
   };
@@ -221,7 +224,7 @@ async function frCreateRoom(code,mode,character='mix'){
   await frInit();
   try{
     const data=await frApi('create_room',{code,mode,visibility:frVisibility(),character,buildVersion:FR_BUILD});
-    FRStore.roomCode=code;frStartHeartbeat(code);
+    FRStore.roomCode=code;FRStore.roomVisibility=data?.room?.visibility||frVisibility();FRStore.partyQueued=false;frStartHeartbeat(code);
     if(FRStore.pendingInviteFriend){const friendId=FRStore.pendingInviteFriend;FRStore.pendingInviteFriend='';try{await frInviteFriend(friendId,code)}catch(e){console.warn('Friend invite failed:',e)}}
     return data;
   }catch(e){console.warn('Room publish failed:',e);frBackendIndicator(false);return null}
@@ -230,7 +233,7 @@ async function frJoinRoom(code,seat,character='mix'){
   await frInit();
   try{
     const data=await frApi('join_room',{code,seat,character});
-    FRStore.roomCode=code;frStartHeartbeat(code);return data;
+    FRStore.roomCode=code;FRStore.roomVisibility=data?.room?.visibility||'';FRStore.partyQueued=data?.room?.visibility==='public'&&data?.room?.mode==='teams';frStartHeartbeat(code);return data;
   }catch(e){console.warn('Room join backend failed:',e);return null}
 }
 function frStartHeartbeat(code){
@@ -246,7 +249,7 @@ function frStartHeartbeat(code){
 }
 async function frLeaveRoom(){
   const old=FRStore.roomCode;if(!old)return;
-  FRStore.roomCode='';clearInterval(FRStore.heartbeat);FRStore.heartbeat=null;
+  FRStore.roomCode='';FRStore.roomVisibility='';FRStore.partyQueued=false;clearInterval(FRStore.heartbeat);FRStore.heartbeat=null;
   try{await frApi('leave_room',{code:old},3500)}catch{}
   setTimeout(frRefreshLobby,350);
 }
@@ -285,10 +288,33 @@ function frStartFriendlyWithFriend(friendId){
   if(typeof setQueueIntent==='function')setQueueIntent('friendly');
   hostGame?.()
 }
+function frStartPartyWithFriend(friendId){
+  if(typeof garageCanQueue==='function'&&!garageCanQueue()){if(typeof status==='function')status('Completa una máquina válida primero.',true);return}
+  if(typeof selectedMode!=='undefined')selectedMode='teams';
+  document.querySelectorAll('.mode-card').forEach(x=>x.classList.toggle('selected',x.dataset.mode==='teams'));
+  if(typeof renderGarage==='function')renderGarage();
+  FRStore.pendingInviteFriend=friendId;FRStore.partyQueued=false;FRStore.roomVisibility='private';
+  const visibility=document.getElementById('roomVisibility');if(visibility)visibility.value='private';
+  if(typeof setQueueIntent==='function')setQueueIntent('party');
+  hostGame?.()
+}
+async function frQueuePartyRoom(){
+  if(!FRStore.roomCode)throw new Error('No hay una party activa.');
+  const data=await frApi('queue_room',{code:FRStore.roomCode});
+  FRStore.roomVisibility='public';FRStore.partyQueued=true;
+  if(typeof queuePartyMatch==='function')queuePartyMatch();
+  return data
+}
+function frMarkPartyQueued(){FRStore.roomVisibility='public';FRStore.partyQueued=true}
+function frPartyState(){return{queued:!!FRStore.partyQueued,visibility:FRStore.roomVisibility||'',code:FRStore.roomCode||''}}
+window.frStartPartyWithFriend=frStartPartyWithFriend;
+window.frQueuePartyRoom=frQueuePartyRoom;
+window.frMarkPartyQueued=frMarkPartyQueued;
+window.frPartyState=frPartyState;
 async function frFriendInviteRespond(inviteId,accept){
   const data=await frApi('friend_invite_respond',{inviteId,accept:!!accept});
   if(!accept){frSetSocial(data.social);return}
-  if(typeof setQueueIntent==='function')setQueueIntent('friendly');
+  if(typeof setQueueIntent==='function')setQueueIntent(data.mode==='teams'?'party':'friendly');
   if(data.code)joinGame?.(data.code)
 }
 window.frInviteFriend=frInviteFriend;
