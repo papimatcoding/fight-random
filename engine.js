@@ -311,6 +311,10 @@ function sim(dt){if(!game)return;
     updateEffects(dt);updateFeedback(dt);updateGroundFires(dt);
     if(game.phase!=='play')game.phase='play';
     updateBullets(dt);
+    const dummy=game.players[1];
+    if(dummy&&game.trainingDummyMode==='fixed'&&game.trainingDummyAnchor){
+      dummy.x=game.trainingDummyAnchor.x;dummy.y=game.trainingDummyAnchor.y;dummy.vx=0;dummy.vy=0;
+    }
     if(game.trainingNoCooldowns&&game.players[0]){
       game.players[0].dc=0;
       game.players[0].specialCd=0;

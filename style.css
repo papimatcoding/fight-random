@@ -520,3 +520,76 @@
   .training-title{padding:6px}.training-metrics div{padding:6px 4px}.training-metrics strong{font-size:11px}
   .training-actions{justify-content:center;flex-wrap:wrap}
 }
+
+
+/* ==========================================================
+   TEST RANGE V2 — upgrades / dummy modes / A-B comparison
+   ========================================================== */
+.training-title-actions{display:flex;gap:5px;align-items:center}
+.training-metrics{grid-template-columns:repeat(5,1fr)}
+
+.training-ab{
+  grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:stretch;
+  pointer-events:auto
+}
+.training-slot,.training-diff{
+  border:1px solid #303842;background:#0a0f15e8;border-radius:9px;padding:7px 8px;backdrop-filter:blur(7px)
+}
+.training-slot{display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center}
+.training-slot span{display:block;color:#75808b;font-size:6px;font-weight:950;letter-spacing:.1em}
+.training-slot strong{display:block;font-size:9px;margin-top:1px}
+.training-slot small{grid-column:1/-1;color:#8d98a3;font-size:7px}
+.training-slot-actions{display:flex;gap:4px}
+.training-slot-actions button{
+  border:1px solid #36404a;background:#121820;color:#dce2e8;border-radius:6px;padding:5px 7px;font-size:6px;font-weight:950
+}
+.training-slot-actions button:disabled{opacity:.28}
+.training-diff{display:flex;align-items:center;gap:5px;flex-wrap:wrap;color:#78838f;font-size:7px;min-width:220px}
+.training-diff span{padding:3px 5px;border-radius:5px;background:#151b22;color:#aab3bc;font-weight:900}
+
+.training-upgrades{
+  position:absolute;z-index:18;top:10px;right:10px;bottom:10px;width:min(390px,42%);
+  display:flex;flex-direction:column;gap:8px;padding:10px;
+  border:1px solid #343d47;border-radius:12px;background:#0a0f15f2;box-shadow:0 20px 60px #000b;backdrop-filter:blur(10px)
+}
+.training-upgrades-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:7px;border-bottom:1px solid #272e36}
+.training-upgrades-head span{display:block;color:#7a8590;font-size:7px;font-weight:950;letter-spacing:.11em}
+.training-upgrades-head strong{display:block;font-size:14px}
+.training-upgrades>p{margin:0;color:#7d8792;font-size:8px;line-height:1.35}
+.training-upgrade-groups{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:9px;padding-right:2px}
+.training-upgrade-group{display:flex;flex-direction:column;gap:5px}
+.training-upgrade-group h4{margin:0;padding:2px 1px 4px;color:#aab3bc;font-size:8px;letter-spacing:.1em;border-bottom:1px solid #222a31}
+.training-upgrade-row{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;
+  border:1px solid #29323a;border-left:3px solid #5f6974;border-radius:8px;background:#10161d;padding:7px 8px
+}
+.training-upgrade-row.rarity-common{border-left-color:#818b95}
+.training-upgrade-row.rarity-rare{border-left-color:#5795cb}
+.training-upgrade-row.rarity-epic{border-left-color:#9d6dcc}
+.training-upgrade-row.rarity-legendary{border-left-color:#c9a452}
+.training-upgrade-row.rarity-illegal{border-left-color:#c45261}
+.training-upgrade-copy{min-width:0}
+.training-upgrade-copy>span{display:block;color:#6f7a86;font-size:6px;font-weight:950;letter-spacing:.09em}
+.training-upgrade-copy>b{display:block;margin-top:2px;font-size:9px}
+.training-upgrade-copy>p{margin:2px 0 0;color:#79848f;font-size:7px;line-height:1.3}
+.training-stepper{display:grid;grid-template-columns:27px 36px 27px;align-items:center;gap:3px}
+.training-stepper button{
+  width:27px;height:27px;border:1px solid #39434d;background:#151c23;color:#edf1f5;border-radius:6px;font-size:16px
+}
+.training-stepper button:disabled{opacity:.22}
+.training-stepper strong{text-align:center;font-size:8px}
+.training-clear-upgrades{width:100%}
+
+@media(max-width:900px){
+  .training-hud{grid-template-columns:1fr}
+  .training-ab{grid-template-columns:1fr 1fr}
+  .training-diff{grid-column:1/-1;min-width:0}
+  .training-upgrades{width:min(420px,58%)}
+}
+@media(max-width:760px){
+  .training-metrics{grid-template-columns:repeat(5,1fr)}
+  .training-metrics span{font-size:5px}.training-metrics strong{font-size:10px}
+  .training-ab{grid-template-columns:1fr}
+  .training-diff{grid-column:auto}
+  .training-upgrades{position:fixed;z-index:130;inset:6px;width:auto;max-height:none}
+}
