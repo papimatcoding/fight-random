@@ -414,7 +414,7 @@ function combatHudUI(s){
   if(p.shield>0)statuses.push(['good','ESCUDO ×'+p.shield]);
   if(p.fx?.fortify>0)statuses.push(['good','FORTIFICADO '+p.fx.fortify.toFixed(1)+'s']);
   if(p.fx?.invisible>0)statuses.push(['good','INVISIBLE '+p.fx.invisible.toFixed(1)+'s']);
-  if(p.fx?.bladeStorm>0)statuses.push(['good','TRINITY '+p.fx.bladeStorm.toFixed(1)+'s']);
+  if(p.fx?.bladeStorm>0)statuses.push(['good','TRINITY ×'+(p.mod?.bladeCount||3)+' · '+p.fx.bladeStorm.toFixed(1)+'s']);
   if(p.fx?.overcharge>0)statuses.push(['core','NÚCLEO '+p.fx.overcharge.toFixed(1)+'s']);
   if(p.fx?.haste>0)statuses.push(['good','ACELERADO']);
   if(p.fx?.burn>0)statuses.push(['danger','ARDIENDO']);
