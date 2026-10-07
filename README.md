@@ -65,7 +65,11 @@ Mercado Negro se reserva para modificaciones que alteran de forma fuerte el comp
 
 ## Lobby / taller
 
-Quickplay muestra solo tu slot antes de buscar partida y usa códigos de sala únicamente como detalle interno: el jugador ve QUICKPLAY, no un código. El menú principal da acceso a Hangar, Amigos, Salas, Ranking e Historial sin cargar todos esos paneles a la vez. En el Hangar, cada módulo muestra una descripción breve; el arma se representa físicamente sobre el chasis con un prototipo simple y centrado, mientras especial y sistema siguen sin arte provisional.
+Quickplay muestra solo tu slot antes de buscar partida y usa códigos de sala únicamente como detalle interno: el jugador ve QUICKPLAY, no un código. El menú principal da acceso a Hangar, Amigos, Salas, Ranking e Historial sin cargar todos esos paneles a la vez. En el Hangar, cada módulo muestra una descripción breve; el arma se representa físicamente sobre el chasis con un prototipo simple y centrado, compensando además la longitud del arma para que la silueta completa quede visualmente centrada. Al cambiar arma aparece una comparación breve de DPS, cadencia, alcance y retroceso. Especial y sistema siguen sin arte provisional.
+
+## Campo de pruebas
+
+Desde el Hangar se puede abrir un banco de pruebas local (PC por ahora) que no publica partidas ni estadísticas online. Usa un dummy inmortal y muestra daño total, DPS de los últimos 5 segundos, golpe máximo y precisión. Permite resetear métricas, recolocar el dummy y desactivar los cooldowns de `Space`/`E` sin alterar la cadencia del arma ni la sobrecarga de SUNLINE.
 
 ## Controles
 
