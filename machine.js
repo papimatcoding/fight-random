@@ -595,7 +595,7 @@ function updateBladeStorm(dt){
     for(const barrel of game.barrels||[]){
       if(!barrel.alive||cds['b'+barrel.id]>0)continue;
       for(const blade of blades){
-        if(Math.hypot(barrel.x-blade.x,barrel.y-blade.y)>bladeR+barrel.r)continue;
+        if(Math.hypot(barrel.x-blade.x,barrel.y-blade.y)>bladeR+barrel.r||lineBlocked(blade.x,blade.y,barrel.x,barrel.y))continue;
         damageMeleeBarrel(barrel,8.5*p.mod.bladeDamage*p.mod.specialDamage,p.i);
         cds['b'+barrel.id]=.22;break
       }
