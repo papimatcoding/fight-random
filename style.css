@@ -593,3 +593,166 @@
   .training-diff{grid-column:auto}
   .training-upgrades{position:fixed;z-index:130;inset:6px;width:auto;max-height:none}
 }
+
+
+/* ==========================================================
+   MENU READABILITY PASS
+   Functional menu copy should remain readable on phones.
+   ========================================================== */
+.menu-shell .mini-label,
+.module-picker .mini-label,
+.friend-picker .mini-label{
+  font-size:10px;
+  line-height:1.2
+}
+.profile-button strong,.lobby-build-summary strong{font-size:20px}
+.profile-button small,.lobby-build-summary small{font-size:11px;line-height:1.35}
+
+.mode-selector .mode-card{min-height:62px;padding:9px 7px}
+.mode-selector .mode-card strong{font-size:13px;line-height:1.1}
+.mode-selector .mode-card span{font-size:10px;line-height:1.2;margin-top:4px}
+
+.home-party .party-slot b,.party-slot b{font-size:13px}
+.home-party .party-slot small,.party-slot small{font-size:10px;line-height:1.25}
+.lobby-play span{font-size:24px}
+.lobby-play small{font-size:10px}
+
+.lobby-nav button{padding:12px 10px}
+.lobby-nav strong{font-size:12px;line-height:1.1}
+.lobby-nav span{font-size:10px;line-height:1.25;margin-top:4px}
+
+.friendly-row .secondary,
+.friendly-row .ghost,
+.friendly-row input{font-size:11px}
+.compact-status,.profile-message{font-size:10px;line-height:1.35}
+
+.subview-head .mini-label{font-size:10px}
+.subview-head strong{font-size:26px}
+.subview-head>small{font-size:10px;line-height:1.2}
+
+.machine-bay-head .mini-label{font-size:10px}
+.machine-bay-head strong{font-size:29px}
+.machine-bay-head small{font-size:11px;line-height:1.3}
+
+.loadout-slot span{font-size:10px}
+.loadout-slot strong{font-size:12px;line-height:1.15}
+.loadout-slot small#garageWeaponStats{font-size:10px;line-height:1.3;margin-top:5px}
+.capacity-line{font-size:10px}
+.capacity-line strong{font-size:16px}
+#garageLoadoutWarning,#loadoutWarning{font-size:10px;line-height:1.35}
+.test-range-button strong{font-size:11px}
+.test-range-button small{font-size:10px}
+.weapon-compare span{font-size:9px}
+
+.module-picker-head .mini-label{font-size:10px}
+.module-picker-head strong{font-size:26px}
+.module-choice{min-height:96px;padding:13px 12px}
+.module-choice b{font-size:13px;line-height:1.15}
+.module-choice p{font-size:10px;line-height:1.4;max-width:220px;-webkit-line-clamp:3}
+.module-choice small{font-size:9px;line-height:1.25}
+
+.friends-toolbar input{font-size:12px}
+.friends-toolbar button{font-size:11px}
+#friendMessage{font-size:10px}
+.friends-head strong{font-size:11px}
+.friends-head span{font-size:10px}
+.friend-copy b{font-size:12px}
+.friend-copy small{font-size:10px;line-height:1.3}
+.friend-actions button{font-size:9px;padding:7px 9px}
+.pending-label{font-size:9px}
+.empty-state{font-size:11px;line-height:1.4}
+
+.room-row b{font-size:13px}
+.room-row small{font-size:10px;line-height:1.3}
+.room-row>strong{font-size:13px}
+.leader-row .rank{font-size:11px}
+.leader-row b{font-size:13px}
+.leader-row>span:not(.rank){font-size:12px}
+.leader-row small{font-size:10px}
+.recent-row b{font-size:12px}
+.recent-row span{font-size:11px}
+.recent-row small{font-size:10px}
+
+/* Test Range configuration is menu UI too. */
+.training-upgrades-head span{font-size:9px}
+.training-upgrades-head strong{font-size:16px}
+.training-upgrades>p{font-size:10px}
+.training-upgrade-group h4{font-size:10px}
+.training-upgrade-copy>span{font-size:8px}
+.training-upgrade-copy>b{font-size:11px}
+.training-upgrade-copy>p{font-size:9px;line-height:1.35}
+.training-stepper strong{font-size:10px}
+.training-slot span{font-size:8px}
+.training-slot strong{font-size:11px}
+.training-slot small,.training-diff{font-size:9px}
+.training-slot-actions button{font-size:8px}
+
+/* Keep increased type within the same viewport by spending less space on gaps. */
+@media(max-width:760px){
+  .lobby-view{padding:8px;gap:6px}
+  .lobby-topline{gap:6px}
+  .profile-button strong,.lobby-build-summary strong{font-size:17px}
+  .profile-button small,.lobby-build-summary small{font-size:10px}
+  .menu-shell .mini-label,.module-picker .mini-label,.friend-picker .mini-label{font-size:9px}
+
+  .mode-selector{gap:4px}
+  .mode-selector .mode-card{min-height:50px;padding:7px 4px}
+  .mode-selector .mode-card strong{font-size:11px}
+  .mode-selector .mode-card span{font-size:9px;margin-top:2px}
+
+  .home-party .party-slot b,.party-slot b{font-size:12px}
+  .home-party .party-slot small,.party-slot small{font-size:9px}
+  .lobby-play{min-height:60px}
+  .lobby-play span{font-size:20px}
+  .lobby-play small{font-size:9px}
+
+  .lobby-nav{gap:4px}
+  .lobby-nav button{padding:9px 7px}
+  .lobby-nav strong{font-size:11px}
+  .lobby-nav span{display:none}
+
+  .friendly-row{gap:4px}
+  .friendly-row .secondary,.friendly-row .ghost{font-size:10px;padding:8px 6px}
+  .friendly-row input,
+  .lobby-profile-edit input,
+  .friends-toolbar input{
+    font-size:16px; /* avoids mobile browser text-input zoom */
+    padding:8px 9px
+  }
+
+  .subview-head{grid-template-columns:38px 1fr auto;gap:7px}
+  .subview-head strong{font-size:22px}
+  .subview-head>small{font-size:9px}
+  .back-menu{width:36px;height:36px}
+
+  .machine-bay-head strong{font-size:25px}
+  .machine-bay-head small{font-size:11px}
+  .loadout-slot{min-height:60px;padding:9px 22px 9px 8px}
+  .loadout-slot span{font-size:9px}
+  .loadout-slot strong{font-size:11px}
+  .loadout-slot small#garageWeaponStats{font-size:9px}
+  .capacity-line{font-size:10px}
+  .capacity-line strong{font-size:15px}
+  #garageLoadoutWarning{font-size:10px}
+  .test-range-button strong{font-size:10px}
+  .test-range-button small{font-size:9px}
+  .weapon-compare span{font-size:8px}
+
+  .module-picker-head strong{font-size:22px}
+  .module-choice{min-height:84px;padding:10px 8px}
+  .module-choice b{font-size:12px}
+  .module-choice p{font-size:10px;line-height:1.35;max-width:none;-webkit-line-clamp:2}
+  .module-choice small{font-size:9px}
+
+  .friends-head strong{font-size:11px}
+  .friends-head span{font-size:10px}
+  .friend-copy b{font-size:12px}
+  .friend-copy small{font-size:10px}
+  .friend-actions button{font-size:9px}
+  .empty-state{font-size:11px}
+
+  .room-row b,.leader-row b{font-size:12px}
+  .room-row small,.leader-row small,.recent-row small{font-size:10px}
+  .recent-row b{font-size:12px}
+  .recent-row span{font-size:11px}
+}
