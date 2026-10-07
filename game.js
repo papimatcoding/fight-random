@@ -71,7 +71,7 @@ function openModulePicker(slot,context='garage'){
   for(const d of Object.values(table)){
     const candidate={...(p.loadout||{}),[slot]:d.id},compatible=moduleAllowed(p.character,d),fits=moduleCost(candidate)<=c.capacity,disabled=!compatible||!fits;
     const bt=document.createElement('button');bt.className='module-choice'+(disabled?' locked':'')+(p.loadout?.[slot]===d.id?' selected':'');bt.disabled=disabled;
-    bt.innerHTML='<b>'+d.name+'</b><small>'+d.cost+'P</small>';
+    bt.innerHTML='<b>'+d.name+'</b><p>'+escapeGarage(d.desc||'')+'</p><small>'+escapeGarage(moduleCardStats(d,slot))+' · '+d.cost+'P</small>';
     bt.onclick=()=>chooseModule(d.id);grid.appendChild(bt)
   }
   $('modulePicker').classList.remove('hidden')
@@ -231,7 +231,7 @@ addEventListener('keyup',e=>{if(e.code==='KeyW')mine.u=0;if(e.code==='KeyS')mine
 cv.onpointermove=pointerPos;cv.addEventListener('pointerdown',()=>{try{ensureAudio()?.resume?.()}catch{}},{once:true});cv.onpointerdown=e=>{pointerPos(e);if(e.button===0)mine.fire=1};addEventListener('pointerup',()=>mine.fire=0);addEventListener('blur',()=>{mine.u=mine.d=mine.l=mine.r=mine.fire=mine.dash=mine.special=0});
 
 function showLobbyView(name='home'){
-  const map={home:'lobbyHome',hangar:'lobbyHangar',rooms:'lobbyRooms',ranking:'lobbyRanking',history:'lobbyHistory'};
+  const map={home:'lobbyHome',hangar:'lobbyHangar',friends:'lobbyFriends',rooms:'lobbyRooms',ranking:'lobbyRanking',history:'lobbyHistory'};
   for(const id of Object.values(map))$(id)?.classList.toggle('hidden',id!==map[name]);
   if(name==='hangar')renderGarage();
 }
@@ -241,6 +241,9 @@ for(const b of document.querySelectorAll('[data-ready-slot]'))b.addEventListener
 $('garageChassisPrev').onclick=()=>garageCycle(-1);$('garageChassisNext').onclick=()=>garageCycle(1);
 $('readyChassisPrev').onclick=()=>readyCycleChassis(-1);$('readyChassisNext').onclick=()=>readyCycleChassis(1);
 $('modulePickerClose').onclick=closeModulePicker;$('modulePicker').addEventListener('pointerdown',e=>{if(e.target===$('modulePicker'))closeModulePicker()});
+$('friendPickerClose').onclick=()=>$('friendPicker').classList.add('hidden');
+$('friendPicker').addEventListener('pointerdown',e=>{if(e.target===$('friendPicker'))$('friendPicker').classList.add('hidden')});
+$('inviteFriendBtn').onclick=()=>{if(typeof frRenderSocial==='function')frRenderSocial();$('friendPicker').classList.remove('hidden')};
 $('editProfileBtn').onclick=()=>$('profileEdit').classList.toggle('hidden');
 for(const b of document.querySelectorAll('[data-lobby-view]'))b.onclick=()=>showLobbyView(b.dataset.lobbyView);
 for(const b of document.querySelectorAll('[data-lobby-home]'))b.onclick=()=>showLobbyView('home');

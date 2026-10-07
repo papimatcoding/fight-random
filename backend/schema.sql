@@ -93,17 +93,61 @@ create table if not exists public.fr_match_players (
 
 create index if not exists fr_match_players_player_idx on public.fr_match_players (player_id, match_id);
 
+create table if not exists public.fr_friendships (
+  id uuid primary key default gen_random_uuid(),
+  requester_id uuid not null references public.fr_players(id) on delete cascade,
+  addressee_id uuid not null references public.fr_players(id) on delete cascade,
+  status text not null default 'pending' check (status in ('pending','accepted')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (requester_id <> addressee_id)
+);
+
+create unique index if not exists fr_friendships_pair_uidx
+  on public.fr_friendships (
+    least(requester_id, addressee_id),
+    greatest(requester_id, addressee_id)
+  );
+create index if not exists fr_friendships_requester_idx
+  on public.fr_friendships (requester_id, status);
+create index if not exists fr_friendships_addressee_idx
+  on public.fr_friendships (addressee_id, status);
+
+create table if not exists public.fr_room_invites (
+  id uuid primary key default gen_random_uuid(),
+  room_id uuid not null references public.fr_rooms(id) on delete cascade,
+  sender_id uuid not null references public.fr_players(id) on delete cascade,
+  recipient_id uuid not null references public.fr_players(id) on delete cascade,
+  status text not null default 'pending' check (status in ('pending','accepted','declined')),
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null default (now() + interval '5 minutes'),
+  responded_at timestamptz,
+  check (sender_id <> recipient_id),
+  unique (room_id, recipient_id)
+);
+
+create index if not exists fr_room_invites_recipient_idx
+  on public.fr_room_invites (recipient_id, status, expires_at desc);
+create index if not exists fr_room_invites_sender_idx
+  on public.fr_room_invites (sender_id, created_at desc);
+
 alter table public.fr_players enable row level security;
 alter table public.fr_rooms enable row level security;
 alter table public.fr_room_members enable row level security;
 alter table public.fr_matches enable row level security;
 alter table public.fr_match_players enable row level security;
+alter table public.fr_friendships enable row level security;
+alter table public.fr_room_invites enable row level security;
 
 revoke all on table public.fr_players from anon, authenticated;
 revoke all on table public.fr_rooms from anon, authenticated;
 revoke all on table public.fr_room_members from anon, authenticated;
 revoke all on table public.fr_matches from anon, authenticated;
 revoke all on table public.fr_match_players from anon, authenticated;
+revoke all on table public.fr_friendships from public, anon, authenticated;
+revoke all on table public.fr_room_invites from public, anon, authenticated;
+grant select, insert, update, delete on table public.fr_friendships to service_role;
+grant select, insert, update, delete on table public.fr_room_invites to service_role;
 
 -- The live database also contains public.fr_record_match(...), a service_role-only
 -- SECURITY DEFINER function that records match results and updates persistent stats

@@ -60,11 +60,12 @@ Mercado Negro se reserva para modificaciones que alteran de forma fuerte el comp
 - El lobby principal es un menú compacto. El Hangar vive en una vista separada y concentra el montaje de la máquina.
 - P2P host-authoritative para combate.
 - Perfil persistente, salas públicas/privadas, quick play, rating, leaderboard e historial mediante Supabase.
+- Amigos V1: solicitudes por apodo, estado online aproximado e invitaciones temporales a partidas amistosas.
 - Si el backend persistente falla, las partidas P2P por enlace siguen funcionando.
 
 ## Lobby / taller
 
-Quickplay muestra solo tu slot antes de buscar partida. El menú principal da acceso a Hangar, Salas, Ranking e Historial sin cargar todos esos paneles a la vez. En el Hangar, arma, especial y sistema se eligen por slots; por ahora las piezas se muestran solo por nombre/coste, sin arte provisional.
+Quickplay muestra solo tu slot antes de buscar partida y usa códigos de sala únicamente como detalle interno: el jugador ve QUICKPLAY, no un código. El menú principal da acceso a Hangar, Amigos, Salas, Ranking e Historial sin cargar todos esos paneles a la vez. En el Hangar, cada módulo muestra una descripción breve; el arma se representa físicamente sobre el chasis con un prototipo simple y centrado, mientras especial y sistema siguen sin arte provisional.
 
 ## Controles
 
