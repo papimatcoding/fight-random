@@ -888,3 +888,33 @@
   .combat-action-copy small{font-size:5px}.combat-action-copy strong{font-size:8px}
   .combat-action>b{font-size:7px}
 }
+
+
+/* ==========================================================
+   FUSION CARDS / CONDITIONAL BUILD FX
+   ========================================================== */
+.rarity-fusion{--rarity:#63e7c6}
+.power-card.fusion-card{
+  background:
+    linear-gradient(135deg,#12302b 0%,#10151d 48%,#251833 100%);
+  border-color:#63e7c6aa;
+  box-shadow:0 0 0 1px #63e7c633,0 0 28px #63e7c622,0 0 42px #aa72ff18;
+}
+.power-card.fusion-card:before{
+  height:4px;
+  background:linear-gradient(90deg,#63e7c6,#9a7dff,#63e7c6);
+  background-size:200% 100%;
+  animation:fusionRail 2.1s linear infinite
+}
+.power-card.fusion-card .rarity{color:#8ff4db}
+.power-card.fusion-card h3{letter-spacing:.01em}
+.power-card.fusion-card .rarity-particle:nth-of-type(odd){background:#9a7dff;box-shadow:0 0 8px #9a7dff,0 0 14px #9a7dff}
+.rarity-announcement.fusion{--announce:#63e7c6}
+.rarity-announcement.fusion:after,.rarity-announcement.fusion:before{
+  background:linear-gradient(90deg,transparent,#63e7c6,#9a7dff)
+}
+.training-upgrade-row.rarity-fusion{
+  border-left-color:#63e7c6;
+  background:linear-gradient(90deg,#10251f,#10161d 58%,#1b1423)
+}
+@keyframes fusionRail{to{background-position:-200% 0}}
