@@ -10,7 +10,7 @@ const RARITY_LABEL={common:'COMÚN',rare:'RARO',epic:'ÉPICO',legendary:'LEGENDA
 const MODES={
   duel:{id:'duel',name:'1V1',players:2,win:5,baseHp:150,teams:[0,1]},
   ffa3:{id:'ffa3',name:'1V1V1',players:3,win:4,baseHp:165,teams:null},
-  teams:{id:'teams',name:'2V2',players:4,win:5,baseHp:165,teams:[0,1,0,1]},
+  teams:{id:'teams',name:'2V2',players:4,win:5,baseHp:165,teams:[0,0,1,1]},
   core:{id:'core',name:'NÚCLEO',players:2,win:4,baseHp:150,teams:[0,1],objective:true}
 };
 
@@ -211,7 +211,7 @@ function allReady(arr){return allConnected()&&arr.every(Boolean)}
 function resetRoomAfterDisconnect(){if(!host||!game)return;const mode=game.mode,oldConnected=game.connected.slice(),oldPlayers=game.players.map(p=>({name:p.name,character:p.character}));game=makeGame(mode);game.connected[0]=true;for(const [seat,c] of hostConnections)game.connected[seat]=!!c.open;for(let i=0;i<oldConnected.length;i++){if(i===0)game.connected[i]=true;if(oldPlayers[i]){game.players[i].name=oldPlayers[i].name;setCharacter(i,oldPlayers[i].character)}}view=game;broadcast(true)}
 
 function chooseMap(){const pool=MAPS.map((m,i)=>({m,i})).filter(x=>!x.m.modes||x.m.modes.includes(game.mode)).map(x=>x.i);let n=pool[Math.floor(Math.random()*pool.length)];if(pool.length>1)while(n===game.map)n=pool[Math.floor(Math.random()*pool.length)];game.map=n}
-function spawnFor(i){const w=worldW(),h=worldH(),mode=game.mode;if(mode==='duel'||mode==='core')return i===0?[w*.13,h*.5]:[w*.87,h*.5];if(mode==='ffa3')return[[w*.5,h*.13],[w*.16,h*.82],[w*.84,h*.82]][i]||[w*.5,h*.5];return[[w*.12,h*.28],[w*.88,h*.28],[w*.12,h*.72],[w*.88,h*.72]][i]||[w*.5,h*.5]}
+function spawnFor(i){const w=worldW(),h=worldH(),mode=game.mode;if(mode==='duel'||mode==='core')return i===0?[w*.13,h*.5]:[w*.87,h*.5];if(mode==='ffa3')return[[w*.5,h*.13],[w*.16,h*.82],[w*.84,h*.82]][i]||[w*.5,h*.5];return[[w*.12,h*.28],[w*.12,h*.72],[w*.88,h*.28],[w*.88,h*.72]][i]||[w*.5,h*.5]}
 function resetBarrels(){game.barrels=MAPS[game.map].barrels.map((p,i)=>({id:i,x:p[0],y:p[1],r:23,hp:22,max:22,alive:true}))}
 function startRound(first=false){if(first&&!game.startedAt)game.startedAt=Date.now();if(first){const allowed=mapDef().modes?.includes(game.mode);if(!allowed)chooseMap()}else chooseMap();game.phase='count';game.count=2.5;game.bullets=[];game.pickups=[];game.fires=[];game.feedback=[];game.core={active:false,respawn:10,progress:0,capturer:null,required:2.3};game.pickupTimer=Math.max(4.8,6.5-(game.round-1)*.18);game.picked=Array(modeOf().players).fill(null);game.opts=Array.from({length:modeOf().players},()=>[]);game.effects=[];game.storm={elapsed:0,start:Math.max(25,34-(game.round-1)*1.15),duration:Math.max(20,26-(game.round-1)*.45),radius:760,minRadius:145,active:false};resetBarrels();game.players.forEach((p,i)=>{const sp=spawnFor(i);p.x=sp[0];p.y=sp[1];p.vx=p.vy=0;p.hp=p.max;p.alive=true;p.shot=p.dc=p.dt=0;p.specialCd=0;p.inv=.45;p.pd=p.ps=0;p.shield=p.s.shield;p.fx={burn:0,burnDps:0,burnOwner:null,slow:0,slowFactor:1,shock:0,haste:0,fortify:0,reactiveReady:p.s.reactive?1:0,invisible:0,overcharge:0}});broadcast(true)}
 
