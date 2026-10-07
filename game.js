@@ -346,6 +346,7 @@ function renderTrainingSlots(){
   diff.innerHTML='B vs A · <span>DPS '+metricPercent(b.metrics.dps,a.metrics.dps)+'</span><span>BURST '+metricPercent(b.metrics.burst,a.metrics.burst)+'</span><span>MÁX '+metricPercent(b.metrics.best,a.metrics.best)+'</span><span>PREC '+metricPercent(b.metrics.accuracy,a.metrics.accuracy)+'</span>'
 }
 function startTestRange(){
+  if(appFullscreenMode==='hangar'&&document.fullscreenElement){document.exitFullscreen().catch(()=>{});document.body.classList.remove('hangar-fullscreen');appFullscreenMode=''}
   if(!garageCanQueue()){status('Completa una máquina válida antes de probarla.',true);return}
   if(typeof closeNetworking==='function')closeNetworking();
   trainingPreviousMode=selectedMode;trainingActive=true;host=false;me=0;code='';
@@ -367,6 +368,7 @@ function startTestRange(){
 }
 function exitTestRange(){
   trainingActive=false;
+  if(appFullscreenMode==='arena'&&document.fullscreenElement)document.exitFullscreen().catch(()=>{});
   Object.assign(mine,blankInput());
   game=view=null;me=null;host=false;selectedMode=trainingPreviousMode;
   $('trainingHud').classList.add('hidden');$('trainingUpgrades').classList.add('hidden');$('gameWrap').classList.add('hidden');$('roomPanel').classList.add('hidden');$('fullscreenBtn').classList.add('hidden');$('lobby').classList.remove('hidden');if(typeof net==='function')net('offline',false);
@@ -698,6 +700,7 @@ addEventListener('keyup',e=>{if(e.code==='KeyW')mine.u=0;if(e.code==='KeyS')mine
 cv.onpointermove=pointerPos;cv.addEventListener('pointerdown',()=>{try{ensureAudio()?.resume?.()}catch{}},{once:true});cv.onpointerdown=e=>{pointerPos(e);if(e.button===0)mine.fire=1};addEventListener('pointerup',()=>mine.fire=0);addEventListener('blur',()=>{mine.u=mine.d=mine.l=mine.r=mine.fire=mine.dash=mine.special=0});
 
 function showLobbyView(name='home'){
+  if(name!=='hangar'&&appFullscreenMode==='hangar'&&document.fullscreenElement)document.exitFullscreen().catch(()=>{});
   const map={home:'lobbyHome',hangar:'lobbyHangar',friends:'lobbyFriends',rooms:'lobbyRooms',ranking:'lobbyRanking',history:'lobbyHistory'};
   for(const id of Object.values(map))$(id)?.classList.toggle('hidden',id!==map[name]);
   if(name==='hangar')renderGarage();
@@ -733,6 +736,7 @@ $('trainingDummyBtn').onclick=cycleTrainingDummy;
 $('trainingRepositionBtn').onclick=()=>repositionTrainingDummy(true);
 $('trainingCooldownBtn').onclick=()=>{if(game?.training){game.trainingNoCooldowns=!game.trainingNoCooldowns;renderTrainingHud(game)}};
 $('trainingUpgradesBtn').onclick=()=>{$('trainingUpgrades').classList.toggle('hidden');renderTrainingUpgradePanel()};
+$('trainingFullscreenBtn').onclick=toggleArenaFullscreen;
 $('trainingUpgradesClose').onclick=()=>$('trainingUpgrades').classList.add('hidden');
 $('trainingClearUpgrades').onclick=()=>rebuildTrainingMachine({});
 $('trainingSaveA').onclick=()=>saveTrainingSlot('A');$('trainingSaveB').onclick=()=>saveTrainingSlot('B');
@@ -757,7 +761,8 @@ document.addEventListener('fullscreenchange',()=>{
   else if(appFullscreenMode==='hangar')document.body.classList.add('hangar-fullscreen');
   $('fullscreenBtn').textContent=on&&appFullscreenMode==='arena'?'SALIR DE PANTALLA COMPLETA':'PANTALLA COMPLETA';
   $('arenaFullscreenBtn').innerHTML=on&&appFullscreenMode==='arena'?'↙ <span>SALIR FULLSCREEN</span>':'⛶ <span>PANTALLA COMPLETA</span>';
-  $('garageFullscreenBtn').textContent=on&&appFullscreenMode==='hangar'?'↙ SALIR FULLSCREEN':'⛶ FULLSCREEN'
+  $('garageFullscreenBtn').textContent=on&&appFullscreenMode==='hangar'?'↙ SALIR FULLSCREEN':'⛶ FULLSCREEN';
+  $('trainingFullscreenBtn').textContent=on&&appFullscreenMode==='arena'?'↙ SALIR FULLSCREEN':'⛶ FULLSCREEN'
 });
 renderGarage();showLobbyView('home');
 const invite=new URL(location.href).searchParams.get('room');if(invite)$('roomInput').value=invite.toUpperCase().slice(0,6);
