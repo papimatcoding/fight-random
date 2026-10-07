@@ -338,11 +338,21 @@ makeOptions=function(i){
   }
   return out
 };
+const makeStandardOptions=makeOptions;
+makeOptions=function(i){
+  const p=game.players[i],fusionPool=availableIds(i,'fusion',[]);
+  if(!fusionPool.length){p.pendingFusion=null;return makeStandardOptions(i)}
+  if(!p.pendingFusion||!fusionPool.includes(p.pendingFusion))p.pendingFusion=fusionPool[0];
+  const fusion=p.pendingFusion,base=makeStandardOptions(i).filter(id=>id!==fusion).slice(0,2);
+  base.splice(Math.min(1,base.length),0,fusion);
+  return base
+};
 powerDef=function(id){return GENERAL[id]||null};
 applyPower=function(i,id){
   const p=game.players[i],d=GENERAL[id];if(!d||(!d.eligible?false:!d.eligible(p)))return;
   p.powers[id]=(p.powers[id]||0)+1;if(d.apply)d.apply(p,game,false);
-  if(d.rarity==='legendary'||d.rarity==='illegal')addFeedback('rarity',p.x,p.y,0,p.i,null,d.name+' · '+RARITY_LABEL[d.rarity])
+  if(d.rarity==='fusion')p.pendingFusion=null;
+  if(d.rarity==='legendary'||d.rarity==='illegal'||d.rarity==='fusion')addFeedback(d.rarity==='fusion'?'fusion':'rarity',p.x,p.y,0,p.i,null,d.name+' · '+RARITY_LABEL[d.rarity])
 };
 updateSynergies=function(){};
 hasSynergy=function(){return false};
