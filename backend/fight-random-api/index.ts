@@ -389,6 +389,27 @@ Deno.serve(async (req) => {
       return json({ ok: true, room: { code, mode, seat: 0, visibility } });
     }
 
+    if (action === "queue_room") {
+      const room = await roomByCode(body.code);
+      if (room.host_player_id !== player.id) throw new ApiError(403, "host_only");
+      if (room.mode !== "teams") throw new ApiError(400, "party_requires_teams");
+      if (room.status !== "waiting") throw new ApiError(409, "room_not_waiting");
+      if (Date.now() - new Date(room.last_heartbeat_at).getTime() > ROOM_TTL_MS)
+        throw new ApiError(410, "room_stale");
+
+      const members = await activeMembers(room.id);
+      if (members.length !== 2) throw new ApiError(409, "party_size", "La party debe tener exactamente 2 jugadores antes de buscar rivales.");
+      const seats = members.map((m: any) => m.seat).sort((a: number, b: number) => a - b);
+      if (seats[0] !== 0 || seats[1] !== 1) throw new ApiError(409, "party_seats", "Los miembros de la party no ocupan los asientos de equipo.");
+
+      const now = new Date().toISOString();
+      const { error } = await db.from("fr_rooms").update({
+        visibility: "public", last_heartbeat_at: now, updated_at: now,
+      }).eq("id", room.id);
+      if (error) throw error;
+      return json({ ok: true, room: { code: room.code, mode: room.mode, visibility: "public", players: members.length, maxPlayers: room.max_players } });
+    }
+
     if (action === "join_room") {
       const room = await roomByCode(body.code);
       if (room.status !== "waiting") throw new ApiError(409, "room_not_waiting");
@@ -428,7 +449,7 @@ Deno.serve(async (req) => {
         if (joined.error) throw joined.error;
       }
       const members = await refreshRoomCount(room);
-      return json({ ok: true, room: { code: room.code, mode: room.mode, seat, players: members.length, maxPlayers: room.max_players } });
+      return json({ ok: true, room: { code: room.code, mode: room.mode, seat, visibility: room.visibility, players: members.length, maxPlayers: room.max_players } });
     }
 
     if (action === "heartbeat") {
