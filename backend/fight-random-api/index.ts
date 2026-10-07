@@ -266,7 +266,7 @@ Deno.serve(async (req) => {
       const targetName = sanitizeNickname(body.nickname);
       if (!targetName) throw new ApiError(400, "invalid_nickname");
       const { data: target, error } = await db.from("fr_players")
-        .select("id,nickname,rating").ilike("nickname", targetName).maybeSingle();
+        .select("id,nickname,rating").eq("nickname", targetName).maybeSingle();
       if (error) throw error;
       if (!target) throw new ApiError(404, "player_not_found", "No existe ningún jugador con ese apodo.");
       if (target.id === player.id) throw new ApiError(400, "cannot_friend_self");
