@@ -1,7 +1,7 @@
 'use strict';
 
 const FR_API='https://xtekdrkqgfjnnwawyoim.supabase.co/functions/v1/fight-random-api';
-const FR_BUILD='2026.10-combat-3';
+const FR_BUILD='2026.10-party-1';
 const FRStore={
   token:'',
   profile:null,
@@ -300,7 +300,13 @@ function frStartPartyWithFriend(friendId){
 }
 async function frQueuePartyRoom(){
   if(!FRStore.roomCode)throw new Error('No hay una party activa.');
-  const data=await frApi('queue_room',{code:FRStore.roomCode});
+  let data;
+  try{data=await frApi('queue_room',{code:FRStore.roomCode})}
+  catch(e){
+    if(e.code!=='party_size')throw e;
+    await new Promise(r=>setTimeout(r,500));
+    data=await frApi('queue_room',{code:FRStore.roomCode})
+  }
   FRStore.roomVisibility='public';FRStore.partyQueued=true;
   if(typeof queuePartyMatch==='function')queuePartyMatch();
   return data
