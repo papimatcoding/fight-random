@@ -159,6 +159,13 @@ const MAPS=[
     obs:[{x:545,y:265,w:140,h:80},{x:965,y:265,w:140,h:80},{x:545,y:585,w:140,h:80},{x:965,y:585,w:140,h:80}],
     pickupSpawns:[[825,145],[825,785],[270,465],[1380,465],[825,465]],
     barrels:[[735,315],[915,315],[735,615],[915,615]],coreSpawns:[[825,465]]
+  },
+  {
+    name:'BANCO DE PRUEBAS',bg:'#0b0f14',w:1400,h:760,modes:['training'],training:true,
+    obs:[],
+    pickupSpawns:[],
+    barrels:[],
+    coreSpawns:[]
   }
 ];
 
@@ -297,6 +304,19 @@ function checkRoundEnd(){if(game.phase!=='play')return;const m=modeOf(),alive=ga
 function eliminate(target,source){if(!target.alive)return;addEffect('eliminate',target.x,target.y,105,PLAYER_COLORS[target.i],.46,source);target.alive=false;target.hp=0;target.stats.deaths++;addFeedback('elimination',target.x,target.y,0,source,target.i);game.killfeed=game.killfeed||[];game.killfeed.unshift({id:Math.random().toString(36).slice(2),killer:source,victim:target.i,life:4,maxLife:4});game.killfeed=game.killfeed.slice(0,5);target.vx=target.vy=0;if(source!=null&&source!==target.i&&game.players[source])game.players[source].stats.kills++;checkRoundEnd()}
 
 function sim(dt){if(!game)return;
+  if(game.training){
+    if(game.phase!=='play')game.phase='play';
+    game.players.forEach((p,i)=>movePlayer(p,inputFor(i),dt));
+    updateStatuses(dt);if(game.phase!=='play')game.phase='play';
+    updateEffects(dt);updateFeedback(dt);updateGroundFires(dt);
+    if(game.phase!=='play')game.phase='play';
+    updateBullets(dt);
+    if(game.trainingNoCooldowns&&game.players[0]){
+      game.players[0].dc=0;
+      game.players[0].specialCd=0;
+    }
+    return
+  }
   if(game.phase==='ready'||game.phase==='end')return;
   if(game.phase==='count'){game.count-=dt;if(game.count<=0)game.phase='play';return}
   if(game.phase==='round'){game.t-=dt;if(game.t<=0){game.round++;game.phase='pick';game.opts=game.players.map((_,i)=>makeOptions(i));game.picked=Array(modeOf().players).fill(null);pickLock=false;broadcast(true)}return}
