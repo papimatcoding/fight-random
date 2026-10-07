@@ -264,7 +264,13 @@ function cycleTrainingDummy(){
 function trainingMetricSnapshot(s=game){
   const m=s?.trainingMetrics||{total:0,best:0,events:[],startedAt:performance.now()},now=performance.now(),p=s?.players?.[0];
   m.events=m.events.filter(e=>now-e.t<=5000);
-  const elapsed=Math.max(.25,Math.min(5,(now-m.startedAt)/1000)),damage5=m.events.reduce((sum,e)=>sum+e.d,0),burst=m.events.filter(e=>now-e.t<=1000).reduce((sum,e)=>sum+e.d,0);
+  const elapsed=Math.max(.25,Math.min(5,(now-m.startedAt)/1000)),damage5=m.events.reduce((sum,e)=>sum+e.d,0);
+  let burst=0,left=0,sum=0;
+  for(let right=0;right<m.events.length;right++){
+    sum+=m.events[right].d;
+    while(m.events[right].t-m.events[left].t>1000){sum-=m.events[left].d;left++}
+    burst=Math.max(burst,sum)
+  }
   return{total:m.total,dps:damage5/elapsed,burst,best:m.best,accuracy:p?.stats?.shots?p.stats.hits/p.stats.shots*100:0}
 }
 function trainingBuildLabel(p=game?.players?.[0]){
