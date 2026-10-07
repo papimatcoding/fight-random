@@ -18,126 +18,134 @@
       </div>
     </header>
 
-    <section class="garage-lobby panel" id="lobby">
-      <aside class="garage-side party-side">
-        <div class="garage-profile">
-          <div>
+    <section class="menu-shell panel" id="lobby">
+      <div class="lobby-view lobby-home" id="lobbyHome">
+        <div class="lobby-topline">
+          <button class="profile-button" id="editProfileBtn" type="button">
             <span class="mini-label">PILOTO</span>
             <strong id="profileName">Jugador</strong>
             <small id="profileMeta">perfil local</small>
+          </button>
+          <div class="lobby-build-summary" id="lobbyBuildSummary">
+            <span class="mini-label">MÁQUINA</span>
+            <strong id="homeBuildTitle">MIX</strong>
+            <small id="homeBuildModules">Sin montar</small>
           </div>
-          <button class="garage-icon-btn" id="editProfileBtn" type="button" aria-label="Editar perfil">✎</button>
         </div>
-        <div class="profile-edit garage-profile-edit hidden" id="profileEdit">
+
+        <div class="profile-edit lobby-profile-edit hidden" id="profileEdit">
           <input id="nicknameInput" maxlength="18" autocomplete="off" placeholder="APODO" />
           <button class="ghost compact" id="saveNicknameBtn" type="button">GUARDAR</button>
         </div>
         <span class="profile-message" id="profileMessage"></span>
 
-        <div class="party-card">
-          <div class="garage-section-head">
-            <span>GRUPO</span>
-            <small id="partyModeLabel">1V1 · QUICKPLAY</small>
+        <div class="lobby-center">
+          <div class="mode-selector" id="modeGrid">
+            <button class="mode-card selected" type="button" data-mode="duel"><strong>DUELO</strong><span>1V1</span></button>
+            <button class="mode-card" type="button" data-mode="teams"><strong>EQUIPOS</strong><span>2V2</span></button>
+            <button class="mode-card special-mode" type="button" data-mode="core"><strong>NÚCLEO</strong><span>1V1</span></button>
+            <button class="mode-card" type="button" data-mode="ffa3"><strong>TRIPLE</strong><span>1V1V1</span></button>
           </div>
-          <div class="party-slots" id="partySlots">
+
+          <div class="home-party">
             <div class="party-slot self">
               <span class="party-avatar">01</span>
-              <span><b id="partySelfName">Jugador</b><small>TÚ · PREPARANDO MÁQUINA</small></span>
+              <span><b id="partySelfName">Jugador</b><small id="partyModeLabel">DUELO · QUICKPLAY</small></span>
             </div>
           </div>
-          <p class="party-note" id="partyNote">En Quickplay solo ves tu slot. El resto aparece al encontrar partida.</p>
-        </div>
 
-        <div class="garage-shortcuts">
-          <button class="garage-tab" type="button" data-garage-panel="rooms">SALAS</button>
-          <button class="garage-tab" type="button" data-garage-panel="ranking">RANKING</button>
-          <button class="garage-tab" type="button" data-garage-panel="history">HISTORIAL</button>
-        </div>
-      </aside>
-
-      <section class="machine-bay">
-        <div class="machine-bay-head">
-          <div>
-            <span class="mini-label">CHASIS</span>
-            <strong id="garageChassisName">MIX</strong>
-            <small id="garageChassisMeta">10 puntos · Dash</small>
-          </div>
-          <div class="chassis-switch">
-            <button id="garageChassisPrev" type="button" aria-label="Chasis anterior">‹</button>
-            <button id="garageChassisNext" type="button" aria-label="Chasis siguiente">›</button>
-          </div>
-        </div>
-
-        <div class="machine-stage">
-          <div class="garage-floor"></div>
-          <div class="garage-machine" id="garageMachine" data-chassis="mix" data-weapon="" data-special="" data-system="">
-            <div class="gm-track gm-track-left"></div>
-            <div class="gm-track gm-track-right"></div>
-            <div class="gm-body"><i></i></div>
-            <div class="gm-core"></div>
-            <div class="gm-weapon"></div>
-            <div class="gm-special"></div>
-            <div class="gm-system"></div>
-          </div>
-
-          <button class="mount-point mount-weapon" type="button" data-garage-slot="weapon">
-            <span class="mount-plus">+</span><span class="mount-label">ARMA</span><b id="garageWeaponName">AÑADIR</b>
+          <input type="hidden" id="roomVisibility" value="public" />
+          <button class="primary lobby-play" id="quickPlayBtn" type="button">
+            <span>JUGAR</span><small>QUICKPLAY</small>
           </button>
-          <button class="mount-point mount-special" type="button" data-garage-slot="special">
-            <span class="mount-plus">+</span><span class="mount-label">ESPECIAL</span><b id="garageSpecialName">AÑADIR</b>
-          </button>
-          <button class="mount-point mount-system" type="button" data-garage-slot="system">
-            <span class="mount-plus">+</span><span class="mount-label">SISTEMA</span><b id="garageSystemName">AÑADIR</b>
-          </button>
+          <p class="status compact-status" id="lobbyStatus">Elige modo y entra.</p>
         </div>
 
-        <div class="capacity garage-capacity">
-          <div class="capacity-line"><span>CAPACIDAD DEL CHASIS</span><strong id="garageCapacityText">0 / 10</strong></div>
-          <div class="capacity-track"><i id="garageCapacityFill"></i></div>
-          <small id="garageLoadoutWarning">Añade arma, especial y sistema.</small>
-        </div>
-      </section>
+        <nav class="lobby-nav" aria-label="Menú principal">
+          <button type="button" data-lobby-view="hangar"><strong>HANGAR</strong><span>montar máquina</span></button>
+          <button type="button" data-lobby-view="rooms"><strong>SALAS</strong><span>públicas y amistosas</span></button>
+          <button type="button" data-lobby-view="ranking"><strong>RANKING</strong><span>clasificación</span></button>
+          <button type="button" data-lobby-view="history"><strong>HISTORIAL</strong><span>tus partidas</span></button>
+        </nav>
 
-      <aside class="garage-side match-side">
-        <div class="garage-section-head"><span>COMBATE</span><small>15 arenas · mapa aleatorio</small></div>
-        <div class="mode-grid garage-mode-grid" id="modeGrid">
-          <button class="mode-card selected" type="button" data-mode="duel"><strong>DUELO</strong><span>1V1 · por rondas</span></button>
-          <button class="mode-card" type="button" data-mode="teams"><strong>EQUIPOS</strong><span>2V2 · por rondas</span></button>
-          <button class="mode-card special-mode" type="button" data-mode="core"><strong>NÚCLEO</strong><span>1V1 · control</span></button>
-          <button class="mode-card" type="button" data-mode="ffa3"><strong>TRIPLE</strong><span>1V1V1 · caos</span></button>
-        </div>
-
-        <input type="hidden" id="roomVisibility" value="public" />
-        <button class="primary garage-play" id="quickPlayBtn" type="button">
-          <span>QUICKPLAY</span><small>buscar rivales automáticamente</small>
-        </button>
-        <button class="secondary garage-friendly" id="hostBtn" type="button">CREAR PARTIDA AMISTOSA</button>
-
-        <div class="join-compact">
-          <span class="mini-label">UNIRSE A AMISTOSA</span>
+        <div class="friendly-row">
+          <button class="secondary" id="hostBtn" type="button">CREAR AMISTOSA</button>
           <form id="joinForm" class="join-row">
             <label class="sr-only" for="roomInput">Código de sala</label>
             <input id="roomInput" autocomplete="off" maxlength="6" placeholder="CÓDIGO" inputmode="text" />
             <button class="ghost" type="submit">ENTRAR</button>
           </form>
         </div>
-        <p class="status" id="lobbyStatus">Monta tu máquina y entra.</p>
-      </aside>
+      </div>
 
-      <div class="garage-drawer hidden" id="garageDrawer">
-        <div class="drawer-head">
-          <strong id="drawerTitle">SALAS</strong>
-          <button class="garage-icon-btn" id="closeGarageDrawer" type="button">×</button>
+      <div class="lobby-view hidden" id="lobbyHangar">
+        <div class="subview-head">
+          <button class="back-menu" type="button" data-lobby-home>‹</button>
+          <div><span class="mini-label">TALLER</span><strong>HANGAR</strong></div>
+          <small>MONTA TU MÁQUINA</small>
         </div>
-        <div class="drawer-panel" id="drawerRooms">
-          <div class="room-list" id="publicRooms"><div class="empty-state">Conectando lobby…</div></div>
+        <section class="hangar-layout">
+          <div class="hangar-main">
+            <div class="machine-bay-head">
+              <div>
+                <span class="mini-label">CHASIS</span>
+                <strong id="garageChassisName">MIX</strong>
+                <small id="garageChassisMeta">10 puntos · Dash</small>
+              </div>
+              <div class="chassis-switch">
+                <button id="garageChassisPrev" type="button" aria-label="Chasis anterior">‹</button>
+                <button id="garageChassisNext" type="button" aria-label="Chasis siguiente">›</button>
+              </div>
+            </div>
+
+            <div class="machine-stage">
+              <div class="garage-floor"></div>
+              <div class="garage-machine" id="garageMachine" data-chassis="mix" data-weapon="" data-special="" data-system="">
+                <div class="gm-track gm-track-left"></div><div class="gm-track gm-track-right"></div>
+                <div class="gm-body"><i></i></div><div class="gm-core"></div>
+                <div class="gm-weapon"></div><div class="gm-special"></div><div class="gm-system"></div>
+              </div>
+            </div>
+          </div>
+
+          <aside class="hangar-loadout">
+            <button class="loadout-slot" type="button" data-garage-slot="weapon"><span>ARMA</span><strong id="garageWeaponName">AÑADIR</strong><b>+</b></button>
+            <button class="loadout-slot" type="button" data-garage-slot="special"><span>ESPECIAL</span><strong id="garageSpecialName">AÑADIR</strong><b>+</b></button>
+            <button class="loadout-slot" type="button" data-garage-slot="system"><span>SISTEMA</span><strong id="garageSystemName">AÑADIR</strong><b>+</b></button>
+            <div class="capacity garage-capacity">
+              <div class="capacity-line"><span>CAPACIDAD</span><strong id="garageCapacityText">0 / 10</strong></div>
+              <div class="capacity-track"><i id="garageCapacityFill"></i></div>
+              <small id="garageLoadoutWarning">Añade arma, especial y sistema.</small>
+            </div>
+          </aside>
+        </section>
+      </div>
+
+      <div class="lobby-view hidden" id="lobbyRooms">
+        <div class="subview-head">
+          <button class="back-menu" type="button" data-lobby-home>‹</button>
+          <div><span class="mini-label">ONLINE</span><strong>SALAS</strong></div>
+          <small>PARTIDAS PÚBLICAS</small>
         </div>
-        <div class="drawer-panel hidden" id="drawerRanking">
-          <div class="leaderboard-list" id="leaderboardRows"><div class="empty-state">Cargando…</div></div>
+        <div class="subview-content room-list" id="publicRooms"><div class="empty-state">Conectando lobby…</div></div>
+      </div>
+
+      <div class="lobby-view hidden" id="lobbyRanking">
+        <div class="subview-head">
+          <button class="back-menu" type="button" data-lobby-home>‹</button>
+          <div><span class="mini-label">GLOBAL</span><strong>RANKING</strong></div>
+          <small>RATING</small>
         </div>
-        <div class="drawer-panel hidden" id="drawerHistory">
-          <div class="recent-list" id="recentMatches"><div class="empty-state">Sin partidas todavía.</div></div>
+        <div class="subview-content leaderboard-list" id="leaderboardRows"><div class="empty-state">Cargando…</div></div>
+      </div>
+
+      <div class="lobby-view hidden" id="lobbyHistory">
+        <div class="subview-head">
+          <button class="back-menu" type="button" data-lobby-home>‹</button>
+          <div><span class="mini-label">PERFIL</span><strong>HISTORIAL</strong></div>
+          <small>ÚLTIMAS PARTIDAS</small>
         </div>
+        <div class="subview-content recent-list" id="recentMatches"><div class="empty-state">Sin partidas todavía.</div></div>
       </div>
     </section>
 
@@ -170,9 +178,9 @@
 
     <section class="game-wrap hidden" id="gameWrap">
       <div class="match-header">
+        <div class="hud-side hud-left"><div class="round-chip"><span>RONDA</span><strong id="roundNum">1</strong></div></div>
         <div class="scoreboard" id="scoreboard"></div>
-        <div class="round-chip"><span>RONDA</span><strong id="roundNum">1</strong></div>
-        <div class="round-chip map-chip"><span>ARENA</span><strong id="mapName">—</strong></div>
+        <div class="hud-side hud-right"><div class="round-chip map-chip"><span>ARENA</span><strong id="mapName">—</strong></div></div>
       </div>
 
       <div class="canvas-frame" id="canvasFrame">
