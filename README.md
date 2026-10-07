@@ -28,7 +28,7 @@ Los módulos cuestan puntos y cada chasis tiene un límite de capacidad. La rare
 - **PISTON** — puñetazo hidráulico de enorme knockback y retroceso propio.
 - **GRINDER** — hacha rotatoria para melee sostenido.
 
-Las armas tienen alcance, cadencia y retroceso propios. Algunas tienen restricciones de chasis.
+Las armas tienen daño, alcance, cadencia y retroceso propios. El Hangar muestra el daño base real del motor; SCRAPSHOT muestra daño por perdigón y total, y SUNLINE daño por tick + DPS aproximado. Algunas armas tienen restricciones de chasis.
 
 ### Especiales
 

@@ -442,3 +442,25 @@
   .module-choice p{font-size:7px;max-width:150px}
   .friend-picker{padding:6px;align-items:end}.friend-picker-panel{border-radius:14px 14px 7px 7px;max-height:82vh}
 }
+
+
+/* Weapon mount alignment pass: pivot originates from the chassis centre. */
+.garage-machine{--weapon-anchor-y:99px}
+.garage-machine[data-chassis="trucks"]{--weapon-anchor-y:100px}
+.garage-machine[data-chassis="lizzy"]{--weapon-anchor-y:90px}
+.garage-machine .gm-weapon,
+.garage-machine[data-weapon="rivet"] .gm-weapon,
+.garage-machine[data-weapon="lance"] .gm-weapon,
+.garage-machine[data-weapon="scrapshot"] .gm-weapon,
+.garage-machine[data-weapon="sunline"] .gm-weapon,
+.garage-machine[data-weapon="piston"] .gm-weapon,
+.garage-machine[data-weapon="grinder"] .gm-weapon{
+  left:50%!important;
+  top:var(--weapon-anchor-y)!important;
+  transform:translateY(-50%)!important;
+  transform-origin:0 50%!important
+}
+.loadout-slot small#garageWeaponStats{
+  display:block;margin-top:4px;color:#75808b;font-size:7px;line-height:1.25;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:6px
+}
