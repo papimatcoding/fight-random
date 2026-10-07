@@ -257,6 +257,64 @@ availableIds=function(i,rarity,exclude=[]){
     const d=GENERAL[id];return d.rarity===rarity&&!exclude.includes(id)&&(p.powers[id]||0)<(d.max||1)&&(!d.eligible||d.eligible(p))
   })
 };
+
+const MODULAR_RARITY_CURVE=[
+  {common:70,rare:27,epic:3,legendary:0,illegal:0},
+  {common:64,rare:29,epic:7,legendary:0,illegal:0},
+  {common:59,rare:30,epic:10.65,legendary:.35,illegal:0},
+  {common:55,rare:29.3,epic:15,legendary:.7,illegal:0},
+  {common:52,rare:29,epic:17.85,legendary:1,illegal:.15},
+  {common:49,rare:28.5,epic:20.8,legendary:1.4,illegal:.3},
+  {common:46,rare:28,epic:23.75,legendary:1.8,illegal:.45}
+];
+
+rarityWeights=function(player){
+  const round=Math.max(1,Math.min(7,game?.round||1)),streak=Math.max(0,Math.min(3,player?.lossStreak||0));
+  const w={...MODULAR_RARITY_CURVE[round-1]};
+  if(streak){
+    const shift=streak*3;
+    w.common=Math.max(24,w.common-shift);
+    w.rare+=streak*.8;
+    w.epic+=streak*2;
+    if(round>=3)w.legendary+=streak*.15;
+    if(round>=5)w.illegal+=streak*.05;
+  }
+  return w
+};
+
+function weightedRarity(weights,allowHigh=true){
+  const entries=Object.entries(weights).filter(([r,w])=>w>0&&(allowHigh||!(r==='legendary'||r==='illegal')));
+  const total=entries.reduce((sum,[,w])=>sum+w,0);
+  let roll=Math.random()*Math.max(.0001,total);
+  for(const [r,w] of entries){roll-=w;if(roll<=0)return r}
+  return entries.at(-1)?.[0]||'common'
+}
+function degradeRarity(i,rolled,exclude=[]){
+  const order={
+    illegal:['illegal','legendary','epic','rare','common'],
+    legendary:['legendary','epic','rare','common'],
+    epic:['epic','rare','common'],
+    rare:['rare','common','epic'],
+    common:['common','rare','epic']
+  }[rolled]||['common','rare','epic'];
+  for(const r of order)if(availableIds(i,r,exclude).length)return r;
+  return null
+}
+function rollModularRarity(i,exclude=[],allowHigh=true){
+  const rolled=weightedRarity(rarityWeights(game.players[i]),allowHigh);
+  return degradeRarity(i,rolled,exclude)
+}
+rollRarity=function(i,exclude=[]){return rollModularRarity(i,exclude,true)||'common'};
+makeOptions=function(i){
+  const out=[];let highTierSeen=false;
+  for(let slot=0;slot<3;slot++){
+    const rarity=rollModularRarity(i,out,!highTierSeen);if(!rarity)break;
+    const pool=availableIds(i,rarity,out);if(!pool.length)break;
+    const id=pool[Math.floor(Math.random()*pool.length)];out.push(id);
+    const d=GENERAL[id];if(d&&(d.rarity==='legendary'||d.rarity==='illegal'))highTierSeen=true
+  }
+  return out
+};
 powerDef=function(id){return GENERAL[id]||null};
 applyPower=function(i,id){
   const p=game.players[i],d=GENERAL[id];if(!d||(!d.eligible?false:!d.eligible(p)))return;
