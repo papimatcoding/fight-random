@@ -405,7 +405,7 @@ function combatHudUI(s){
   const specialMax=Math.max(.01,typeof specialCooldown==='function'?specialCooldown(p):sp.cd),specialProgress=1-hudPct(p.specialCd||0,specialMax),specialReady=(p.specialCd||0)<=0;
   setCombatAction($('combatSpecial'),$('combatSpecialState'),$('combatSpecialMeter'),specialReady?'LISTO':p.specialCd.toFixed(1)+'s',specialProgress,specialReady)
 }
-function syncUI(s){if(!s)return;if(s.training){$('combatHud').classList.add('hidden');renderTrainingHud(s);$('readyOverlay').classList.add('hidden');$('upgradeOverlay').classList.add('hidden');$('matchOverlay').classList.add('hidden');return}combatHudUI(s);const m=modeOf(s);$('modeName').textContent=m.name;$('roundNum').textContent=s.round;$('mapName').textContent=mapDef(s).name;
+function syncUI(s){if(!s)return;if(s.training){$('arenaTopbar').classList.add('hidden');$('combatHud').classList.add('hidden');renderTrainingHud(s);$('readyOverlay').classList.add('hidden');$('upgradeOverlay').classList.add('hidden');$('matchOverlay').classList.add('hidden');return}$('arenaTopbar').classList.remove('hidden');combatHudUI(s);const m=modeOf(s);$('modeName').textContent=m.name;$('roundNum').textContent=s.round;$('mapName').textContent=mapDef(s).name;
   const sb=$('scoreboard');sb.innerHTML='';for(const item of scoreData(s)){const el=document.createElement('div');el.className='score-pill';el.style.borderColor=item.color+'66';el.innerHTML='<span style="color:'+item.color+'">'+item.label+'</span><b>'+item.score+'</b>';sb.appendChild(el)}
   const msg=$('centerMessage');if(s.phase==='count'){msg.textContent=Math.ceil(s.count);msg.classList.remove('hidden')}else if(s.phase==='round'){msg.textContent='RONDA TERMINADA';msg.classList.remove('hidden')}else msg.classList.add('hidden');
   readyUI(s);draftUI(s);endUI(s)
@@ -487,7 +487,56 @@ function draftUI(s){
 }
 function resultForMe(s){if(!s.matchWinner||me==null)return false;if(s.matchWinner.type==='player')return s.matchWinner.seat===me;return s.players[me].team===s.matchWinner.team}
 function accuracy(p){return p.stats.shots?Math.round(p.stats.hits/p.stats.shots*100):0}
-function endUI(s){const o=$('matchOverlay');if(s.phase!=='end'||me==null){o.classList.add('hidden');return}o.classList.remove('hidden');const win=resultForMe(s),p=s.players[me];$('matchTitle').textContent=win?'VICTORIA':'DERROTA';$('matchSubtitle').textContent=win?'Has ganado la partida.':'Has perdido la partida.';$('statDamage').textContent=Math.round(p.stats.damage);$('statAccuracy').textContent=accuracy(p)+'%';$('statKills').textContent=p.stats.kills;$('statPickups').textContent=p.stats.pickups;const ready=!!s.rematch[me],count=s.rematch.filter(Boolean).length,m=modeOf(s);$('rematchBtn').disabled=ready;$('rematchBtn').textContent=ready?'REVANCHA LISTA ✓':'LISTO PARA REVANCHA';$('rematchStatus').textContent=ready?(count===m.players?'Reiniciando…':'Esperando al resto…'):(count?count+' / '+m.players+' ya están listos.':'La revancha empieza cuando todos acepten.')}
+function finalBuildEntries(p){
+  const order={fusion:0,illegal:1,legendary:2,epic:3,rare:4,common:5};
+  return Object.entries(p.powers||{}).filter(([,count])=>count>0).map(([id,count])=>({id,count,d:powerDef(id)}))
+    .filter(x=>x.d).sort((a,b)=>(order[a.d.rarity]??9)-(order[b.d.rarity]??9)||a.d.name.localeCompare(b.d.name))
+}
+function renderFinalBuild(p){
+  if(!p)return;
+  machineData($('finalMachine'),p);
+  const entries=finalBuildEntries(p),fusions=entries.filter(x=>x.d.rarity==='fusion'),mods=entries.filter(x=>x.d.rarity!=='fusion');
+  $('finalBuildTitle').textContent=(CHASSIS[p.character]?.name||p.character)+' · '+entries.reduce((sum,x)=>sum+x.count,0)+' MODS';
+  $('finalBuildModules').textContent=[
+    WEAPONS[p.loadout?.weapon]?.name||'ARMA',
+    SPECIALS[p.loadout?.special]?.name||'ESPECIAL',
+    SYSTEMS[p.loadout?.system]?.name||'SISTEMA'
+  ].join(' · ');
+
+  const fusionBox=$('finalFusions');fusionBox.innerHTML='';
+  if(fusions.length){
+    for(const x of fusions){
+      const chip=document.createElement('div');chip.className='final-fusion-chip';
+      chip.innerHTML='<span>FUSIÓN</span><strong>'+escapeGarage(x.d.name)+'</strong><small>'+escapeGarage(x.d.desc)+'</small>';
+      fusionBox.appendChild(chip)
+    }
+  }else fusionBox.innerHTML='<div class="final-no-fusion">SIN FUSIONES</div>';
+
+  const upgrades=$('finalUpgrades');upgrades.innerHTML='';
+  for(const x of mods){
+    const chip=document.createElement('span');chip.className='final-upgrade-chip rarity-'+x.d.rarity;
+    chip.textContent=(RARITY_LABEL[x.d.rarity]||x.d.rarity)+' · '+x.d.name+(x.count>1?' ×'+x.count:'');
+    upgrades.appendChild(chip)
+  }
+  if(!mods.length)upgrades.innerHTML='<span class="final-empty-upgrades">Sin modificaciones adicionales.</span>'
+}
+function endUI(s){
+  const o=$('matchOverlay');
+  if(s.phase!=='end'||me==null){o.classList.add('hidden');return}
+  o.classList.remove('hidden');
+  const win=resultForMe(s),p=s.players[me];
+  $('matchTitle').textContent=win?'VICTORIA':'DERROTA';
+  $('matchSubtitle').textContent=win?'Tu máquina ha sobrevivido a la arena.':'Así terminó tu máquina.';
+  renderFinalBuild(p);
+  $('statDamage').textContent=Math.round(p.stats.damage);
+  $('statAccuracy').textContent=accuracy(p)+'%';
+  $('statKills').textContent=p.stats.kills;
+  $('statPickups').textContent=p.stats.pickups;
+  const ready=!!s.rematch[me],count=s.rematch.filter(Boolean).length,m=modeOf(s);
+  $('rematchBtn').disabled=ready;
+  $('rematchBtn').textContent=ready?'REVANCHA LISTA ✓':'LISTO PARA REVANCHA';
+  $('rematchStatus').textContent=ready?(count===m.players?'Reiniciando…':'Esperando al resto…'):(count?count+' / '+m.players+' ya están listos.':'La revancha empieza cuando todos acepten.')
+}
 
 function drawGrid(ww,hh){ctx.strokeStyle='#151b2a';ctx.lineWidth=1;for(let x=0;x<ww;x+=48){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,hh);ctx.stroke()}for(let y=0;y<hh;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(ww,y);ctx.stroke()}}
 function drawArenaScore(s){}
@@ -621,8 +670,18 @@ $('trainingUpgradesClose').onclick=()=>$('trainingUpgrades').classList.add('hidd
 $('trainingClearUpgrades').onclick=()=>rebuildTrainingMachine({});
 $('trainingSaveA').onclick=()=>saveTrainingSlot('A');$('trainingSaveB').onclick=()=>saveTrainingSlot('B');
 $('trainingLoadA').onclick=()=>loadTrainingSlot('A');$('trainingLoadB').onclick=()=>loadTrainingSlot('B');
-$('fullscreenBtn').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('canvasFrame').requestFullscreen()}catch(e){console.warn(e)}};
-document.addEventListener('fullscreenchange',()=>{$('fullscreenBtn').textContent=document.fullscreenElement?'SALIR DE PANTALLA COMPLETA':'PANTALLA COMPLETA'});
+async function toggleArenaFullscreen(){
+  try{if(document.fullscreenElement)await document.exitFullscreen();else await $('canvasFrame').requestFullscreen()}
+  catch(e){console.warn(e)}
+}
+$('fullscreenBtn').onclick=toggleArenaFullscreen;
+$('arenaFullscreenBtn').onclick=toggleArenaFullscreen;
+$('arenaLeaveBtn').onclick=()=>{if(trainingActive)exitTestRange();else if(typeof clean==='function')clean()};
+document.addEventListener('fullscreenchange',()=>{
+  const on=!!document.fullscreenElement;
+  $('fullscreenBtn').textContent=on?'SALIR DE PANTALLA COMPLETA':'PANTALLA COMPLETA';
+  $('arenaFullscreenBtn').innerHTML=on?'↙ <span>SALIR FULLSCREEN</span>':'⛶ <span>PANTALLA COMPLETA</span>'
+});
 renderGarage();showLobbyView('home');
 const invite=new URL(location.href).searchParams.get('room');if(invite)$('roomInput').value=invite.toUpperCase().slice(0,6);
 if(typeof Peer==='undefined')status('No se pudo cargar la conexión online. Recarga.',true);else if(invite){setQueueIntent('friendly');setTimeout(()=>joinGame(invite),0);}
