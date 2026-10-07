@@ -433,7 +433,22 @@ updateGroundFires=function(dt){legacyUpdateGroundFires(dt);updateMines(dt);updat
 const legacyDamageRaw=damageRaw;
 damageRaw=function(target,amount,source,allowFriendly,kx,ky){
   if(target?.s){amount*=1-(target.s.damageReduction||0);kx=(kx||0)*(target.s.knockTaken||1);ky=(ky||0)*(target.s.knockTaken||1)}
-  legacyDamageRaw(target,amount,source,allowFriendly,kx,ky)
+  const trainingHit=!!game?.training&&target?.i===1&&source===0,before=trainingHit?target.hp:0;
+  legacyDamageRaw(target,amount,source,allowFriendly,kx,ky);
+  if(trainingHit&&game?.trainingMetrics){
+    const dealt=Math.max(0,before-target.hp);
+    if(dealt>0){
+      const metrics=game.trainingMetrics,now=performance.now();
+      metrics.total+=dealt;
+      metrics.best=Math.max(metrics.best,dealt);
+      metrics.events.push({t:now,d:dealt});
+      if(metrics.events.length>500)metrics.events.splice(0,metrics.events.length-500);
+    }
+    // The test dummy is effectively immortal; metrics keep the real dealt amount.
+    target.hp=target.max;
+    target.alive=true;
+    game.phase='play';
+  }
 };
 
 // Fix storm start radius so map corners are not already outside when it activates.
