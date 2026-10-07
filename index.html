@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#090b12" />
   <title>Fight Random — arena online</title>
-  <link rel="stylesheet" href="style.css?v=20261007-party1" />
+  <link rel="stylesheet" href="style.css?v=20261007-qol1" />
 </head>
 <body>
   <main class="shell">
@@ -80,10 +80,13 @@
       </div>
 
       <div class="lobby-view hidden" id="lobbyHangar">
-        <div class="subview-head">
+        <div class="subview-head hangar-subview-head">
           <button class="back-menu" type="button" data-lobby-home>‹</button>
           <div><span class="mini-label">TALLER</span><strong>HANGAR</strong></div>
-          <small>MONTA TU MÁQUINA</small>
+          <div class="hangar-head-actions">
+            <button class="secondary compact" id="garagePreviewBtn" type="button">PROBAR ARMA</button>
+            <button class="secondary compact" id="garageFullscreenBtn" type="button">⛶ FULLSCREEN</button>
+          </div>
         </div>
         <section class="hangar-layout">
           <div class="hangar-main">
@@ -105,7 +108,9 @@
                 <div class="gm-track gm-track-left"></div><div class="gm-track gm-track-right"></div>
                 <div class="gm-body"><i></i></div><div class="gm-core"></div>
                 <div class="gm-weapon"></div><div class="gm-special"></div><div class="gm-system"></div>
+                <div class="gm-weapon-fx" aria-hidden="true"><i></i><i></i><i></i></div>
               </div>
+              <div class="garage-weapon-state" id="garageWeaponState">ARMA EN ESPERA</div>
             </div>
           </div>
 
@@ -115,6 +120,7 @@
             <button class="loadout-slot" type="button" data-garage-slot="system"><span>SISTEMA</span><strong id="garageSystemName">AÑADIR</strong><b>+</b></button>
             <div class="weapon-compare hidden" id="weaponCompare" aria-live="polite"></div>
             <button class="secondary test-range-button" id="testRangeBtn" type="button"><strong>CAMPO DE PRUEBAS</strong><small>dummy + métricas · PC</small></button>
+            <button class="ghost garage-clear-button" id="garageClearBtn" type="button">DESMONTAR TODO</button>
             <div class="capacity garage-capacity">
               <div class="capacity-line"><span>CAPACIDAD</span><strong id="garageCapacityText">0 / 10</strong></div>
               <div class="capacity-track"><i id="garageCapacityFill"></i></div>
@@ -270,6 +276,7 @@
             <div><span>CAMPO DE PRUEBAS</span><strong id="trainingBuildName">MIX · RIVET-9</strong></div>
             <div class="training-title-actions">
               <button class="secondary compact" id="trainingUpgradesBtn" type="button">MEJORAS</button>
+              <button class="secondary compact" id="trainingFullscreenBtn" type="button">⛶ FULLSCREEN</button>
               <button class="ghost compact" id="trainingExitBtn" type="button">VOLVER AL HANGAR</button>
             </div>
           </div>
@@ -421,8 +428,8 @@
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
   <script src="backend.js" defer></script>
   <script src="engine.js" defer></script>
-  <script src="machine.js" defer></script>
+  <script src="machine.js?v=20261007-qol1" defer></script>
   <script src="network.js" defer></script>
-  <script src="game.js" defer></script>
+  <script src="game.js?v=20261007-qol1" defer></script>
 </body>
 </html>

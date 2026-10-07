@@ -1113,3 +1113,192 @@
   .friend-actions .party-button{font-size:8px;padding:6px 7px}
   .party-queue{padding:9px 10px;font-size:10px}
 }
+
+
+/* ==========================================================
+   GAMEPLAY / HANGAR QOL PASS
+   ========================================================== */
+.hangar-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.hangar-head-actions button{font-size:9px;white-space:nowrap}
+.garage-clear-button{padding:8px 10px;font-size:9px;color:#929da8}
+.garage-weapon-state{
+  position:absolute;left:50%;bottom:8%;z-index:7;transform:translateX(-50%);
+  padding:5px 9px;border:1px solid #303943;border-radius:999px;background:#090e14d9;
+  color:#8f9aa5;font-size:8px;font-weight:950;letter-spacing:.09em;white-space:nowrap;
+  pointer-events:none;backdrop-filter:blur(6px)
+}
+
+/* More mechanical-looking idle silhouettes. */
+#garageMachine .gm-weapon{transition:background .16s ease,border-color .16s ease,box-shadow .16s ease,transform .12s ease}
+#garageMachine[data-weapon="rivet"] .gm-weapon{
+  background:repeating-linear-gradient(90deg,#25303a 0 9px,#3d4852 9px 12px);
+  border-color:#74808a
+}
+#garageMachine[data-weapon="lance"] .gm-weapon{
+  background:linear-gradient(180deg,#4a5661 0 35%,#1a2128 35% 66%,#596571 66%);
+  box-shadow:inset 0 0 0 1px #82909b44!important
+}
+#garageMachine[data-weapon="scrapshot"] .gm-weapon{
+  background:repeating-linear-gradient(180deg,#73808a 0 3px,#222b34 3px 6px);
+  border-color:#7d8993
+}
+#garageMachine[data-weapon="sunline"] .gm-weapon{
+  background:repeating-linear-gradient(90deg,#291a1f 0 7px,#572d36 7px 11px);
+  border-color:#92515c
+}
+#garageMachine[data-weapon="piston"] .gm-weapon{
+  background:linear-gradient(180deg,#524934,#2d281e);
+  border-color:#887d63
+}
+#garageMachine[data-weapon="grinder"] .gm-weapon{
+  background:linear-gradient(180deg,#56616a,#1d242b);
+  border-color:#77838d
+}
+
+/* Weapon preview FX are anchored to the actual turret centre. */
+#garageMachine{--preview-muzzle-x:72px}
+#garageMachine[data-weapon="rivet"]{--preview-muzzle-x:72px}
+#garageMachine[data-weapon="lance"]{--preview-muzzle-x:112px}
+#garageMachine[data-weapon="scrapshot"]{--preview-muzzle-x:68px}
+#garageMachine[data-weapon="sunline"]{--preview-muzzle-x:86px}
+#garageMachine[data-weapon="piston"]{--preview-muzzle-x:82px}
+#garageMachine[data-weapon="grinder"]{--preview-muzzle-x:75px}
+#garageMachine .gm-weapon-fx{
+  position:absolute;z-index:9;left:calc(50% + var(--preview-muzzle-x));top:var(--weapon-anchor-y);
+  width:1px;height:1px;pointer-events:none
+}
+#garageMachine .gm-weapon-fx:before,
+#garageMachine .gm-weapon-fx:after{content:"";position:absolute;opacity:0;pointer-events:none}
+#garageMachine .gm-weapon-fx i{
+  display:none;position:absolute;left:0;top:0;width:9px;height:9px;border-radius:50%;
+  background:#cfd4d8;filter:blur(1px);opacity:0
+}
+
+/* Ballistic weapon cycles. */
+#garageMachine.is-previewing[data-weapon="rivet"] .gm-weapon{animation:garageRivetKick .19s steps(2,end) 7}
+#garageMachine.is-previewing[data-weapon="lance"] .gm-weapon{animation:garageLanceKick 1.05s ease-out 1}
+#garageMachine.is-previewing[data-weapon="scrapshot"] .gm-weapon{animation:garageShotgunKick .46s cubic-bezier(.2,.8,.2,1) 2}
+#garageMachine.is-previewing[data-weapon="piston"] .gm-weapon:after{animation:garagePistonStroke .62s cubic-bezier(.25,.9,.2,1) 2}
+#garageMachine.is-previewing[data-weapon="grinder"] .gm-weapon:after{
+  animation:garageGrinderSpin .20s linear 11;transform-origin:50% 50%
+}
+#garageMachine.is-previewing[data-weapon="grinder"] .gm-weapon{animation:garageGrinderVibe .12s linear 18}
+
+#garageMachine.is-previewing[data-weapon="rivet"] .gm-weapon-fx:before,
+#garageMachine.is-previewing[data-weapon="lance"] .gm-weapon-fx:before,
+#garageMachine.is-previewing[data-weapon="scrapshot"] .gm-weapon-fx:before{
+  opacity:1;left:-2px;top:-7px;width:28px;height:14px;
+  clip-path:polygon(0 42%,100% 0,72% 50%,100% 100%,0 58%);
+  background:#ffe6a1;filter:drop-shadow(0 0 8px #ffb45e)
+}
+#garageMachine.is-previewing[data-weapon="rivet"] .gm-weapon-fx:before{animation:garageMuzzleFlicker .19s steps(2,end) 7}
+#garageMachine.is-previewing[data-weapon="lance"] .gm-weapon-fx:before{animation:garageLanceFlash 1.05s ease-out 1}
+#garageMachine.is-previewing[data-weapon="scrapshot"] .gm-weapon-fx:before{animation:garageShotgunFlash .46s ease-out 2}
+
+/* SUNLINE demo: beam -> redline -> forced overheat -> smoke/cooling. */
+#garageMachine.is-previewing[data-weapon="sunline"] .gm-weapon-fx:before{
+  opacity:.92;left:-4px;top:-2px;width:150px;height:4px;border-radius:999px;
+  background:linear-gradient(90deg,#fff2f4,#ff5a70 30%,#ff233f00);
+  box-shadow:0 0 7px #ff4c64,0 0 15px #ff334f;
+  transform-origin:0 50%;animation:garageSunBeam 1.9s ease-in-out forwards
+}
+#garageMachine.preview-hot[data-weapon="sunline"] .gm-weapon{
+  border-color:#d75b68!important;background:repeating-linear-gradient(90deg,#4c1c24 0 7px,#a13a49 7px 11px)!important;
+  box-shadow:0 0 15px #e34e5d66,inset 0 0 8px #ff5a6655!important
+}
+#garageMachine.preview-overheated[data-weapon="sunline"] .gm-weapon{
+  border-color:#ff4255!important;background:#8e202f!important;
+  box-shadow:0 0 25px #ff3d5366!important;animation:garageOverheatShake .08s linear 8
+}
+#garageMachine.preview-overheated[data-weapon="sunline"] .gm-weapon-fx:before{opacity:0}
+#garageMachine.preview-overheated[data-weapon="sunline"] .gm-weapon-fx i,
+#garageMachine.preview-cooling[data-weapon="sunline"] .gm-weapon-fx i{display:block;animation:garageSmoke 1.15s ease-out infinite}
+#garageMachine .gm-weapon-fx i:nth-child(1){animation-delay:0s!important}
+#garageMachine .gm-weapon-fx i:nth-child(2){animation-delay:.27s!important}
+#garageMachine .gm-weapon-fx i:nth-child(3){animation-delay:.54s!important}
+#garageMachine.preview-cooling[data-weapon="sunline"] .gm-weapon{border-color:#76565e!important;background:#38272c!important}
+
+@keyframes garageRivetKick{
+  0%,100%{translate:0 0}
+  45%{translate:-5px 0}
+}
+@keyframes garageLanceKick{
+  0%,28%{translate:0 0}
+  34%{translate:-16px 0}
+  70%,100%{translate:0 0}
+}
+@keyframes garageShotgunKick{
+  0%,100%{translate:0 0}
+  30%{translate:-10px 0}
+}
+@keyframes garagePistonStroke{
+  0%,100%{transform:translateX(0)}
+  38%{transform:translateX(31px)}
+  62%{transform:translateX(26px)}
+}
+@keyframes garageGrinderSpin{to{transform:rotate(360deg)}}
+@keyframes garageGrinderVibe{
+  0%,100%{translate:0 0}
+  50%{translate:-1px 1px}
+}
+@keyframes garageMuzzleFlicker{0%,45%{transform:scaleX(.2);opacity:0}46%,70%{transform:scaleX(1);opacity:1}71%,100%{opacity:0}}
+@keyframes garageLanceFlash{0%,29%{opacity:0;transform:scaleX(.1)}30%,38%{opacity:1;transform:scaleX(1.5)}55%,100%{opacity:0;transform:scaleX(.2)}}
+@keyframes garageShotgunFlash{0%,25%{opacity:0;transform:scale(.3)}26%,46%{opacity:1;transform:scale(1.25)}70%,100%{opacity:0;transform:scale(.4)}}
+@keyframes garageSunBeam{0%{transform:scaleX(.08);opacity:.2}15%{transform:scaleX(1);opacity:.85}72%{opacity:1}100%{transform:scaleX(1.12);opacity:.15}}
+@keyframes garageOverheatShake{
+  0%,100%{translate:0 0}
+  25%{translate:-2px 1px}
+  75%{translate:2px -1px}
+}
+@keyframes garageSmoke{
+  0%{opacity:0;transform:translate(0,0) scale(.5)}
+  20%{opacity:.6}
+  100%{opacity:0;transform:translate(18px,-34px) scale(2.1)}
+}
+
+/* Fullscreen Hangar uses the whole document so module dialogs remain functional. */
+body.hangar-fullscreen{overflow:hidden;background:#070a0e}
+body.hangar-fullscreen .topbar{display:none!important}
+body.hangar-fullscreen main{
+  width:100vw!important;max-width:none!important;height:100vh!important;padding:0!important;margin:0!important
+}
+body.hangar-fullscreen .menu-shell{
+  width:100vw!important;max-width:none!important;height:100vh!important;max-height:none!important;
+  min-height:0!important;border:0!important;border-radius:0!important;margin:0!important
+}
+body.hangar-fullscreen #lobbyHangar{
+  display:flex!important;height:100vh!important;box-sizing:border-box;padding:14px!important;gap:10px!important
+}
+body.hangar-fullscreen .hangar-layout{grid-template-columns:minmax(0,1fr) 330px;gap:14px}
+body.hangar-fullscreen .hangar-main{border-radius:10px}
+body.hangar-fullscreen .hangar-main .machine-stage{min-height:0}
+body.hangar-fullscreen #garageMachine{
+  transform:translate(-50%,-50%) scale(1.28)!important
+}
+body.hangar-fullscreen .hangar-loadout{padding:12px;gap:9px}
+body.hangar-fullscreen .loadout-slot{min-height:72px}
+body.hangar-fullscreen .machine-bay-head strong{font-size:34px}
+body.hangar-fullscreen .garage-weapon-state{bottom:6%;font-size:10px}
+body.hangar-fullscreen .module-picker,
+body.hangar-fullscreen .friend-picker{position:fixed;z-index:300}
+
+/* Trinity blade readability in combat. */
+.combat-statuses span.good{box-shadow:inset 2px 0 0 currentColor}
+.combat-action.ready{border-color:#496456}
+.combat-action.danger{border-color:#72404a}
+
+@media(max-width:760px){
+  .hangar-subview-head{grid-template-columns:38px 1fr auto}
+  .hangar-head-actions{gap:3px}
+  .hangar-head-actions button{font-size:8px;padding:7px 8px}
+  .garage-clear-button{grid-column:1/-1}
+  .garage-weapon-state{bottom:5%;font-size:7px}
+  body.hangar-fullscreen #lobbyHangar{padding:6px!important}
+  body.hangar-fullscreen .hangar-layout{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;gap:6px}
+  body.hangar-fullscreen #garageMachine{transform:translate(-50%,-50%) scale(.92)!important}
+  body.hangar-fullscreen .hangar-loadout{display:grid;grid-template-columns:repeat(3,1fr);padding:6px;gap:5px}
+  body.hangar-fullscreen .hangar-loadout .weapon-compare,
+  body.hangar-fullscreen .hangar-loadout .test-range-button,
+  body.hangar-fullscreen .hangar-loadout .garage-clear-button,
+  body.hangar-fullscreen .hangar-loadout .garage-capacity{grid-column:1/-1}
+}

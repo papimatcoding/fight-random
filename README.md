@@ -104,3 +104,10 @@ La build `2026.10-combat-3` integra los controles críticos dentro del propio fr
 ## Party 2v2
 
 La build `2026.10-party-1` añade una party de dos jugadores desde la lista de amigos. El líder crea una sala 2v2 privada, el amigo ocupa el segundo asiento del mismo equipo y ambos pueden ajustar la máquina antes de abrir la cola. Al pulsar `BUSCAR RIVALES`, la misma sala se publica a Quickplay; los siguientes dos asientos pertenecen al equipo contrario y la pareja se marca automáticamente como lista. No se crean tablas nuevas: se reutilizan amigos, invitaciones, salas y P2P existentes.
+
+
+## Gameplay / Hangar QoL
+
+La build `2026.10-qol-1` corrige TRINITY para que sus cuchillas tengan posiciones orbitales reales y dañen por contacto a jugadores y barriles. El dibujo usa la misma fase/radio que la simulación.
+
+El Hangar incorpora demostraciones animadas por arma, incluyendo el ciclo térmico completo de SUNLINE (calentamiento, SOBRECARGA, humo y enfriamiento), botón PROBAR ARMA, DESMONTAR TODO y fullscreen propio. El Campo de Pruebas también mantiene un control de fullscreen dentro de su HUD.
