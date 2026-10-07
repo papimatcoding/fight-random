@@ -110,6 +110,83 @@ async function refreshRoomCount(room: any) {
   return members;
 }
 
+
+async function friendshipBetween(a: string, b: string) {
+  const { data, error } = await db.from("fr_friendships").select("*")
+    .in("requester_id", [a, b]).in("addressee_id", [a, b]).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+async function requireFriend(a: string, b: string) {
+  const row = await friendshipBetween(a, b);
+  if (!row || row.status !== "accepted") throw new ApiError(403, "not_friends");
+  return row;
+}
+async function socialBundle(playerId: string) {
+  const { data: links, error: linkError } = await db.from("fr_friendships").select("*")
+    .or(`requester_id.eq.${playerId},addressee_id.eq.${playerId}`)
+    .order("updated_at", { ascending: false });
+  if (linkError) throw linkError;
+
+  const otherIds = [...new Set((links ?? []).map((r: any) => r.requester_id === playerId ? r.addressee_id : r.requester_id))];
+  let profiles: Record<string, any> = {};
+  if (otherIds.length) {
+    const { data, error } = await db.from("fr_players")
+      .select("id,nickname,rating,last_seen_at").in("id", otherIds);
+    if (error) throw error;
+    profiles = Object.fromEntries((data ?? []).map((p: any) => [p.id, p]));
+  }
+  const onlineCutoff = Date.now() - 45_000;
+  const friendShape = (r: any) => {
+    const otherId = r.requester_id === playerId ? r.addressee_id : r.requester_id;
+    const p = profiles[otherId];
+    return {
+      friendshipId: r.id,
+      id: otherId,
+      nickname: p?.nickname ?? "Jugador",
+      rating: p?.rating ?? 1000,
+      online: p?.last_seen_at ? new Date(p.last_seen_at).getTime() > onlineCutoff : false,
+    };
+  };
+
+  const friends = (links ?? []).filter((r: any) => r.status === "accepted").map(friendShape);
+  const incoming = (links ?? []).filter((r: any) => r.status === "pending" && r.addressee_id === playerId).map(friendShape);
+  const outgoing = (links ?? []).filter((r: any) => r.status === "pending" && r.requester_id === playerId).map(friendShape);
+
+  const now = new Date().toISOString();
+  const { data: inviteRows, error: inviteError } = await db.from("fr_room_invites")
+    .select("id,room_id,sender_id,created_at,expires_at")
+    .eq("recipient_id", playerId).eq("status", "pending").gt("expires_at", now)
+    .order("created_at", { ascending: false }).limit(12);
+  if (inviteError) throw inviteError;
+
+  const roomIds = [...new Set((inviteRows ?? []).map((x: any) => x.room_id))];
+  const senderIds = [...new Set((inviteRows ?? []).map((x: any) => x.sender_id))];
+  let rooms: Record<string, any> = {}, senders: Record<string, any> = {};
+  if (roomIds.length) {
+    const { data, error } = await db.from("fr_rooms")
+      .select("id,mode,status,last_heartbeat_at,visibility").in("id", roomIds);
+    if (error) throw error;
+    rooms = Object.fromEntries((data ?? []).map((x: any) => [x.id, x]));
+  }
+  if (senderIds.length) {
+    const { data, error } = await db.from("fr_players").select("id,nickname").in("id", senderIds);
+    if (error) throw error;
+    senders = Object.fromEntries((data ?? []).map((x: any) => [x.id, x]));
+  }
+  const invites = (inviteRows ?? []).filter((x: any) => {
+    const r = rooms[x.room_id];
+    return r && r.status === "waiting" && Date.now() - new Date(r.last_heartbeat_at).getTime() <= ROOM_TTL_MS;
+  }).map((x: any) => ({
+    id: x.id,
+    from: senders[x.sender_id]?.nickname ?? "Amigo",
+    mode: rooms[x.room_id]?.mode ?? "duel",
+    expiresAt: x.expires_at,
+  }));
+
+  return { friends, incoming, outgoing, invites };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
@@ -169,6 +246,7 @@ Deno.serve(async (req) => {
         .select("won,character,score,kills,deaths,damage,accuracy,pickups,match_id,fr_matches!inner(mode,finished_at)")
         .eq("player_id", player.id).order("match_id", { ascending: false }).limit(5);
       if (recentError) throw recentError;
+      const social = await socialBundle(player.id);
 
       return json({
         ok: true,
@@ -180,7 +258,108 @@ Deno.serve(async (req) => {
         })),
         leaderboard: leaderboard ?? [],
         recent: recent ?? [],
+        social,
       });
+    }
+
+    if (action === "friend_request") {
+      const targetName = sanitizeNickname(body.nickname);
+      if (!targetName) throw new ApiError(400, "invalid_nickname");
+      const { data: target, error } = await db.from("fr_players")
+        .select("id,nickname,rating").ilike("nickname", targetName).maybeSingle();
+      if (error) throw error;
+      if (!target) throw new ApiError(404, "player_not_found", "No existe ningún jugador con ese apodo.");
+      if (target.id === player.id) throw new ApiError(400, "cannot_friend_self");
+
+      const existing = await friendshipBetween(player.id, target.id);
+      if (existing?.status === "accepted") throw new ApiError(409, "already_friends", "Ya sois amigos.");
+      if (existing?.status === "pending") {
+        if (existing.addressee_id === player.id) {
+          const accepted = await db.from("fr_friendships").update({
+            status: "accepted", updated_at: new Date().toISOString(),
+          }).eq("id", existing.id);
+          if (accepted.error) throw accepted.error;
+          return json({ ok: true, accepted: true, social: await socialBundle(player.id) });
+        }
+        throw new ApiError(409, "request_pending", "Ya hay una solicitud pendiente.");
+      }
+
+      const created = await db.from("fr_friendships").insert({
+        requester_id: player.id, addressee_id: target.id, status: "pending",
+      });
+      if (created.error) throw created.error;
+      return json({ ok: true, social: await socialBundle(player.id) });
+    }
+
+    if (action === "friend_respond") {
+      const id = String(body.friendshipId ?? "");
+      const { data: row, error } = await db.from("fr_friendships").select("*").eq("id", id).maybeSingle();
+      if (error) throw error;
+      if (!row || row.addressee_id !== player.id || row.status !== "pending") throw new ApiError(404, "request_not_found");
+      if (body.accept === true) {
+        const updated = await db.from("fr_friendships").update({
+          status: "accepted", updated_at: new Date().toISOString(),
+        }).eq("id", row.id);
+        if (updated.error) throw updated.error;
+      } else {
+        const removed = await db.from("fr_friendships").delete().eq("id", row.id);
+        if (removed.error) throw removed.error;
+      }
+      return json({ ok: true, social: await socialBundle(player.id) });
+    }
+
+    if (action === "friend_remove") {
+      const id = String(body.friendshipId ?? "");
+      const { data: row, error } = await db.from("fr_friendships").select("*").eq("id", id).maybeSingle();
+      if (error) throw error;
+      if (!row || row.status !== "accepted" || (row.requester_id !== player.id && row.addressee_id !== player.id))
+        throw new ApiError(404, "friendship_not_found");
+      const removed = await db.from("fr_friendships").delete().eq("id", row.id);
+      if (removed.error) throw removed.error;
+      return json({ ok: true, social: await socialBundle(player.id) });
+    }
+
+    if (action === "friend_invite") {
+      const friendId = String(body.friendId ?? "");
+      await requireFriend(player.id, friendId);
+      const room = await roomByCode(body.code);
+      if (room.host_player_id !== player.id || room.visibility !== "private" || room.status !== "waiting")
+        throw new ApiError(403, "invite_requires_friendly_host");
+      if (Date.now() - new Date(room.last_heartbeat_at).getTime() > ROOM_TTL_MS) throw new ApiError(410, "room_stale");
+
+      const expiresAt = new Date(Date.now() + 5 * 60_000).toISOString();
+      const invited = await db.from("fr_room_invites").upsert({
+        room_id: room.id, sender_id: player.id, recipient_id: friendId,
+        status: "pending", created_at: new Date().toISOString(), expires_at: expiresAt, responded_at: null,
+      }, { onConflict: "room_id,recipient_id" });
+      if (invited.error) throw invited.error;
+      return json({ ok: true });
+    }
+
+    if (action === "friend_invite_respond") {
+      const id = String(body.inviteId ?? "");
+      const { data: invite, error } = await db.from("fr_room_invites").select("*")
+        .eq("id", id).eq("recipient_id", player.id).eq("status", "pending").maybeSingle();
+      if (error) throw error;
+      if (!invite || new Date(invite.expires_at).getTime() <= Date.now()) throw new ApiError(404, "invite_not_found");
+
+      if (body.accept !== true) {
+        const declined = await db.from("fr_room_invites").update({
+          status: "declined", responded_at: new Date().toISOString(),
+        }).eq("id", invite.id);
+        if (declined.error) throw declined.error;
+        return json({ ok: true, social: await socialBundle(player.id) });
+      }
+
+      const { data: room, error: roomError } = await db.from("fr_rooms").select("*").eq("id", invite.room_id).maybeSingle();
+      if (roomError) throw roomError;
+      if (!room || room.status !== "waiting" || Date.now() - new Date(room.last_heartbeat_at).getTime() > ROOM_TTL_MS)
+        throw new ApiError(410, "room_stale");
+      const accepted = await db.from("fr_room_invites").update({
+        status: "accepted", responded_at: new Date().toISOString(),
+      }).eq("id", invite.id);
+      if (accepted.error) throw accepted.error;
+      return json({ ok: true, code: room.code, mode: room.mode });
     }
 
     if (action === "create_room") {
