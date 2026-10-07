@@ -918,3 +918,176 @@
   background:linear-gradient(90deg,#10251f,#10161d 58%,#1b1423)
 }
 @keyframes fusionRail{to{background-position:-200% 0}}
+
+
+/* ==========================================================
+   ARENA HUD V2 / TRUE FULLSCREEN / FINAL MACHINE
+   ========================================================== */
+.game-wrap .canvas-frame{
+  width:min(100%,calc((100dvh - 96px)*16/9));
+  max-height:calc(100dvh - 96px);
+  margin:0 auto
+}
+.arena-topbar{
+  position:absolute;z-index:45;left:10px;right:10px;top:9px;
+  display:grid;grid-template-columns:minmax(92px,1fr) auto minmax(92px,1fr) auto;
+  gap:7px;align-items:start;pointer-events:none
+}
+.arena-topbar>*{pointer-events:auto}
+.arena-meta,.scoreboard,.arena-controls{
+  min-height:39px;border:1px solid #35404b;background:#090e14e8;border-radius:9px;
+  backdrop-filter:blur(7px);box-shadow:0 8px 26px #0007
+}
+.arena-meta{display:flex;flex-direction:column;justify-content:center;padding:5px 9px}
+.arena-meta span{font-size:8px;line-height:1;color:#7e8995;font-weight:950;letter-spacing:.1em}
+.arena-meta strong{margin-top:3px;font-size:13px;line-height:1.05}
+.arena-round{justify-self:start;min-width:88px}
+.arena-map{justify-self:end;text-align:right;min-width:100px}
+.arena-map strong{max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arena-topbar .scoreboard{
+  align-self:start;justify-self:center;display:flex;align-items:center;gap:5px;padding:4px 7px
+}
+.arena-topbar .score-pill{border-radius:6px;padding:4px 7px;font-size:10px}
+.arena-topbar .score-pill b{font-size:14px}
+.arena-controls{display:flex;align-items:center;gap:4px;padding:4px}
+.arena-control{
+  min-height:29px;border:1px solid #3c4651;background:#131a21;color:#dbe1e7;border-radius:6px;
+  padding:5px 8px;font-size:8px;font-weight:950;letter-spacing:.04em;white-space:nowrap
+}
+.arena-control:hover{border-color:#626f7d;background:#18212a}
+.arena-control.danger{color:#ef858d;border-color:#74363d;background:#241216}
+
+/* Larger, cleaner combat information. */
+.combat-hud{z-index:24;width:min(830px,calc(100% - 26px));bottom:11px;gap:7px}
+.combat-vitals{padding:8px 11px;border-color:#394550}
+.combat-vitals-line span{font-size:11px}
+.combat-vitals-line strong{font-size:15px}
+.combat-hp-track{height:9px}
+.combat-statuses span{font-size:9px;padding:4px 6px}
+.combat-action{min-height:52px;padding:9px 10px;gap:8px}
+.combat-action kbd{min-width:48px;padding:7px 8px;font-size:10px}
+.combat-action-copy small{font-size:8px}
+.combat-action-copy strong{font-size:12px}
+.combat-action>b{font-size:10px}
+.combat-action-meter{height:4px}
+
+/* End-of-match machine identity. */
+.match-overlay{
+  z-index:30;justify-content:flex-start;padding:58px 28px 20px;overflow:auto
+}
+.match-result-head{text-align:center}
+.match-result-head h2{font-size:clamp(38px,6vw,70px)!important}
+.match-result-head>p:not(.eyebrow){margin:5px 0 12px!important}
+.final-build{width:min(880px,100%);display:grid;gap:8px;margin:0 auto 12px}
+.final-machine-card{
+  min-height:140px;display:grid;grid-template-columns:180px minmax(0,1fr);align-items:center;
+  border:1px solid #313b46;border-radius:12px;background:#0b1017;padding:10px 14px;text-align:left
+}
+.final-machine-stage{position:relative;height:118px;overflow:visible}
+.final-machine{
+  position:absolute!important;left:50%!important;top:50%!important;
+  transform:translate(-50%,-50%) scale(.63)!important
+}
+.final-machine-copy span{display:block;color:#77838f;font-size:9px;font-weight:950;letter-spacing:.12em}
+.final-machine-copy strong{display:block;margin-top:4px;font-size:22px;letter-spacing:-.03em}
+.final-machine-copy small{display:block;margin-top:4px;color:#9aa5af;font-size:11px;line-height:1.35}
+.final-fusions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.final-fusion-chip{
+  position:relative;overflow:hidden;border:1px solid #63e7c677;border-radius:9px;
+  background:linear-gradient(100deg,#10251f,#131722 55%,#1c1425);padding:8px 10px;text-align:left
+}
+.final-fusion-chip:before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(#63e7c6,#9a7dff)
+}
+.final-fusion-chip span{display:block;color:#78eacf;font-size:7px;font-weight:950;letter-spacing:.13em}
+.final-fusion-chip strong{display:block;margin-top:2px;font-size:12px}
+.final-fusion-chip small{display:block;margin-top:2px;color:#83909c;font-size:9px;line-height:1.3}
+.final-no-fusion{
+  grid-column:1/-1;border:1px dashed #303943;border-radius:8px;color:#697580;
+  padding:7px;text-align:center;font-size:9px;font-weight:900;letter-spacing:.1em
+}
+.final-upgrades{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}
+.final-upgrade-chip,.final-empty-upgrades{
+  border:1px solid color-mix(in srgb,var(--rarity,#66727d) 50%,#26303a);
+  border-radius:999px;background:#10161d;padding:5px 8px;color:#b6c0ca;font-size:8px;font-weight:900
+}
+.final-upgrade-chip{box-shadow:inset 2px 0 0 var(--rarity,#66727d)}
+.final-empty-upgrades{color:#697580}
+.match-overlay .stats-grid{margin:0 auto 12px}
+.match-overlay #rematchBtn{min-width:240px}
+
+/* Fullscreen: every critical control remains inside the 16:9 play field. */
+.canvas-frame:fullscreen{
+  width:100vw!important;height:100vh!important;max-height:none!important;aspect-ratio:auto!important;
+  border:0;border-radius:0;background:#030507;position:relative;overflow:hidden
+}
+.canvas-frame:fullscreen canvas{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(100vw,calc(100vh * 16 / 9))!important;
+  height:min(100vh,calc(100vw * 9 / 16))!important;
+  aspect-ratio:16/9
+}
+.canvas-frame:fullscreen .arena-topbar{
+  left:50%;right:auto;top:50%;
+  transform:translate(-50%,-50%);
+  width:min(100vw,calc(100vh * 16 / 9));
+  height:min(100vh,calc(100vw * 9 / 16));
+  box-sizing:border-box;padding:10px;
+  grid-template-columns:minmax(100px,1fr) auto minmax(100px,1fr) auto;
+  align-content:start
+}
+.canvas-frame:fullscreen .combat-hud{
+  left:50%;top:50%;bottom:auto;transform:translate(-50%,-50%);
+  width:min(900px,calc(min(100vw,calc(100vh * 16 / 9)) - 24px));
+  height:min(100vh,calc(100vw * 9 / 16));
+  box-sizing:border-box;padding:0 0 10px;justify-content:flex-end
+}
+.canvas-frame:fullscreen .upgrade-overlay,
+.canvas-frame:fullscreen .match-overlay,
+.canvas-frame:fullscreen .ready-overlay,
+.canvas-frame:fullscreen .center-message,
+.canvas-frame:fullscreen .rarity-announcement{
+  width:min(100vw,calc(100vh * 16 / 9));
+}
+.canvas-frame:fullscreen .upgrade-overlay,
+.canvas-frame:fullscreen .match-overlay,
+.canvas-frame:fullscreen .ready-overlay,
+.canvas-frame:fullscreen .center-message{
+  height:min(100vh,calc(100vw * 9 / 16));
+  aspect-ratio:auto;left:50%;top:50%;right:auto;bottom:auto;transform:translate(-50%,-50%)
+}
+.canvas-frame:fullscreen .rarity-announcement{left:50%}
+
+@media(max-width:760px){
+  .game-wrap .canvas-frame{width:100%;max-height:none}
+  .arena-topbar{
+    left:5px;right:5px;top:5px;grid-template-columns:58px 1fr 68px auto;gap:3px
+  }
+  .arena-meta,.arena-topbar .scoreboard,.arena-controls{min-height:32px}
+  .arena-meta{padding:4px 5px}.arena-meta span{font-size:6px}.arena-meta strong{font-size:10px}
+  .arena-round{min-width:0}.arena-map{min-width:0}.arena-map strong{max-width:62px;font-size:8px}
+  .arena-topbar .scoreboard{padding:3px;gap:2px}.arena-topbar .score-pill{padding:3px 4px;font-size:8px}.arena-topbar .score-pill b{font-size:11px}
+  .arena-controls{padding:2px;gap:2px}
+  .arena-control{padding:4px 5px;font-size:7px;min-height:26px}
+  .arena-control span{display:none}
+
+  .combat-hud{bottom:5px;width:calc(100% - 10px);gap:4px}
+  .combat-vitals{padding:5px 7px}.combat-vitals-line span{font-size:9px}.combat-vitals-line strong{font-size:11px}
+  .combat-hp-track{height:6px}.combat-statuses span{font-size:7px;padding:2px 4px}
+  .combat-action{min-height:43px;padding:6px 5px;gap:4px}
+  .combat-action kbd{min-width:34px;padding:5px 4px;font-size:8px}
+  .combat-action-copy small{font-size:6px}.combat-action-copy strong{font-size:9px}
+  .combat-action>b{font-size:8px}
+
+  .match-overlay{padding:45px 10px 10px}
+  .final-machine-card{grid-template-columns:112px 1fr;min-height:100px;padding:7px}
+  .final-machine-stage{height:86px}.final-machine{transform:translate(-50%,-50%) scale(.46)!important}
+  .final-machine-copy span{font-size:7px}.final-machine-copy strong{font-size:16px}.final-machine-copy small{font-size:9px}
+  .final-fusions{grid-template-columns:1fr}.final-fusion-chip small{font-size:8px}
+  .final-upgrade-chip{font-size:7px;padding:4px 6px}
+  .match-overlay .stats-grid{gap:5px}.match-overlay .stats-grid div{padding:7px}
+  .match-overlay .stats-grid span{font-size:7px}.match-overlay .stats-grid strong{font-size:16px}
+
+  .canvas-frame:fullscreen .arena-topbar{padding:5px}
+  .canvas-frame:fullscreen .combat-hud{padding-bottom:5px}
+}

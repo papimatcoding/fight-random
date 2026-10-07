@@ -94,3 +94,8 @@ La rareza escala por ronda en la build `2026.10-polish-1`. Legendario empieza a 
 ## HUD de combate
 
 La build `2026.10-polish-2` usa un HUD fijo dentro de la arena: vida/estados del jugador y tres bloques para `SPACE`, arma primaria (`M1`) y especial (`E`). Los cooldowns se leen directamente, SUNLINE muestra calor/sobrecarga y la tormenta genera aviso contextual. La información larga ya no se dibuja debajo de la máquina local.
+
+
+## Combat V3 / fullscreen
+
+La build `2026.10-combat-3` integra los controles críticos dentro del propio frame de la arena. Marcador, ronda, mapa, fullscreen y SALIR permanecen disponibles al entrar en pantalla completa. El HUD inferior aumenta tamaño y mantiene vida, estados y SPACE/M1/E dentro del área 16:9. Al terminar una partida se muestra la configuración final: chasis, módulos, modificaciones y fusiones obtenidas.

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#090b12" />
   <title>Fight Random — arena online</title>
-  <link rel="stylesheet" href="style.css?v=20261007-hud1" />
+  <link rel="stylesheet" href="style.css?v=20261007-combat3" />
 </head>
 <body>
   <main class="shell">
@@ -220,14 +220,18 @@
     </section>
 
     <section class="game-wrap hidden" id="gameWrap">
-      <div class="match-header">
-        <div class="hud-side hud-left"><div class="round-chip"><span>RONDA</span><strong id="roundNum">1</strong></div></div>
-        <div class="scoreboard" id="scoreboard"></div>
-        <div class="hud-side hud-right"><div class="round-chip map-chip"><span>ARENA</span><strong id="mapName">—</strong></div></div>
-      </div>
-
       <div class="canvas-frame" id="canvasFrame">
         <canvas id="game" width="1280" height="720" aria-label="Arena de Fight Random"></canvas>
+
+        <div class="arena-topbar" id="arenaTopbar">
+          <div class="arena-meta arena-round"><span>RONDA</span><strong id="roundNum">1</strong></div>
+          <div class="scoreboard" id="scoreboard"></div>
+          <div class="arena-meta arena-map"><span>ARENA</span><strong id="mapName">—</strong></div>
+          <div class="arena-controls">
+            <button class="arena-control" id="arenaFullscreenBtn" type="button">⛶ <span>PANTALLA COMPLETA</span></button>
+            <button class="arena-control danger" id="arenaLeaveBtn" type="button">SALIR</button>
+          </div>
+        </div>
         <div class="center-message hidden" id="centerMessage"></div>
 
         <div class="combat-hud hidden" id="combatHud">
@@ -367,9 +371,31 @@
         </div>
 
         <div class="match-overlay hidden" id="matchOverlay">
-          <p class="eyebrow">FIN DE PARTIDA</p>
-          <h2 id="matchTitle">VICTORIA</h2>
-          <p id="matchSubtitle">La arena ha sobrevivido de milagro.</p>
+          <div class="match-result-head">
+            <p class="eyebrow">FIN DE PARTIDA</p>
+            <h2 id="matchTitle">VICTORIA</h2>
+            <p id="matchSubtitle">Partida terminada.</p>
+          </div>
+
+          <div class="final-build">
+            <div class="final-machine-card">
+              <div class="final-machine-stage">
+                <div class="garage-machine compact-machine final-machine" id="finalMachine" data-chassis="mix" data-weapon="" data-special="" data-system="">
+                  <div class="gm-track gm-track-left"></div><div class="gm-track gm-track-right"></div>
+                  <div class="gm-body"><i></i></div><div class="gm-core"></div>
+                  <div class="gm-weapon"></div><div class="gm-special"></div><div class="gm-system"></div>
+                </div>
+              </div>
+              <div class="final-machine-copy">
+                <span>CONFIGURACIÓN FINAL</span>
+                <strong id="finalBuildTitle">MIX</strong>
+                <small id="finalBuildModules">RIVET-9 · ATLAS SHELL · OVERCLOCK</small>
+              </div>
+            </div>
+            <div class="final-fusions" id="finalFusions"></div>
+            <div class="final-upgrades" id="finalUpgrades"></div>
+          </div>
+
           <div class="stats-grid">
             <div><span>DAÑO</span><strong id="statDamage">0</strong></div>
             <div><span>PRECISIÓN</span><strong id="statAccuracy">0%</strong></div>
