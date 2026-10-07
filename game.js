@@ -3,7 +3,7 @@ function buildText(p){const entries=Object.entries(p.powers);return entries.leng
 function scoreData(s){const m=modeOf(s);if(m.id==='teams')return[{label:'EQUIPO AZUL',score:s.teamScore[0],color:TEAM_COLORS[0]},{label:'EQUIPO ROSA',score:s.teamScore[1],color:TEAM_COLORS[1]}];return s.players.map(p=>({label:(p.i===me?'TÚ · ':'')+(p.name||('P'+(p.i+1))),score:p.score,color:PLAYER_COLORS[p.i]}))}
 const GARAGE_KEY='fr-garage-build';
 const CHASSIS_ORDER=['mix','trucks','lizzy'];
-let garageBuild=loadGarageBuild(),pickerContext='garage',pickerSlot=null,weaponCompareTimer=null,trainingActive=false,trainingPreviousMode='duel';
+let garageBuild=loadGarageBuild(),pickerContext='garage',pickerSlot=null,weaponCompareTimer=null,trainingActive=false,trainingPreviousMode='duel',trainingSlots={A:null,B:null};
 window.frQueueIntent='idle';
 
 function blankGarageBuild(){return{character:'mix',loadout:{weapon:null,special:null,system:null}}}
@@ -178,15 +178,130 @@ function resetTrainingMetrics(){
   game.trainingMetrics={total:0,best:0,events:[],startedAt:performance.now()};
   if(game.players[0])game.players[0].stats=combatStats()
 }
-function repositionTrainingDummy(){
+function clearTrainingProjectiles(){
   if(!game?.training)return;
-  const d=game.players[1];d.x=1030;d.y=380;d.vx=d.vy=0;d.a=Math.PI;d.hp=d.max;d.alive=true
+  game.bullets=[];game.fires=[];game.mines=[];game.effects=[];game.feedback=[];game.killfeed=[];
+  const p=game.players[0];if(p){p.weaponHeat=0;p.weaponLock=0;p.specialCd=0;p.dc=0;p.shot=0;p.ps=0;p.pd=0;p.fx.burn=0;p.fx.slow=0;p.fx.fortify=0;p.fx.invisible=0;p.fx.bladeStorm=0;p.fx.bladeTick=0}
+}
+function trainingUpgradeGroup(id){
+  if(id.startsWith('sys_'))return'system';
+  if(id.startsWith('mix_')||id.startsWith('trucks_')||id.startsWith('lizzy_'))return'chassis';
+  if(id.startsWith('atlas_')||id.startsWith('hell_')||id.startsWith('shiv_')||id.startsWith('mine_')||id.startsWith('hound_')||id.startsWith('trinity_'))return'special';
+  return'weapon'
+}
+function trainingGroupTitle(group,p){
+  if(group==='weapon')return'ARMA · '+(WEAPONS[p.loadout?.weapon]?.name||'—');
+  if(group==='special')return'ESPECIAL · '+(SPECIALS[p.loadout?.special]?.name||'—');
+  if(group==='system')return'SISTEMA · '+(SYSTEMS[p.loadout?.system]?.name||'—');
+  return'CHASIS · '+(CHASSIS[p.character]?.name||p.character)
+}
+function compatibleTrainingUpgrades(p){
+  return Object.entries(GENERAL).filter(([,d])=>!d.eligible||d.eligible(p))
+}
+function rebuildTrainingMachine(powers={},source=null){
+  if(!game?.training)return;
+  const p=game.players[0],x=p.x,y=p.y,a=p.a,name=p.name;
+  if(source){p.character=source.character;p.loadout=clone(source.loadout)}
+  p.max=characterHp(p.character,MODES.duel);p.hp=p.max;p.r=CHASSIS[p.character].radius;p.alive=true;
+  p.x=x;p.y=y;p.a=a;p.name=name;p.synergies=[];p.powers={};
+  resetMachineStats(p);
+  for(const [id,countRaw] of Object.entries(powers||{})){
+    const d=GENERAL[id];if(!d||d.eligible&&!d.eligible(p))continue;
+    const count=Math.max(0,Math.min(d.max||1,Number(countRaw)||0));
+    for(let n=0;n<count;n++){if(d.apply)d.apply(p,game,true);p.powers[id]=(p.powers[id]||0)+1}
+  }
+  p.fx={burn:0,burnDps:0,burnOwner:null,slow:0,slowFactor:1,shock:0,haste:0,fortify:0,reactiveReady:p.s.reactive?1:0,invisible:0,overcharge:0,bladeStorm:0,bladeTick:0};
+  p.weaponHeat=0;p.weaponLock=0;p.specialCd=0;p.dc=0;p.shot=0;p.ps=0;p.pd=0;
+  clearTrainingProjectiles();resetTrainingMetrics();applyTrainingDummyMode(game.trainingDummyMode||'fixed',false);
+  $('trainingBuildName').textContent=(CHASSIS[p.character]?.name||p.character)+' · '+(WEAPONS[p.loadout.weapon]?.name||'ARMA');
+  renderTrainingUpgradePanel()
+}
+function setTrainingUpgradeLevel(id,level){
+  if(!game?.training)return;
+  const p=game.players[0],d=GENERAL[id];if(!d||d.eligible&&!d.eligible(p))return;
+  const desired=clone(p.powers||{}),next=Math.max(0,Math.min(d.max||1,level));
+  if(next)desired[id]=next;else delete desired[id];
+  rebuildTrainingMachine(desired)
+}
+function renderTrainingUpgradePanel(){
+  if(!game?.training)return;
+  const p=game.players[0],root=$('trainingUpgradeGroups');if(!root)return;root.innerHTML='';
+  const groups={weapon:[],special:[],chassis:[],system:[]};
+  for(const [id,d] of compatibleTrainingUpgrades(p))groups[trainingUpgradeGroup(id)].push([id,d]);
+  for(const group of ['weapon','special','chassis','system']){
+    if(!groups[group].length)continue;
+    const section=document.createElement('section');section.className='training-upgrade-group';
+    const head=document.createElement('h4');head.textContent=trainingGroupTitle(group,p);section.appendChild(head);
+    for(const [id,d] of groups[group]){
+      const level=p.powers[id]||0,max=d.max||1,row=document.createElement('div');row.className='training-upgrade-row rarity-'+d.rarity;
+      row.innerHTML='<div class="training-upgrade-copy"><span>'+escapeGarage(RARITY_LABEL[d.rarity]||d.rarity)+'</span><b>'+escapeGarage(d.name)+'</b><p>'+escapeGarage(d.desc)+'</p></div><div class="training-stepper"><button data-minus type="button">−</button><strong>'+level+' / '+max+'</strong><button data-plus type="button">+</button></div>';
+      const minus=row.querySelector('[data-minus]'),plus=row.querySelector('[data-plus]');minus.disabled=level<=0;plus.disabled=level>=max;
+      minus.onclick=()=>setTrainingUpgradeLevel(id,level-1);plus.onclick=()=>setTrainingUpgradeLevel(id,level+1);
+      section.appendChild(row)
+    }
+    root.appendChild(section)
+  }
+}
+function repositionTrainingDummy(reset=true){
+  if(!game?.training)return;
+  const d=game.players[1];game.trainingDummyAnchor={x:1030,y:380};d.x=1030;d.y=380;d.vx=d.vy=0;d.a=Math.PI;d.hp=d.max;d.alive=true;
+  if(reset)resetTrainingMetrics()
+}
+function applyTrainingDummyMode(mode='fixed',reset=true){
+  if(!game?.training)return;
+  const valid=['fixed','free','tank'];game.trainingDummyMode=valid.includes(mode)?mode:'fixed';
+  const d=game.players[1];d.s.damageReduction=game.trainingDummyMode==='tank'?.35:0;
+  d.s.knockTaken=game.trainingDummyMode==='fixed'?0:(game.trainingDummyMode==='tank'?.45:1);
+  d.r=game.trainingDummyMode==='tank'?36:30;
+  repositionTrainingDummy(false);
+  if(reset)resetTrainingMetrics()
+}
+function cycleTrainingDummy(){
+  if(!game?.training)return;
+  const modes=['fixed','free','tank'],i=modes.indexOf(game.trainingDummyMode||'fixed');
+  applyTrainingDummyMode(modes[(i+1)%modes.length])
+}
+function trainingMetricSnapshot(s=game){
+  const m=s?.trainingMetrics||{total:0,best:0,events:[],startedAt:performance.now()},now=performance.now(),p=s?.players?.[0];
+  m.events=m.events.filter(e=>now-e.t<=5000);
+  const elapsed=Math.max(.25,Math.min(5,(now-m.startedAt)/1000)),damage5=m.events.reduce((sum,e)=>sum+e.d,0),burst=m.events.filter(e=>now-e.t<=1000).reduce((sum,e)=>sum+e.d,0);
+  return{total:m.total,dps:damage5/elapsed,burst,best:m.best,accuracy:p?.stats?.shots?p.stats.hits/p.stats.shots*100:0}
+}
+function trainingBuildLabel(p=game?.players?.[0]){
+  if(!p)return'—';const count=Object.values(p.powers||{}).reduce((a,b)=>a+b,0);
+  return(CHASSIS[p.character]?.name||p.character)+' · '+(WEAPONS[p.loadout?.weapon]?.name||'ARMA')+(count?' · '+count+' mods':'')
+}
+function saveTrainingSlot(slot){
+  if(!game?.training||!['A','B'].includes(slot))return;
+  const p=game.players[0];trainingSlots[slot]={character:p.character,loadout:clone(p.loadout),powers:clone(p.powers||{}),metrics:trainingMetricSnapshot(),label:trainingBuildLabel(p)};
+  renderTrainingSlots()
+}
+function loadTrainingSlot(slot){
+  const snap=trainingSlots[slot];if(!game?.training||!snap)return;
+  rebuildTrainingMachine(snap.powers,snap);renderTrainingSlots()
+}
+function fmtMetric(v){return Math.round(Number(v)||0)}
+function metricPercent(next,base){
+  if(!base)return next?'nuevo':'=';
+  const pct=(next-base)/Math.abs(base)*100;if(Math.abs(pct)<.5)return'=';
+  return(pct>0?'+':'')+Math.round(pct)+'%'
+}
+function renderTrainingSlots(){
+  for(const slot of ['A','B']){
+    const snap=trainingSlots[slot],label=$('training'+slot+'Label'),stats=$('training'+slot+'Stats'),load=$('trainingLoad'+slot);
+    if(label)label.textContent=snap?snap.label:'vacía';
+    if(stats)stats.textContent=snap?('DPS '+fmtMetric(snap.metrics.dps)+' · BURST '+fmtMetric(snap.metrics.burst)+' · MÁX '+cleanStatNumber(snap.metrics.best)):'—';
+    if(load)load.disabled=!snap
+  }
+  const diff=$('trainingDiff'),a=trainingSlots.A,b=trainingSlots.B;if(!diff)return;
+  if(!a||!b){diff.textContent='Guarda A y B para comparar.';return}
+  diff.innerHTML='B vs A · <span>DPS '+metricPercent(b.metrics.dps,a.metrics.dps)+'</span><span>BURST '+metricPercent(b.metrics.burst,a.metrics.burst)+'</span><span>MÁX '+metricPercent(b.metrics.best,a.metrics.best)+'</span><span>PREC '+metricPercent(b.metrics.accuracy,a.metrics.accuracy)+'</span>'
 }
 function startTestRange(){
   if(!garageCanQueue()){status('Completa una máquina válida antes de probarla.',true);return}
   if(typeof closeNetworking==='function')closeNetworking();
   trainingPreviousMode=selectedMode;trainingActive=true;host=false;me=0;code='';
-  game=makeGame('duel');game.training=true;game.trainingNoCooldowns=false;
+  game=makeGame('duel');game.training=true;game.trainingNoCooldowns=false;game.trainingDummyMode='fixed';
   const trainingMap=MAPS.findIndex(m=>m.training);game.map=trainingMap>=0?trainingMap:0;
   game.connected=[true,true];game.ready=[true,true];game.phase='play';game.round=1;
   game.bullets=[];game.pickups=[];game.barrels=[];game.fires=[];game.mines=[];game.effects=[];game.feedback=[];game.killfeed=[];
@@ -194,31 +309,32 @@ function startTestRange(){
   const p=game.players[0];p.name=typeof frPlayerName==='function'?frPlayerName():'TÚ';p.x=330;p.y=380;p.a=0;
   const d=game.players[1];d.name='DUMMY';d.character='trucks';d.loadout=clone(DEFAULT_LOADOUT.trucks);d.powers={};d.synergies=[];resetMachineStats(d);d.r=30;d.max=1000000000;d.hp=d.max;d.alive=true;
   d.fx={burn:0,burnDps:0,burnOwner:null,slow:0,slowFactor:1,shock:0,haste:0,fortify:0,reactiveReady:0,invisible:0,overcharge:0,bladeStorm:0,bladeTick:0};
-  d.s.damageReduction=0;repositionTrainingDummy();
-  remoteInputs[1]=blankInput();view=game;resetTrainingMetrics();
+  applyTrainingDummyMode('fixed',false);remoteInputs[1]=blankInput();view=game;resetTrainingMetrics();
   Object.assign(mine,blankInput());mine.ax=d.x;mine.ay=d.y;
-  $('lobby').classList.add('hidden');$('roomPanel').classList.add('hidden');$('gameWrap').classList.remove('hidden');$('fullscreenBtn').classList.remove('hidden');$('trainingHud').classList.remove('hidden');
-  $('trainingBuildName').textContent=(CHASSIS[p.character]?.name||p.character)+' · '+(WEAPONS[p.loadout.weapon]?.name||'ARMA');
+  $('lobby').classList.add('hidden');$('roomPanel').classList.add('hidden');$('gameWrap').classList.remove('hidden');$('fullscreenBtn').classList.remove('hidden');$('trainingHud').classList.remove('hidden');$('trainingUpgrades').classList.add('hidden');
+  $('trainingBuildName').textContent=trainingBuildLabel(p);
   $('scoreboard').innerHTML='';$('centerMessage').classList.add('hidden');
   $('modeName').textContent='PRUEBAS';$('roundNum').textContent='—';$('mapName').textContent='BANCO';if(typeof net==='function')net('local',true);
+  renderTrainingUpgradePanel();renderTrainingSlots()
 }
 function exitTestRange(){
   trainingActive=false;
   Object.assign(mine,blankInput());
   game=view=null;me=null;host=false;selectedMode=trainingPreviousMode;
-  $('trainingHud').classList.add('hidden');$('gameWrap').classList.add('hidden');$('roomPanel').classList.add('hidden');$('fullscreenBtn').classList.add('hidden');$('lobby').classList.remove('hidden');if(typeof net==='function')net('offline',false);
+  $('trainingHud').classList.add('hidden');$('trainingUpgrades').classList.add('hidden');$('gameWrap').classList.add('hidden');$('roomPanel').classList.add('hidden');$('fullscreenBtn').classList.add('hidden');$('lobby').classList.remove('hidden');if(typeof net==='function')net('offline',false);
   renderGarage();showLobbyView('hangar')
 }
 function renderTrainingHud(s){
   if(!s?.training)return;
-  const m=s.trainingMetrics||{total:0,best:0,events:[],startedAt:performance.now()},now=performance.now();
-  m.events=m.events.filter(e=>now-e.t<=5000);
-  const elapsed=Math.max(.25,Math.min(5,(now-m.startedAt)/1000)),windowDamage=m.events.reduce((sum,e)=>sum+e.d,0),p=s.players[0];
-  $('trainingDamage').textContent=Math.round(m.total);
-  $('trainingDps').textContent=Math.round(windowDamage/elapsed);
-  $('trainingBest').textContent=cleanStatNumber(m.best);
-  $('trainingAccuracy').textContent=(p.stats.shots?Math.round(p.stats.hits/p.stats.shots*100):0)+'%';
-  $('trainingCooldownBtn').textContent=s.trainingNoCooldowns?'CD DESACTIVADOS':'CD NORMALES'
+  const snap=trainingMetricSnapshot(s),p=s.players[0],dummyLabel={fixed:'FIJO',free:'LIBRE',tank:'TANQUE'}[s.trainingDummyMode]||'FIJO';
+  $('trainingDamage').textContent=Math.round(snap.total);
+  $('trainingDps').textContent=Math.round(snap.dps);
+  $('trainingBurst').textContent=Math.round(snap.burst);
+  $('trainingBest').textContent=cleanStatNumber(snap.best);
+  $('trainingAccuracy').textContent=Math.round(snap.accuracy)+'%';
+  $('trainingCooldownBtn').textContent=s.trainingNoCooldowns?'CD DESACTIVADOS':'CD NORMALES';
+  $('trainingDummyBtn').textContent='DUMMY · '+dummyLabel;
+  $('trainingBuildName').textContent=trainingBuildLabel(p)
 }
 function syncUI(s){if(!s)return;if(s.training){renderTrainingHud(s);$('readyOverlay').classList.add('hidden');$('upgradeOverlay').classList.add('hidden');$('matchOverlay').classList.add('hidden');return}const m=modeOf(s);$('modeName').textContent=m.name;$('roundNum').textContent=s.round;$('mapName').textContent=mapDef(s).name;
   const sb=$('scoreboard');sb.innerHTML='';for(const item of scoreData(s)){const el=document.createElement('div');el.className='score-pill';el.style.borderColor=item.color+'66';el.innerHTML='<span style="color:'+item.color+'">'+item.label+'</span><b>'+item.score+'</b>';sb.appendChild(el)}
@@ -244,7 +360,7 @@ function drawArenaScore(s){}
 function drawBarrels(p,i){const shown=Math.min(7,p.s.n),perp=p.a+Math.PI/2;for(let k=0;k<shown;k++){const off=(k-(shown-1)/2)*6.5,ox=Math.cos(perp)*off,oy=Math.sin(perp)*off;ctx.strokeStyle=PLAYER_COLORS[i];ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(p.x+ox,p.y+oy);ctx.lineTo(p.x+ox+Math.cos(p.a)*39,p.y+oy+Math.sin(p.a)*39);ctx.stroke()}}
 function drawHpAbove(p){
   if(p.fx?.invisible>0&&p.i!==me)return;
-  const w=96,h=11,x=p.x-w/2,y=p.y-52,ratio=Math.max(0,p.hp/p.max);ctx.fillStyle='#05070bdd';ctx.fillRect(x-2,y-2,w+4,h+4);ctx.fillStyle=ratio>.45?PLAYER_COLORS[p.i]:(ratio>.2?'#ffd166':'#ff596f');ctx.fillRect(x,y,w*ratio,h);ctx.strokeStyle='#ffffff40';ctx.lineWidth=1.5;ctx.strokeRect(x,y,w,h);ctx.font='900 11px system-ui';ctx.textAlign='center';ctx.fillStyle='#f7f9ff';ctx.fillText(game?.training&&p.i===1?'DUMMY · ∞':(Math.max(0,Math.ceil(p.hp))+' / '+p.max),p.x,y-6);
+  const w=96,h=11,x=p.x-w/2,y=p.y-52,ratio=Math.max(0,p.hp/p.max);ctx.fillStyle='#05070bdd';ctx.fillRect(x-2,y-2,w+4,h+4);ctx.fillStyle=ratio>.45?PLAYER_COLORS[p.i]:(ratio>.2?'#ffd166':'#ff596f');ctx.fillRect(x,y,w*ratio,h);ctx.strokeStyle='#ffffff40';ctx.lineWidth=1.5;ctx.strokeRect(x,y,w,h);ctx.font='900 11px system-ui';ctx.textAlign='center';ctx.fillStyle='#f7f9ff';ctx.fillText(game?.training&&p.i===1?('DUMMY · '+({fixed:'FIJO',free:'LIBRE',tank:'TANQUE'}[game.trainingDummyMode]||'FIJO')):(Math.max(0,Math.ceil(p.hp))+' / '+p.max),p.x,y-6);
   if(p.i===me){
     ctx.font='900 9px system-ui';const c=CHASSIS[p.character]||CHASSIS.mix,sp=SPECIALS[p.loadout?.special]||SPECIALS.atlas,wdef=WEAPONS[p.loadout?.weapon]||WEAPONS.rivet;
     const basic=p.character==='trucks'?(p.fx?.fortify>0?'FORTIFICADO':(p.dc<=0?'FORTIFICAR':p.dc.toFixed(1)+'s')):p.character==='lizzy'?(p.fx?.invisible>0?'INVISIBLE '+p.fx.invisible.toFixed(1)+'s':(p.dc<=0?'INVISIBILIDAD':p.dc.toFixed(1)+'s')):(p.dc<=0?'DASH':p.dc.toFixed(1)+'s');
@@ -350,8 +466,13 @@ $('rematchBtn').onclick=()=>{if(me==null)return;if(host)setReady(me,'rematch');e
 $('testRangeBtn').onclick=startTestRange;
 $('trainingExitBtn').onclick=exitTestRange;
 $('trainingResetBtn').onclick=resetTrainingMetrics;
-$('trainingDummyBtn').onclick=()=>{repositionTrainingDummy();resetTrainingMetrics()};
+$('trainingDummyBtn').onclick=cycleTrainingDummy;
 $('trainingCooldownBtn').onclick=()=>{if(game?.training){game.trainingNoCooldowns=!game.trainingNoCooldowns;renderTrainingHud(game)}};
+$('trainingUpgradesBtn').onclick=()=>{$('trainingUpgrades').classList.toggle('hidden');renderTrainingUpgradePanel()};
+$('trainingUpgradesClose').onclick=()=>$('trainingUpgrades').classList.add('hidden');
+$('trainingClearUpgrades').onclick=()=>rebuildTrainingMachine({});
+$('trainingSaveA').onclick=()=>saveTrainingSlot('A');$('trainingSaveB').onclick=()=>saveTrainingSlot('B');
+$('trainingLoadA').onclick=()=>loadTrainingSlot('A');$('trainingLoadB').onclick=()=>loadTrainingSlot('B');
 $('fullscreenBtn').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('canvasFrame').requestFullscreen()}catch(e){console.warn(e)}};
 document.addEventListener('fullscreenchange',()=>{$('fullscreenBtn').textContent=document.fullscreenElement?'SALIR DE PANTALLA COMPLETA':'PANTALLA COMPLETA'});
 renderGarage();showLobbyView('home');
