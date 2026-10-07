@@ -103,6 +103,7 @@ function applySystem(p){
 function resetMachineStats(p){
   p.s=machineBaseStats(p.character);
   p.mod=blankMachineMods();
+  p.rivetCycle=0;p.fusionDragonCharge=0;p.grinderGuard=0;
   applySystem(p);
 }
 
