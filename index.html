@@ -230,6 +230,37 @@
         <canvas id="game" width="1280" height="720" aria-label="Arena de Fight Random"></canvas>
         <div class="center-message hidden" id="centerMessage"></div>
 
+        <div class="combat-hud hidden" id="combatHud">
+          <div class="combat-vitals">
+            <div class="combat-vitals-line">
+              <span id="combatPlayerName">TÚ</span>
+              <strong id="combatHpText">150 / 150</strong>
+            </div>
+            <div class="combat-hp-track"><i id="combatHpFill"></i></div>
+            <div class="combat-statuses" id="combatStatuses"></div>
+          </div>
+          <div class="combat-actions">
+            <div class="combat-action" id="combatSpace">
+              <kbd>SPACE</kbd>
+              <span class="combat-action-copy"><small>CHASIS</small><strong id="combatSpaceName">DASH</strong></span>
+              <b id="combatSpaceState">LISTO</b>
+              <i class="combat-action-meter" id="combatSpaceMeter"></i>
+            </div>
+            <div class="combat-action weapon-action" id="combatWeapon">
+              <kbd>M1</kbd>
+              <span class="combat-action-copy"><small>ARMA</small><strong id="combatWeaponName">RIVET-9</strong></span>
+              <b id="combatWeaponState">LISTO</b>
+              <i class="combat-action-meter" id="combatWeaponMeter"></i>
+            </div>
+            <div class="combat-action" id="combatSpecial">
+              <kbd>E</kbd>
+              <span class="combat-action-copy"><small>ESPECIAL</small><strong id="combatSpecialName">ATLAS SHELL</strong></span>
+              <b id="combatSpecialState">LISTO</b>
+              <i class="combat-action-meter" id="combatSpecialMeter"></i>
+            </div>
+          </div>
+        </div>
+
         <div class="training-hud hidden" id="trainingHud">
           <div class="training-title">
             <div><span>CAMPO DE PRUEBAS</span><strong id="trainingBuildName">MIX · RIVET-9</strong></div>
