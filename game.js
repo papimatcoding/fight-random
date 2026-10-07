@@ -58,7 +58,7 @@ function renderGarage(){
   const title=$('homeBuildTitle'),mods=$('homeBuildModules');if(title)title.textContent=c.name;if(mods)mods.textContent=[moduleName('weapon',garageBuild.loadout.weapon),moduleName('special',garageBuild.loadout.special),moduleName('system',garageBuild.loadout.system)].filter(x=>x!=='AÑADIR').join(' · ')||'Sin montar';
   const self=$('partySelfName');if(self)self.textContent=typeof frPlayerName==='function'?frPlayerName():'Jugador'
 }
-function cleanStatNumber(n){return Number.isInteger(n)?String(n):Number(n).toFixed(1).replace(/\.0$/,'')}
+function cleanStatNumber(n){const v=Number(n);return Number.isInteger(v)?String(v):String(Number(v.toFixed(2)))}
 function weaponDamageText(d){
   if(!d)return'';
   if(d.id==='scrapshot'){
