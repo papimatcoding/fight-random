@@ -44,6 +44,8 @@ function renderGarage(){
   machineData($('garageMachine'),garageBuild);
   $('garageChassisName').textContent=c.name;$('garageChassisMeta').textContent=chassisMeta(c.id);
   $('garageWeaponName').textContent=moduleName('weapon',garageBuild.loadout.weapon);
+  const garageWeapon=WEAPONS[garageBuild.loadout.weapon];
+  const garageWeaponStats=$('garageWeaponStats');if(garageWeaponStats)garageWeaponStats.textContent=garageWeapon?weaponDamageText(garageWeapon)+' · RANGO '+garageWeapon.range:'';
   $('garageSpecialName').textContent=moduleName('special',garageBuild.loadout.special);
   $('garageSystemName').textContent=moduleName('system',garageBuild.loadout.system);
   for(const b of document.querySelectorAll('[data-garage-slot]'))b.classList.toggle('filled',!!garageBuild.loadout[b.dataset.garageSlot]);
@@ -56,8 +58,21 @@ function renderGarage(){
   const title=$('homeBuildTitle'),mods=$('homeBuildModules');if(title)title.textContent=c.name;if(mods)mods.textContent=[moduleName('weapon',garageBuild.loadout.weapon),moduleName('special',garageBuild.loadout.special),moduleName('system',garageBuild.loadout.system)].filter(x=>x!=='AÑADIR').join(' · ')||'Sin montar';
   const self=$('partySelfName');if(self)self.textContent=typeof frPlayerName==='function'?frPlayerName():'Jugador'
 }
+function cleanStatNumber(n){return Number.isInteger(n)?String(n):Number(n).toFixed(1).replace(/\.0$/,'')}
+function weaponDamageText(d){
+  if(!d)return'';
+  if(d.id==='scrapshot'){
+    const pellets=d.pellets||1,total=d.damage*pellets;
+    return 'DAÑO '+cleanStatNumber(d.damage)+' × '+pellets+' = '+cleanStatNumber(total);
+  }
+  if(d.id==='sunline'){
+    const dps=d.damage/Math.max(.01,d.rate||.08);
+    return 'DAÑO '+cleanStatNumber(d.damage)+'/tick · ~'+Math.round(dps)+' DPS';
+  }
+  return 'DAÑO '+cleanStatNumber(d.damage);
+}
 function moduleCardStats(d,slot){
-  if(slot==='weapon')return [d.range?'RANGO '+d.range:null,d.rate?'CAD '+d.rate.toFixed(2)+'s':null,d.recoil?'RETRO '+d.recoil:null].filter(Boolean).join(' · ');
+  if(slot==='weapon')return [weaponDamageText(d),d.range?'RANGO '+d.range:null,d.rate?'CAD '+d.rate.toFixed(2)+'s':null,d.recoil?'RETRO '+d.recoil:null].filter(Boolean).join(' · ');
   if(slot==='special')return 'CD '+d.cd.toFixed(1)+'s';
   return 'PASIVA'
 }
