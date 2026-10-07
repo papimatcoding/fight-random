@@ -367,3 +367,78 @@
   .module-choice{min-height:62px;padding:8px}.module-choice b{font-size:9px}
   .match-header{grid-template-columns:82px 1fr 82px;gap:3px}.scoreboard{gap:3px}.score-pill,.round-chip{padding:4px 6px}.score-pill{font-size:9px}.score-pill b{font-size:12px;margin-left:3px}.round-chip strong{font-size:11px}.map-chip{min-width:0}.map-chip strong{max-width:70px;font-size:8px}
 }
+
+
+/* ==========================================================
+   HANGAR MODULE CLARITY + SOCIAL V1
+   ========================================================== */
+.lobby-nav{grid-template-columns:repeat(5,1fr)}
+.lobby-nav button{position:relative}
+.nav-badge{position:absolute;right:7px;top:6px;min-width:18px;height:18px;display:grid;place-items:center;padding:0 5px;border-radius:999px;background:#b94343;color:#fff;font-size:8px;font-style:normal;font-weight:950}
+
+.module-choice p{margin:2px 0 1px;color:#7d8792;font-size:8px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:180px}
+.module-choice small{font-size:7px;color:#9aa4ae;letter-spacing:.04em}
+.module-choice{min-height:82px}
+.module-choice.module-remove p,.module-choice.module-remove small{display:none}
+
+/* Weapon prototype: simple centred turret mount, no SVG and no special/system art yet. */
+.garage-machine .gm-weapon{
+  display:block!important;left:50%!important;top:68px!important;width:64px;height:8px;
+  transform:none!important;transform-origin:0 50%;border:2px solid #6e7983;background:#28323b;border-radius:4px;
+  box-shadow:none!important
+}
+.garage-machine[data-weapon=""] .gm-weapon{display:none!important}
+.garage-machine .gm-weapon:before{
+  content:""!important;position:absolute;left:-12px;top:50%;width:22px;height:22px;transform:translateY(-50%);
+  border:2px solid #717c86;border-radius:50%;background:#202830
+}
+.garage-machine .gm-weapon:after{content:""!important;position:absolute;background:#8d98a1}
+.garage-machine[data-weapon="rivet"] .gm-weapon{width:62px;height:8px}
+.garage-machine[data-weapon="rivet"] .gm-weapon:after{right:-10px;top:1px;width:11px;height:6px;border-radius:2px}
+.garage-machine[data-weapon="lance"] .gm-weapon{width:104px;height:5px;top:70px!important}
+.garage-machine[data-weapon="lance"] .gm-weapon:after{right:-16px;top:-3px;width:18px;height:9px;border:2px solid #78838d;background:#171d23}
+.garage-machine[data-weapon="scrapshot"] .gm-weapon{width:57px;height:18px;top:63px!important;background:#303a43}
+.garage-machine[data-weapon="scrapshot"] .gm-weapon:after{right:-9px;top:-3px;width:12px;height:20px;border-radius:3px;background:#87929b}
+.garage-machine[data-weapon="sunline"] .gm-weapon{width:76px;height:11px;top:66px!important;border-color:#87535b;background:#39242a}
+.garage-machine[data-weapon="sunline"] .gm-weapon:after{left:18px;right:8px;top:2px;height:3px;background:#bd6570;box-shadow:0 0 7px #9d4b58}
+.garage-machine[data-weapon="piston"] .gm-weapon{width:49px;height:18px;top:63px!important;border-color:#746b57;background:#393225}
+.garage-machine[data-weapon="piston"] .gm-weapon:after{right:-22px;top:-6px;width:24px;height:26px;border:2px solid #857a63;background:#c6baa2;border-radius:3px}
+.garage-machine[data-weapon="grinder"] .gm-weapon{width:46px;height:6px;top:69px!important}
+.garage-machine[data-weapon="grinder"] .gm-weapon:after{right:-29px;top:-16px;width:34px;height:34px;border:5px dashed #8f99a2;border-radius:50%;background:#171d23}
+
+/* Lizzy's chassis is narrower: keep the mount on its geometric centre. */
+.garage-machine[data-chassis="lizzy"] .gm-weapon{left:50%!important}
+
+/* No provisional art for special/system yet. */
+.garage-machine .gm-special,.garage-machine .gm-system{display:none!important}
+.garage-machine[data-system="plating"] .gm-body{box-shadow:inset 0 0 0 7px #0f141a!important}
+
+/* Friends */
+.friends-toolbar{display:flex;align-items:center;gap:10px}
+.friends-toolbar form{display:grid;grid-template-columns:minmax(160px,280px) auto;gap:6px}
+.friends-toolbar input{border:1px solid #333c46;background:#0b1016;color:#eef2f5;border-radius:9px;padding:10px;font-size:10px}
+.friends-toolbar button{padding:10px 13px;font-size:9px}
+#friendMessage{color:#7d8793;font-size:9px}
+.friends-columns{flex:1;min-height:0;display:grid;grid-template-columns:.8fr .9fr 1.3fr;gap:8px}
+.friends-section{min-height:0;border:1px solid #282f37;border-radius:11px;background:#0d1218;padding:8px;display:flex;flex-direction:column}
+.friends-head{display:flex;align-items:center;justify-content:space-between;padding:2px 3px 8px;border-bottom:1px solid #242b32}
+.friends-head strong{font-size:9px;letter-spacing:.1em}.friends-head span{font-size:8px;color:#77828e}
+.friends-list{min-height:0;overflow:auto;display:flex;flex-direction:column;gap:5px;padding-top:6px}
+.friend-row{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid #29313a;background:#11171e;border-radius:9px;padding:8px}
+.friend-status{width:7px;height:7px;border-radius:50%;background:#414a54}.friend-status.online{background:#69c889;box-shadow:0 0 8px #69c88955}
+.friend-copy{min-width:0}.friend-copy b{display:block;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.friend-copy small{display:block;color:#74808b;font-size:8px;margin-top:2px}
+.friend-actions{display:flex;gap:4px;align-items:center}.friend-actions button{padding:6px 8px;font-size:7px;border-radius:7px}.pending-label{font-size:7px;color:#76818d;font-weight:900;letter-spacing:.08em}
+.friend-row.pending{opacity:.65}
+.friend-picker{position:fixed;z-index:110;inset:0;display:grid;place-items:center;padding:16px;background:#05080bd9;backdrop-filter:blur(8px)}
+.friend-picker-panel{width:min(520px,100%);max-height:min(620px,88vh);display:flex;flex-direction:column;border:1px solid #343d47;background:#0d1218;border-radius:14px;padding:12px;box-shadow:0 28px 80px #000}
+.friend-picker-panel .friends-list{max-height:500px}
+.room-actions{flex-wrap:wrap}
+
+@media(max-width:760px){
+  .lobby-nav{grid-template-columns:repeat(3,1fr)}
+  .lobby-nav button:last-child:nth-child(5){grid-column:auto}
+  .friends-toolbar{display:block}.friends-toolbar form{grid-template-columns:1fr 72px}.friends-toolbar #friendMessage{display:block;margin-top:5px}
+  .friends-columns{grid-template-columns:1fr;overflow:auto}.friends-section{min-height:130px}.friends-main{min-height:180px}
+  .module-choice p{font-size:7px;max-width:150px}
+  .friend-picker{padding:6px;align-items:end}.friend-picker-panel{border-radius:14px 14px 7px 7px;max-height:82vh}
+}
