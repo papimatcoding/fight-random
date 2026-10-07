@@ -526,7 +526,7 @@ function endUI(s){
   o.classList.remove('hidden');
   const win=resultForMe(s),p=s.players[me];
   $('matchTitle').textContent=win?'VICTORIA':'DERROTA';
-  $('matchSubtitle').textContent=win?'Tu máquina ha sobrevivido a la arena.':'Así terminó tu máquina.';
+  $('matchSubtitle').textContent='Configuración final de la partida.';
   renderFinalBuild(p);
   $('statDamage').textContent=Math.round(p.stats.damage);
   $('statAccuracy').textContent=accuracy(p)+'%';
