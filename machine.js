@@ -357,6 +357,13 @@ applyPower=function(i,id){
 updateSynergies=function(){};
 hasSynergy=function(){return false};
 
+const legacyMachineDamageBullet=damageBullet;
+damageBullet=function(target,b,amount,direct){
+  legacyMachineDamageBullet(target,b,amount,direct);
+  if(direct&&b?.weaponId==='rivet'&&b.owner!=null){
+    const a=game.players[b.owner];if(a?.mod?.fusionSwarm)a.specialCd=Math.max(0,(a.specialCd||0)-.20)
+  }
+};
 function weaponDef(p){return WEAPONS[p.loadout?.weapon]||WEAPONS.rivet}
 function specialDef(p){return SPECIALS[p.loadout?.special]||SPECIALS.atlas}
 function weaponRate(p){return Math.max(.07,weaponDef(p).rate*p.mod.weaponRate*(p.fx?.overcharge>0?.84:1))}
@@ -366,7 +373,7 @@ function bulletLife(range,speed){return Math.max(.15,range/Math.max(1,speed))}
 function spawnBullet(p,a,def,extra={}){
   const pace=tempo(),speed=(def.speed||600)*pace,range=(def.range||650)*p.mod.weaponRange;
   game.bullets.push({x:p.x+Math.cos(a)*34,y:p.y+Math.sin(a)*34,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,
-    r:def.size||5.5,owner:p.i,dmg:def.damage*p.mod.weaponDamage,bounces:p.mod.bounces||0,homing:0,boom:0,
+    r:def.size||5.5,owner:p.i,weaponId:def.id,dmg:def.damage*p.mod.weaponDamage,bounces:p.mod.bounces||0,homing:0,boom:0,
     fire:p.mod.weaponFire||0,frost:0,shock:0,life:bulletLife(range,speed),...extra})
 }
 function angleDelta(a,b){return Math.abs(((a-b+Math.PI*3)%(Math.PI*2))-Math.PI)}
@@ -399,10 +406,11 @@ function laserShot(p,w){
     const rx=t.x-p.x,ry=t.y-p.y,proj=Math.max(0,Math.min(len,(rx*dx+ry*dy)/len)),cx=p.x+dx/len*proj,cy=p.y+dy/len*proj,perp=Math.hypot(t.x-cx,t.y-cy);
     if(perp<t.r+7&&proj<hitT&&!lineBlocked(p.x,p.y,t.x,t.y)){hit=t;hitT=proj}
   }
-  if(hit){x2=p.x+dx/len*hitT;y2=p.y+dy/len*hitT;let dmg=w.damage*p.mod.weaponDamage;if(p.mod.laserRedline&&p.weaponHeat>cap*.70)dmg*=1.38;damageRaw(hit,dmg,p.i,false,Math.cos(p.a)*22,Math.sin(p.a)*22);p.stats.hits++;addFeedback('hit',hit.x,hit.y,dmg,p.i,hit.i)}
-  p.stats.shots++;game.effects.push({id:Math.random().toString(36).slice(2),type:'beam',x:p.x,y:p.y,x2,y2,radius:6,color:'#ff5f73',duration:.11,life:.11,owner:p.i});
+  const cryo=p.mod.fusionCryo&&p.weaponHeat<cap*.38;
+  if(hit){x2=p.x+dx/len*hitT;y2=p.y+dy/len*hitT;let dmg=w.damage*p.mod.weaponDamage;if(cryo)dmg*=1.20;if(p.mod.laserRedline&&p.weaponHeat>cap*.70)dmg*=1.38;damageRaw(hit,dmg,p.i,false,Math.cos(p.a)*22,Math.sin(p.a)*22);p.stats.hits++;addFeedback('hit',hit.x,hit.y,dmg,p.i,hit.i)}
+  p.stats.shots++;game.effects.push({id:Math.random().toString(36).slice(2),type:'beam',x:p.x,y:p.y,x2,y2,radius:6,color:cryo?'#78e8ff':'#ff5f73',duration:.11,life:.11,owner:p.i});
   selfRecoil(p,w.recoil);
-  if(p.weaponHeat>=cap){p.weaponHeat=cap;p.weaponLock=1.25;addFeedback('overheat',p.x,p.y,0,p.i,null,'SOBRECARGA')}
+  if(p.weaponHeat>=cap){p.weaponHeat=cap;p.weaponLock=1.25;if(p.mod.sunPurge){addEffect('shockwave',p.x,p.y,92,'#ff7586',.28,p.i);for(const t of game.players){if(!t.alive||!isEnemy(p.i,t.i))continue;const d=Math.hypot(t.x-p.x,t.y-p.y);if(d<92+t.r){const fall=Math.max(.2,1-d/110),dx=(t.x-p.x)/(d||1),dy=(t.y-p.y)/(d||1);damageRaw(t,4*fall,p.i,false,dx*180*fall,dy*180*fall)}}}addFeedback('overheat',p.x,p.y,0,p.i,null,'SOBRECARGA')}
 }
 function damageMeleeBarrel(barrel,amount,source){
   if(!barrel?.alive)return false;
@@ -437,17 +445,19 @@ function pistonShot(p,w){
   selfRecoil(p,w.recoil);
   if(!target)return;
   const dmg=w.damage*p.mod.weaponDamage,knock=w.knock*p.mod.pistonKnock;
-  if(target.type==='barrel'){damageMeleeBarrel(target.target,dmg*1.25,p.i);p.stats.hits++;return}
-  damageRaw(target.target,dmg,p.i,false,Math.cos(p.a)*knock,Math.sin(p.a)*knock);p.stats.hits++;addFeedback('hit',target.target.x,target.target.y,dmg,p.i,target.target.i)
+  const onConnect=(x,y)=>{if(p.mod.pistonRecovery)p.dc=Math.max(0,p.dc-.6);if(p.mod.fusionSiege){p.specialCd=Math.max(0,p.specialCd-1.8);addEffect('shockwave',x,y,64,'#ffd27a',.22,p.i);for(const t of game.players){if(!t.alive||!isEnemy(p.i,t.i))continue;const d=Math.hypot(t.x-x,t.y-y);if(d<64+t.r){const fall=Math.max(.2,1-d/78),dx=(t.x-x)/(d||1),dy=(t.y-y)/(d||1);damageRaw(t,3.5*fall,p.i,false,dx*105*fall,dy*105*fall)}}}};
+  if(target.type==='barrel'){damageMeleeBarrel(target.target,dmg*1.25,p.i);p.stats.hits++;onConnect(target.target.x,target.target.y);return}
+  damageRaw(target.target,dmg,p.i,false,Math.cos(p.a)*knock,Math.sin(p.a)*knock);p.stats.hits++;addFeedback('hit',target.target.x,target.target.y,dmg,p.i,target.target.i);onConnect(target.target.x,target.target.y)
 }
 function grinderShot(p,w){
-  const range=w.range*p.mod.grinderRange,arc=1.55,passes=1+(p.mod.pellets>0?1:0),dmg=w.damage*p.mod.weaponDamage*p.mod.grinderDamage*(passes>1?1.55:1);p.stats.shots+=passes;
-  pushDirectionalEffect('axeSwing',p,range,'#d8e2ef',.28,{passes});
+  const crown=p.mod.fusionCrown&&p.fx.bladeStorm>0,range=w.range*p.mod.grinderRange*(crown?1.15:1),arc=1.55,passes=1+(p.mod.pellets>0?1:0),dmg=w.damage*p.mod.weaponDamage*p.mod.grinderDamage*(passes>1?1.55:1)*(crown?1.12:1);p.stats.shots+=passes;
+  if(p.mod.grinderGuard)p.grinderGuard=.34;
+  pushDirectionalEffect('axeSwing',p,range,crown?'#ff8190':'#d8e2ef',.28,{passes});
   selfRecoil(p,w.recoil);
   for(const t of game.players){
     if(!t.alive||!isEnemy(p.i,t.i))continue;const dx=t.x-p.x,dy=t.y-p.y,d=Math.hypot(dx,dy);
     if(d>range+t.r||angleDelta(Math.atan2(dy,dx),p.a)>arc/2||lineBlocked(p.x,p.y,t.x,t.y))continue;
-    damageRaw(t,dmg,p.i,false,Math.cos(p.a)*w.knock,Math.sin(p.a)*w.knock);p.stats.hits++;addFeedback('hit',t.x,t.y,dmg,p.i,t.i)
+    damageRaw(t,dmg,p.i,false,Math.cos(p.a)*w.knock,Math.sin(p.a)*w.knock);p.stats.hits++;addFeedback('hit',t.x,t.y,dmg,p.i,t.i);if(crown)p.fx.bladeStorm=Math.min(6,p.fx.bladeStorm+.18)
   }
   for(const barrel of game.barrels||[]){
     if(!barrel.alive)continue;const dx=barrel.x-p.x,dy=barrel.y-p.y,d=Math.hypot(dx,dy);
@@ -462,14 +472,19 @@ fire=function(p){
   if(w.id==='piston'){pistonShot(p,w);return}
   if(w.id==='grinder'){grinderShot(p,w);return}
   addEffect('shot',p.x+Math.cos(p.a)*28,p.y+Math.sin(p.a)*28,24,PLAYER_COLORS[p.i],.08,p.i);
+  let recoil=w.recoil;
   if(w.id==='scrapshot'){
-    const pellets=w.pellets+p.mod.pellets;p.stats.shots+=pellets;
-    for(let i=0;i<pellets;i++){const t=pellets===1?0:(i/(pellets-1)-.5),a=p.a+t*w.spread*p.mod.spread;spawnBullet(p,a,w,{dmg:w.damage*p.mod.weaponDamage})}
+    const pellets=w.pellets+p.mod.pellets,dragon=!!(p.mod.fusionDragon&&p.fusionDragonCharge);p.stats.shots+=pellets;
+    if(dragon){p.fusionDragonCharge=0;addEffect('muzzle',p.x+Math.cos(p.a)*34,p.y+Math.sin(p.a)*34,58,'#ff824d',.20,p.i)}
+    for(let i=0;i<pellets;i++){const t=pellets===1?0:(i/(pellets-1)-.5),a=p.a+t*w.spread*p.mod.spread;spawnBullet(p,a,w,{dmg:w.damage*p.mod.weaponDamage*(dragon?1.08:1),fire:dragon?3:(p.mod.weaponFire||0)})}
   }else if(w.id==='rivet'){
-    const n=1+p.mod.pellets;p.stats.shots+=n;
-    for(let i=0;i<n;i++){const t=n===1?0:(i/(n-1)-.5),a=p.a+t*.14;spawnBullet(p,a,w)}
+    const n=1+p.mod.pellets;p.stats.shots+=n;p.rivetCycle=(p.rivetCycle||0)+1;const breaker=p.mod.rivetBreaker&&p.rivetCycle%5===0;
+    for(let i=0;i<n;i++){const t=n===1?0:(i/(n-1)-.5),a=p.a+t*.14;spawnBullet(p,a,w,breaker?{dmg:w.damage*p.mod.weaponDamage*1.65,r:8}:{})}
+    if(breaker)addEffect('muzzle',p.x+Math.cos(p.a)*32,p.y+Math.sin(p.a)*32,40,'#ffd36b',.16,p.i)
+  }else if(w.id==='lance'&&p.mod.fusionPlatform&&Math.hypot(p.vx,p.vy)<45){
+    p.stats.shots++;spawnBullet(p,p.a,w,{dmg:w.damage*p.mod.weaponDamage*1.22});recoil*=.55;addEffect('platform',p.x,p.y,46,'#b9d9ff',.20,p.i)
   }else{p.stats.shots++;spawnBullet(p,p.a,w)}
-  selfRecoil(p,w.recoil)
+  selfRecoil(p,recoil)
 };
 
 function fireAtlas(p){
@@ -479,6 +494,7 @@ function fireAtlas(p){
     specialKnock:400,cluster:p.mod.atlasCluster});addEffect('muzzle',p.x+Math.cos(a)*32,p.y+Math.sin(a)*32,58,'#ffd8a8',.20,p.i)
 }
 function fireHelltrail(p){
+  if(p.mod.fusionDragon)p.fusionDragonCharge=1;
   const rows=p.mod.hellRows>1?[-20,20]:[0],count=7,a=p.a,perp=a+Math.PI/2,pace=tempo();
   for(const off of rows)for(let k=0;k<count;k++){const delay=k*.085,x=p.x+Math.cos(a)*(30+k*18)+Math.cos(perp)*off,y=p.y+Math.sin(a)*(30+k*18)+Math.sin(perp)*off;game.bullets.push({x,y,vx:Math.cos(a)*(425+18*k)*pace,vy:Math.sin(a)*(425+18*k)*pace,r:9,owner:p.i,dmg:5.2*p.mod.specialDamage,bounces:0,homing:0,boom:0,fire:0,frost:0,shock:0,life:.78+delay,groundFire:true,napalmRadius:48*p.mod.hellRadius,napalmLife:5.0*p.mod.hellLife,napalmDamage:.9*p.mod.specialDamage})}
   p.stats.shots+=count*rows.length;addEffect('muzzle',p.x+Math.cos(a)*36,p.y+Math.sin(a)*36,72,'#ff813d',.26,p.i)
@@ -520,7 +536,7 @@ updateStatuses=function(dt){
     if(!p.alive)continue;
     p.weaponLock=Math.max(0,(p.weaponLock||0)-dt);
     const cool=.34*p.mod.heatCool*(p.weaponLock>0?1.35:1);p.weaponHeat=Math.max(0,(p.weaponHeat||0)-cool*dt);
-    if(p.fx.bladeStorm>0)p.fx.bladeStorm=Math.max(0,p.fx.bladeStorm-dt)
+    if(p.fx.bladeStorm>0)p.fx.bladeStorm=Math.max(0,p.fx.bladeStorm-dt);p.grinderGuard=Math.max(0,(p.grinderGuard||0)-dt)
   }
 };
 
@@ -558,6 +574,7 @@ updateGroundFires=function(dt){legacyUpdateGroundFires(dt);updateMines(dt);updat
 
 const legacyDamageRaw=damageRaw;
 damageRaw=function(target,amount,source,allowFriendly,kx,ky){
+  if(target?.grinderGuard>0)amount*=.75;
   if(target?.s){amount*=1-(target.s.damageReduction||0);kx=(kx||0)*(target.s.knockTaken||1);ky=(ky||0)*(target.s.knockTaken||1)}
   const trainingHit=!!game?.training&&target?.i===1&&source===0,before=trainingHit?target.hp:0;
   legacyDamageRaw(target,amount,source,allowFriendly,kx,ky);
