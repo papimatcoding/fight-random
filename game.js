@@ -411,12 +411,29 @@ function syncUI(s){if(!s)return;if(s.training){$('arenaTopbar').classList.add('h
   readyUI(s);draftUI(s);endUI(s)
 }
 function readyUI(s){
-  const o=$('readyOverlay');if(s.phase!=='ready'){o.classList.add('hidden');return}
-  o.classList.remove('hidden');const m=modeOf(s),connected=s.connected.filter(Boolean).length,full=connected===m.players,mineReady=me!=null&&!!s.ready[me],readyCount=s.ready.filter(Boolean).length,p=me!=null?s.players[me]:null,valid=!!p&&loadoutValid(p),quick=window.frQueueIntent==='quick';
+  const o=$('readyOverlay');if(s.phase!=='ready'){o.classList.add('hidden');$('partyQueueBtn').classList.add('hidden');return}
+  o.classList.remove('hidden');
+  const m=modeOf(s),connected=s.connected.filter(Boolean).length,full=connected===m.players,mineReady=me!=null&&!!s.ready[me],readyCount=s.ready.filter(Boolean).length,p=me!=null?s.players[me]:null,valid=!!p&&loadoutValid(p),quick=window.frQueueIntent==='quick',party=window.frQueueIntent==='party',partyState=window.frPartyState?.()||{},partyQueued=!!partyState.queued;
   renderReadyParty(s);renderReadyMachine(p,mineReady||me==null);
-  $('readyTitle').textContent=!full?(quick?'BUSCANDO...':'SALA AMISTOSA'):(mineReady?'MÁQUINA CERRADA':'ÚLTIMO AJUSTE');
-  $('readySubtitle').textContent=!full?(quick?'Tu máquina ya está en cola. El rival/equipo aparecerá al encontrarlo.':'Comparte el código de sala e invita a quien quieras.'):(mineReady?'Esperando al resto.':'Revisa la máquina y confirma.');
-  $('readyBtn').disabled=!full||mineReady||me==null||!valid;$('readyBtn').textContent=!full?(quick?'BUSCANDO RIVALES':'ESPERANDO JUGADORES'):(mineReady?'LISTO ✓':'LISTO');
+
+  const queueBtn=$('partyQueueBtn');
+  queueBtn.classList.toggle('hidden',!(party&&host));
+  if(party&&host){
+    queueBtn.disabled=partyQueued||connected!==2;
+    queueBtn.textContent=partyQueued?'EN COLA 2V2':(connected<2?'ESPERANDO COMPAÑERO':'BUSCAR RIVALES')
+  }
+
+  if(party){
+    $('readyTitle').textContent=partyQueued?'BUSCANDO RIVALES':'PARTY 2V2';
+    $('readySubtitle').textContent=partyQueued?'Vuestra pareja está bloqueada. Quickplay rellenará el equipo contrario.':(host?'Invita a un amigo. Cuando seáis 2, abre la cola.':'Ajusta tu máquina. El líder abrirá la cola cuando estéis listos.');
+    $('readyBtn').disabled=!full||mineReady||me==null||!valid;
+    $('readyBtn').textContent=mineReady?'PARTY LISTA ✓':(partyQueued?'EN COLA':'ESPERANDO COLA')
+  }else{
+    $('readyTitle').textContent=!full?(quick?'BUSCANDO...':'SALA AMISTOSA'):(mineReady?'MÁQUINA CERRADA':'ÚLTIMO AJUSTE');
+    $('readySubtitle').textContent=!full?(quick?'Tu máquina ya está en cola. El rival/equipo aparecerá al encontrarlo.':'Comparte el código de sala e invita a quien quieras.'):(mineReady?'Esperando al resto.':'Revisa la máquina y confirma.');
+    $('readyBtn').disabled=!full||mineReady||me==null||!valid;
+    $('readyBtn').textContent=!full?(quick?'BUSCANDO RIVALES':'ESPERANDO JUGADORES'):(mineReady?'LISTO ✓':'LISTO')
+  }
   $('readyState').textContent=connected+' / '+m.players+' conectados · '+readyCount+' / '+m.players+' listos'
 }
 function decorateHighTierCard(bt,d){
@@ -657,6 +674,11 @@ $('joinForm').onsubmit=e=>{e.preventDefault();setQueueIntent('friendly');joinGam
 $('roomInput').oninput=e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
 $('leaveBtn').onclick=()=>{const u=new URL(location.href);u.searchParams.delete('room');history.replaceState({},'',u);setQueueIntent('idle');clean();renderGarage();showLobbyView('home')};
 $('copyBtn').onclick=async()=>{const u=new URL(location.href);u.searchParams.set('room',code);try{await navigator.clipboard.writeText(u.toString());$('copyBtn').textContent='COPIADO';setTimeout(()=>$('copyBtn').textContent='COPIAR ENLACE',1200)}catch{prompt('Copia el enlace:',u.toString())}};
+$('partyQueueBtn').onclick=async()=>{
+  const btn=$('partyQueueBtn');if(btn.disabled)return;btn.disabled=true;btn.textContent='ABRIENDO COLA…';
+  try{await window.frQueuePartyRoom?.();readyUI(host?game:view)}
+  catch(e){$('readyState').textContent=e.message||'No se pudo abrir la cola.';btn.disabled=false;btn.textContent='BUSCAR RIVALES'}
+};
 $('readyBtn').onclick=()=>{if(me==null)return;const state=host?game:view,p=state?.players?.[me];if(p&&loadoutValid(p)){garageBuild={character:p.character,loadout:clone(p.loadout)};saveGarageBuild()}if(host)setReady(me,'ready');else conn?.send({type:'ready'})};
 $('rematchBtn').onclick=()=>{if(me==null)return;if(host)setReady(me,'rematch');else conn?.send({type:'rematch'})};
 $('testRangeBtn').onclick=startTestRange;
