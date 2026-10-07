@@ -185,12 +185,14 @@ function clearTrainingProjectiles(){
   const p=game.players[0];if(p){p.weaponHeat=0;p.weaponLock=0;p.specialCd=0;p.dc=0;p.shot=0;p.ps=0;p.pd=0;p.fx.burn=0;p.fx.slow=0;p.fx.fortify=0;p.fx.invisible=0;p.fx.bladeStorm=0;p.fx.bladeTick=0}
 }
 function trainingUpgradeGroup(id){
+  if(GENERAL[id]?.rarity==='fusion')return'fusion';
   if(id.startsWith('sys_'))return'system';
   if(id.startsWith('mix_')||id.startsWith('trucks_')||id.startsWith('lizzy_'))return'chassis';
   if(id.startsWith('atlas_')||id.startsWith('hell_')||id.startsWith('shiv_')||id.startsWith('mine_')||id.startsWith('hound_')||id.startsWith('trinity_'))return'special';
   return'weapon'
 }
 function trainingGroupTitle(group,p){
+  if(group==='fusion')return'FUSIONES DISPONIBLES';
   if(group==='weapon')return'ARMA · '+(WEAPONS[p.loadout?.weapon]?.name||'—');
   if(group==='special')return'ESPECIAL · '+(SPECIALS[p.loadout?.special]?.name||'—');
   if(group==='system')return'SISTEMA · '+(SYSTEMS[p.loadout?.system]?.name||'—');
@@ -227,9 +229,9 @@ function setTrainingUpgradeLevel(id,level){
 function renderTrainingUpgradePanel(){
   if(!game?.training)return;
   const p=game.players[0],root=$('trainingUpgradeGroups');if(!root)return;root.innerHTML='';
-  const groups={weapon:[],special:[],chassis:[],system:[]};
+  const groups={fusion:[],weapon:[],special:[],chassis:[],system:[]};
   for(const [id,d] of compatibleTrainingUpgrades(p))groups[trainingUpgradeGroup(id)].push([id,d]);
-  for(const group of ['weapon','special','chassis','system']){
+  for(const group of ['fusion','weapon','special','chassis','system']){
     if(!groups[group].length)continue;
     const section=document.createElement('section');section.className='training-upgrade-group';
     const head=document.createElement('h4');head.textContent=trainingGroupTitle(group,p);section.appendChild(head);
@@ -418,8 +420,8 @@ function readyUI(s){
   $('readyState').textContent=connected+' / '+m.players+' conectados · '+readyCount+' / '+m.players+' listos'
 }
 function decorateHighTierCard(bt,d){
-  if(!bt||!d||(d.rarity!=='legendary'&&d.rarity!=='illegal'))return;
-  bt.classList.add('high-tier-card');
+  if(!bt||!d||!['legendary','illegal','fusion'].includes(d.rarity))return;
+  bt.classList.add('high-tier-card');if(d.rarity==='fusion')bt.classList.add('fusion-card');
   for(let i=0;i<14;i++){
     const p=document.createElement('i');p.className='rarity-particle';
     const edge=i%4,progress=((i*37)%100)/100;
@@ -434,22 +436,23 @@ function decorateHighTierCard(bt,d){
   }
 }
 function showRarityAnnouncement(d){
-  if(!d||(d.rarity!=='legendary'&&d.rarity!=='illegal'))return;
+  if(!d||!['legendary','illegal','fusion'].includes(d.rarity))return;
   const box=$('rarityAnnouncement');if(!box)return;
   clearTimeout(rarityAnnouncementTimer);
-  box.classList.remove('hidden','legendary','illegal','show');
+  box.classList.remove('hidden','legendary','illegal','fusion','show');
   void box.offsetWidth;
   box.classList.add(d.rarity,'show');
-  $('rarityAnnouncementTier').textContent=d.rarity==='illegal'?'MERCADO NEGRO INSTALADO':'LEGENDARIO INSTALADO';
+  $('rarityAnnouncementTier').textContent=d.rarity==='illegal'?'MERCADO NEGRO INSTALADO':(d.rarity==='fusion'?'FUSIÓN COMPLETADA':'LEGENDARIO INSTALADO');
   $('rarityAnnouncementName').textContent=d.name;
-  $('rarityAnnouncementText').textContent=d.rarity==='illegal'?'Modificación extrema. La máquina ya no juega limpio.':'Modificación de alto nivel integrada.';
+  $('rarityAnnouncementText').textContent=d.rarity==='illegal'?'Modificación extrema. La máquina ya no juega limpio.':(d.rarity==='fusion'?'Dos sistemas de la máquina ahora funcionan como uno.':'Modificación de alto nivel integrada.');
   try{
     if(typeof sound==='function'){
       if(d.rarity==='illegal'){sound(170,.18,.035,'sawtooth',78);setTimeout(()=>sound(520,.16,.02,'square',240),70)}
+      else if(d.rarity==='fusion'){sound(440,.16,.025,'triangle',880);setTimeout(()=>sound(880,.20,.02,'sine',1320),90)}
       else{sound(760,.14,.024,'sine',1120);setTimeout(()=>sound(1040,.18,.018,'sine',1380),85)}
     }
   }catch{}
-  rarityAnnouncementTimer=setTimeout(()=>{box.classList.remove('show');setTimeout(()=>box.classList.add('hidden'),260)},1450)
+  rarityAnnouncementTimer=setTimeout(()=>{box.classList.remove('show');setTimeout(()=>box.classList.add('hidden'),260)},1650)
 }
 function draftUI(s){
   const o=$('upgradeOverlay');
@@ -468,18 +471,19 @@ function draftUI(s){
     decorateHighTierCard(bt,d);
     bt.onclick=()=>{
       if(pickLock)return;pickLock=true;bt.classList.add('picked-card');
-      if(d.rarity==='legendary'||d.rarity==='illegal'){lastHighTierAnnouncement=sig+'|'+id;showRarityAnnouncement(d)}
+      if(['legendary','illegal','fusion'].includes(d.rarity)){lastHighTierAnnouncement=sig+'|'+id;showRarityAnnouncement(d)}
       if(host)chooseUpgrade(0,n);else conn?.send({type:'pick',n})
     };
     $('upgradeCards').appendChild(bt)
   });
   if(chosen!=null){
     const id=opts[chosen],d=powerDef(id),key=sig+'|'+id;
-    if(d&&(d.rarity==='legendary'||d.rarity==='illegal')&&lastHighTierAnnouncement!==key){lastHighTierAnnouncement=key;showRarityAnnouncement(d)}
+    if(d&&['legendary','illegal','fusion'].includes(d.rarity)&&lastHighTierAnnouncement!==key){lastHighTierAnnouncement=key;showRarityAnnouncement(d)}
   }
   const luck=p.lossStreak?(' · Comeback +'+p.lossStreak):'';
   $('upgradeKicker').textContent='ELIGE TU MEJORA'+luck;
-  $('pickStatus').textContent=chosen==null?'Las rarezas escalan por ronda. Legendario y Mercado Negro son eventos poco frecuentes.':'Elegido. Esperando al resto…'
+  const fusionOffered=opts.some(id=>powerDef(id)?.rarity==='fusion');
+  $('pickStatus').textContent=chosen==null?(fusionOffered?'FUSIÓN DISPONIBLE · esta combinación seguirá reservando una carta hasta que la integres.':'Las rarezas escalan por ronda. Legendario y Mercado Negro son eventos poco frecuentes.'):'Elegido. Esperando al resto…'
 }
 function resultForMe(s){if(!s.matchWinner||me==null)return false;if(s.matchWinner.type==='player')return s.matchWinner.seat===me;return s.players[me].team===s.matchWinner.team}
 function accuracy(p){return p.stats.shots?Math.round(p.stats.hits/p.stats.shots*100):0}
