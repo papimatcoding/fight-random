@@ -471,13 +471,13 @@
    ========================================================== */
 /* Keep the turret pivot on the chassis centre, but centre the complete silhouette
    (chassis + forward weapon) in the Hangar stage. */
-.hangar-main .garage-machine{--machine-balance-x:-18px;left:calc(50% + var(--machine-balance-x))!important}
-.hangar-main .garage-machine[data-weapon="rivet"]{--machine-balance-x:-17px}
+.hangar-main .garage-machine{--machine-balance-x:-7px;left:calc(50% + var(--machine-balance-x))!important}
+.hangar-main .garage-machine[data-weapon="rivet"]{--machine-balance-x:-7px}
 .hangar-main .garage-machine[data-weapon="lance"]{--machine-balance-x:-31px}
-.hangar-main .garage-machine[data-weapon="scrapshot"]{--machine-balance-x:-18px}
-.hangar-main .garage-machine[data-weapon="sunline"]{--machine-balance-x:-23px}
-.hangar-main .garage-machine[data-weapon="piston"]{--machine-balance-x:-19px}
-.hangar-main .garage-machine[data-weapon="grinder"]{--machine-balance-x:-20px}
+.hangar-main .garage-machine[data-weapon="scrapshot"]{--machine-balance-x:-5px}
+.hangar-main .garage-machine[data-weapon="sunline"]{--machine-balance-x:-9px}
+.hangar-main .garage-machine[data-weapon="piston"]{--machine-balance-x:-7px}
+.hangar-main .garage-machine[data-weapon="grinder"]{--machine-balance-x:-9px}
 .hangar-main .garage-machine[data-weapon=""]{--machine-balance-x:0px}
 
 .weapon-compare{
@@ -487,7 +487,7 @@
 }
 .weapon-compare.visible{opacity:1;transform:translateY(0)}
 .weapon-compare span{font-size:7px;font-weight:950;letter-spacing:.06em;padding:3px 5px;border-radius:5px;background:#151b22;color:#8c96a1}
-.weapon-compare .up{color:#80c995}.weapon-compare .down{color:#d98982}.weapon-compare .same{color:#79838d}
+.weapon-compare .better{color:#80c995}.weapon-compare .worse{color:#d98982}.weapon-compare .same{color:#79838d}
 .test-range-button{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 11px;text-align:left}
 .test-range-button strong{font-size:9px;letter-spacing:.08em}.test-range-button small{font-size:7px;color:#79838e}
 
@@ -510,11 +510,11 @@
 
 @media(max-width:760px){
   .hangar-main .garage-machine[data-weapon="lance"]{--machine-balance-x:-24px}
-  .hangar-main .garage-machine[data-weapon="sunline"]{--machine-balance-x:-18px}
+  .hangar-main .garage-machine[data-weapon="sunline"]{--machine-balance-x:-7px}
   .hangar-main .garage-machine[data-weapon="rivet"],
-  .hangar-main .garage-machine[data-weapon="scrapshot"],
-  .hangar-main .garage-machine[data-weapon="piston"],
-  .hangar-main .garage-machine[data-weapon="grinder"]{--machine-balance-x:-14px}
+  .hangar-main .garage-machine[data-weapon="piston"]{--machine-balance-x:-6px}
+  .hangar-main .garage-machine[data-weapon="scrapshot"]{--machine-balance-x:-4px}
+  .hangar-main .garage-machine[data-weapon="grinder"]{--machine-balance-x:-7px}
   .weapon-compare{min-height:23px;padding:5px}.weapon-compare span{font-size:6px}
   .training-hud{grid-template-columns:1fr;left:6px;right:6px;top:6px}
   .training-title{padding:6px}.training-metrics div{padding:6px 4px}.training-metrics strong{font-size:11px}
