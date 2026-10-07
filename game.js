@@ -4,6 +4,7 @@ function scoreData(s){const m=modeOf(s);if(m.id==='teams')return[{label:'EQUIPO 
 const GARAGE_KEY='fr-garage-build';
 const CHASSIS_ORDER=['mix','trucks','lizzy'];
 let garageBuild=loadGarageBuild(),pickerContext='garage',pickerSlot=null,weaponCompareTimer=null,trainingActive=false,trainingPreviousMode='duel',trainingSlots={A:null,B:null};
+let rarityAnnouncementTimer=null,lastHighTierAnnouncement='';
 window.frQueueIntent='idle';
 
 function blankGarageBuild(){return{character:'mix',loadout:{weapon:null,special:null,system:null}}}
@@ -356,7 +357,70 @@ function readyUI(s){
   $('readyBtn').disabled=!full||mineReady||me==null||!valid;$('readyBtn').textContent=!full?(quick?'BUSCANDO RIVALES':'ESPERANDO JUGADORES'):(mineReady?'LISTO ✓':'LISTO');
   $('readyState').textContent=connected+' / '+m.players+' conectados · '+readyCount+' / '+m.players+' listos'
 }
-function draftUI(s){const o=$('upgradeOverlay');if(s.phase!=='pick'||me==null){o.classList.add('hidden');o.dataset.sig='';pickLock=false;return}o.classList.remove('hidden');const opts=s.opts[me]||[],chosen=s.picked[me],p=s.players[me],sig=opts.join('|')+'|'+chosen+'|'+p.lossStreak;if(o.dataset.sig===sig)return;o.dataset.sig=sig;$('upgradeCards').innerHTML='';opts.forEach((id,n)=>{const d=powerDef(id);if(!d)return;const bt=document.createElement('button');bt.className='power-card rarity-'+d.rarity;bt.disabled=chosen!=null;const unlock=SYNERGIES.find(sy=>sy.requires.includes(id)&&!hasSynergy(p,sy.id)&&sy.requires.every(req=>req===id||(p.powers[req]||0)>0));bt.innerHTML='<span class="rarity">'+RARITY_LABEL[d.rarity]+'</span><h3>'+d.name+'</h3><p>'+d.desc+'</p>'+(unlock?'<span class="synergy-hint">SINERGIA → '+unlock.name+'</span>':'')+'<span class="lvl">NIVEL '+(p.powers[id]||0)+' / '+(d.max||1)+'</span>';bt.onclick=()=>{if(pickLock)return;pickLock=true;if(host)chooseUpgrade(0,n);else conn?.send({type:'pick',n})};$('upgradeCards').appendChild(bt)});const luck=p.lossStreak?(' · Comeback luck +'+p.lossStreak):'';$('upgradeKicker').textContent='ELIGE TU MEJORA'+luck;$('pickStatus').textContent=chosen==null?'El draft solo ofrece modificaciones compatibles con tu chasis y los módulos montados. Mercado Negro altera las reglas de una pieza.':'Elegido. Esperando al resto…'}
+function decorateHighTierCard(bt,d){
+  if(!bt||!d||(d.rarity!=='legendary'&&d.rarity!=='illegal'))return;
+  bt.classList.add('high-tier-card');
+  for(let i=0;i<14;i++){
+    const p=document.createElement('i');p.className='rarity-particle';
+    const edge=i%4,progress=((i*37)%100)/100;
+    let x=50,y=50;
+    if(edge===0){x=progress*100;y=2}
+    if(edge===1){x=98;y=progress*100}
+    if(edge===2){x=progress*100;y=98}
+    if(edge===3){x=2;y=progress*100}
+    p.style.setProperty('--px',x+'%');p.style.setProperty('--py',y+'%');
+    p.style.setProperty('--delay',(-i*.19)+'s');p.style.setProperty('--dur',(1.8+(i%5)*.18)+'s');
+    bt.appendChild(p)
+  }
+}
+function showRarityAnnouncement(d){
+  if(!d||(d.rarity!=='legendary'&&d.rarity!=='illegal'))return;
+  const box=$('rarityAnnouncement');if(!box)return;
+  clearTimeout(rarityAnnouncementTimer);
+  box.classList.remove('hidden','legendary','illegal','show');
+  void box.offsetWidth;
+  box.classList.add(d.rarity,'show');
+  $('rarityAnnouncementTier').textContent=d.rarity==='illegal'?'MERCADO NEGRO INSTALADO':'LEGENDARIO INSTALADO';
+  $('rarityAnnouncementName').textContent=d.name;
+  $('rarityAnnouncementText').textContent=d.rarity==='illegal'?'Modificación extrema. La máquina ya no juega limpio.':'Modificación de alto nivel integrada.';
+  try{
+    if(typeof sound==='function'){
+      if(d.rarity==='illegal'){sound(170,.18,.035,'sawtooth',78);setTimeout(()=>sound(520,.16,.02,'square',240),70)}
+      else{sound(760,.14,.024,'sine',1120);setTimeout(()=>sound(1040,.18,.018,'sine',1380),85)}
+    }
+  }catch{}
+  rarityAnnouncementTimer=setTimeout(()=>{box.classList.remove('show');setTimeout(()=>box.classList.add('hidden'),260)},1450)
+}
+function draftUI(s){
+  const o=$('upgradeOverlay');
+  if(s.phase!=='pick'||me==null){o.classList.add('hidden');o.dataset.sig='';pickLock=false;return}
+  o.classList.remove('hidden');
+  const opts=s.opts[me]||[],chosen=s.picked[me],p=s.players[me],sig=opts.join('|')+'|'+chosen+'|'+p.lossStreak;
+  if(o.dataset.sig===sig)return;
+  o.dataset.sig=sig;$('upgradeCards').innerHTML='';
+  opts.forEach((id,n)=>{
+    const d=powerDef(id);if(!d)return;
+    const bt=document.createElement('button');
+    bt.className='power-card rarity-'+d.rarity+(chosen===n?' picked-card':'');
+    bt.disabled=chosen!=null;
+    const unlock=SYNERGIES.find(sy=>sy.requires.includes(id)&&!hasSynergy(p,sy.id)&&sy.requires.every(req=>req===id||(p.powers[req]||0)>0));
+    bt.innerHTML='<span class="rarity">'+RARITY_LABEL[d.rarity]+'</span><h3>'+d.name+'</h3><p>'+d.desc+'</p>'+(unlock?'<span class="synergy-hint">SINERGIA → '+unlock.name+'</span>':'')+'<span class="lvl">NIVEL '+(p.powers[id]||0)+' / '+(d.max||1)+'</span>';
+    decorateHighTierCard(bt,d);
+    bt.onclick=()=>{
+      if(pickLock)return;pickLock=true;bt.classList.add('picked-card');
+      if(d.rarity==='legendary'||d.rarity==='illegal'){lastHighTierAnnouncement=sig+'|'+id;showRarityAnnouncement(d)}
+      if(host)chooseUpgrade(0,n);else conn?.send({type:'pick',n})
+    };
+    $('upgradeCards').appendChild(bt)
+  });
+  if(chosen!=null){
+    const id=opts[chosen],d=powerDef(id),key=sig+'|'+id;
+    if(d&&(d.rarity==='legendary'||d.rarity==='illegal')&&lastHighTierAnnouncement!==key){lastHighTierAnnouncement=key;showRarityAnnouncement(d)}
+  }
+  const luck=p.lossStreak?(' · Comeback +'+p.lossStreak):'';
+  $('upgradeKicker').textContent='ELIGE TU MEJORA'+luck;
+  $('pickStatus').textContent=chosen==null?'Las rarezas escalan por ronda. Legendario y Mercado Negro son eventos poco frecuentes.':'Elegido. Esperando al resto…'
+}
 function resultForMe(s){if(!s.matchWinner||me==null)return false;if(s.matchWinner.type==='player')return s.matchWinner.seat===me;return s.players[me].team===s.matchWinner.team}
 function accuracy(p){return p.stats.shots?Math.round(p.stats.hits/p.stats.shots*100):0}
 function endUI(s){const o=$('matchOverlay');if(s.phase!=='end'||me==null){o.classList.add('hidden');return}o.classList.remove('hidden');const win=resultForMe(s),p=s.players[me];$('matchTitle').textContent=win?'VICTORIA':'DERROTA';$('matchSubtitle').textContent=win?'Has ganado la partida.':'Has perdido la partida.';$('statDamage').textContent=Math.round(p.stats.damage);$('statAccuracy').textContent=accuracy(p)+'%';$('statKills').textContent=p.stats.kills;$('statPickups').textContent=p.stats.pickups;const ready=!!s.rematch[me],count=s.rematch.filter(Boolean).length,m=modeOf(s);$('rematchBtn').disabled=ready;$('rematchBtn').textContent=ready?'REVANCHA LISTA ✓':'LISTO PARA REVANCHA';$('rematchStatus').textContent=ready?(count===m.players?'Reiniciando…':'Esperando al resto…'):(count?count+' / '+m.players+' ya están listos.':'La revancha empieza cuando todos acepten.')}

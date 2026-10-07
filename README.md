@@ -84,3 +84,8 @@ El panel `MEJORAS` permite forzar cualquier modificación compatible de arma, es
 ## Backend
 
 Ver `backend/README.md`, `backend/schema.sql` y `backend/fight-random-api/`.
+
+
+## Draft de rarezas
+
+La rareza escala por ronda en la build `2026.10-polish-1`. Legendario empieza a aparecer desde ronda 3 y Mercado Negro desde ronda 5. El comeback desplaza principalmente Básico hacia Raro/Épico y solo aumenta ligeramente las rarezas altas. Un draft puede contener como máximo una carta Legendaria o Mercado Negro y agotar pools de rareza baja nunca promociona automáticamente una tirada a rareza alta.

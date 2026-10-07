@@ -1,7 +1,7 @@
 'use strict';
 
 const FR_API='https://xtekdrkqgfjnnwawyoim.supabase.co/functions/v1/fight-random-api';
-const FR_BUILD='2026.10-range-2';
+const FR_BUILD='2026.10-polish-1';
 const FRStore={
   token:'',
   profile:null,
@@ -46,6 +46,16 @@ function frBackendIndicator(on){
   if(pill)pill.classList.toggle('online',!!on);
 }
 function frPlayerName(){return FRStore.profile?.nickname||localStorage.getItem('fr-nickname')||'Jugador'}
+function frSyncNicknameToRoom(name){
+  const safe=String(name||'Jugador').slice(0,18);
+  try{
+    const state=typeof host!=='undefined'&&host?game:view;
+    const seat=typeof me!=='undefined'?me:null;
+    if(seat!=null&&state?.players?.[seat])state.players[seat].name=safe;
+    if(typeof host!=='undefined'&&host&&typeof broadcast==='function')broadcast(true);
+    else if(typeof conn!=='undefined'&&conn?.open)conn.send({type:'profile',name:safe});
+  }catch(e){console.warn('Nickname room sync failed:',e)}
+}
 function frCurrentCharacter(){
   const state=typeof host!=='undefined'&&host?game:view;
   const seat=typeof me!=='undefined'?me:null;
@@ -167,7 +177,8 @@ async function frInit(){
   FRStore.initPromise=(async()=>{
     try{
       const stored=localStorage.getItem('fr-nickname')||'';
-      const data=await frApi('session',{nickname:stored});
+      const hadToken=/^[a-f0-9]{64}$/.test(localStorage.getItem('fr-player-token')||'');
+      const data=await frApi('session',{nickname:hadToken?'':stored});
       FRStore.profile=data.profile;localStorage.setItem('fr-nickname',data.profile.nickname);
       frRenderProfile();
       await frRefreshLobby();
@@ -190,7 +201,21 @@ async function frSetNickname(name){
   const cleaned=String(name||'').trim().slice(0,18);
   if(cleaned.length<2)throw new Error('Nombre demasiado corto');
   const data=await frApi('set_profile',{nickname:cleaned});
-  FRStore.profile=data.profile;localStorage.setItem('fr-nickname',data.profile.nickname);frRenderProfile();return data.profile;
+  if(!data?.profile?.nickname)throw new Error('El servidor no confirmó el nombre.');
+  FRStore.profile=data.profile;
+  localStorage.setItem('fr-nickname',data.profile.nickname);
+  frSyncNicknameToRoom(data.profile.nickname);
+  frRenderProfile();
+  const input=document.getElementById('nicknameInput');if(input)input.value=data.profile.nickname;
+  try{
+    const verified=await frApi('lobby');
+    if(verified?.profile?.nickname){
+      FRStore.profile=verified.profile;
+      localStorage.setItem('fr-nickname',verified.profile.nickname);
+      frRenderProfile();
+    }
+  }catch(e){console.warn('Nickname verification refresh failed:',e)}
+  return FRStore.profile;
 }
 async function frCreateRoom(code,mode,character='mix'){
   await frInit();
@@ -295,9 +320,14 @@ document.addEventListener('DOMContentLoaded',()=>{
     catch(err){if(msg)msg.textContent=err.message||'No se pudo enviar.'}
   });
   document.getElementById('saveNicknameBtn')?.addEventListener('click',async()=>{
-    const input=document.getElementById('nicknameInput'),msg=document.getElementById('profileMessage');
-    try{await frSetNickname(input?.value||'');if(msg)msg.textContent='Guardado.'}
-    catch(e){if(msg)msg.textContent=e.message||'No se pudo guardar.'}
+    const input=document.getElementById('nicknameInput'),msg=document.getElementById('profileMessage'),btn=document.getElementById('saveNicknameBtn');
+    if(btn){btn.disabled=true;btn.textContent='GUARDANDO…'}if(msg)msg.textContent='';
+    try{
+      const p=await frSetNickname(input?.value||'');
+      if(msg)msg.textContent='Guardado como '+p.nickname+'.';
+      document.getElementById('profileEdit')?.classList.add('hidden');
+    }catch(e){if(msg)msg.textContent=e.message||'No se pudo guardar.'}
+    finally{if(btn){btn.disabled=false;btn.textContent='GUARDAR'}}
   });
   document.getElementById('nicknameInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('saveNicknameBtn')?.click()}});
   document.getElementById('quickPlayBtn')?.addEventListener('click',frQuickPlay);
