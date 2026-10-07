@@ -343,7 +343,67 @@ function renderTrainingHud(s){
   $('trainingDummyBtn').textContent='DUMMY · '+dummyLabel;
   $('trainingBuildName').textContent=trainingBuildLabel(p)
 }
-function syncUI(s){if(!s)return;if(s.training){renderTrainingHud(s);$('readyOverlay').classList.add('hidden');$('upgradeOverlay').classList.add('hidden');$('matchOverlay').classList.add('hidden');return}const m=modeOf(s);$('modeName').textContent=m.name;$('roundNum').textContent=s.round;$('mapName').textContent=mapDef(s).name;
+function hudPct(value,max){return Math.max(0,Math.min(1,max>0?value/max:0))}
+function setCombatAction(el,stateEl,meterEl,state,progress,ready=false,mode='cooldown'){
+  if(!el||!stateEl||!meterEl)return;
+  stateEl.textContent=state;
+  el.classList.toggle('ready',!!ready);
+  el.classList.toggle('danger',mode==='danger');
+  el.classList.toggle('heat',mode==='heat');
+  meterEl.style.width=Math.max(0,Math.min(100,progress*100))+'%'
+}
+function combatHudUI(s){
+  const hud=$('combatHud');
+  if(!hud)return;
+  if(s?.training||me==null||!s?.players?.[me]||(s.phase!=='play'&&s.phase!=='count')){
+    hud.classList.add('hidden');return
+  }
+  const p=s.players[me],ch=CHASSIS[p.character]||CHASSIS.mix,w=WEAPONS[p.loadout?.weapon]||WEAPONS.rivet,sp=SPECIALS[p.loadout?.special]||SPECIALS.atlas;
+  hud.classList.remove('hidden');hud.classList.toggle('dead',!p.alive);
+
+  $('combatPlayerName').textContent='TÚ · '+(p.name||ch.name);
+  $('combatHpText').textContent=Math.max(0,Math.ceil(p.hp))+' / '+p.max;
+  const hpRatio=hudPct(p.hp,p.max),hpFill=$('combatHpFill');hpFill.style.width=(hpRatio*100)+'%';
+  hpFill.classList.toggle('low',hpRatio<=.35);hpFill.classList.toggle('critical',hpRatio<=.18);
+
+  const statuses=[];
+  if(!p.alive)statuses.push(['danger','DESTRUIDO']);
+  if(p.shield>0)statuses.push(['good','ESCUDO ×'+p.shield]);
+  if(p.fx?.fortify>0)statuses.push(['good','FORTIFICADO '+p.fx.fortify.toFixed(1)+'s']);
+  if(p.fx?.invisible>0)statuses.push(['good','INVISIBLE '+p.fx.invisible.toFixed(1)+'s']);
+  if(p.fx?.bladeStorm>0)statuses.push(['good','TRINITY '+p.fx.bladeStorm.toFixed(1)+'s']);
+  if(p.fx?.overcharge>0)statuses.push(['core','NÚCLEO '+p.fx.overcharge.toFixed(1)+'s']);
+  if(p.fx?.haste>0)statuses.push(['good','ACELERADO']);
+  if(p.fx?.burn>0)statuses.push(['danger','ARDIENDO']);
+  if((p.fx?.slowFactor??1)<.99)statuses.push(['danger','RALENTIZADO']);
+  if(s.storm){
+    const until=Math.max(0,(s.storm.start||0)-(s.storm.elapsed||0));
+    if(s.storm.active)statuses.push(['danger','TORMENTA ACTIVA']);
+    else if(until<=8)statuses.push(['warning','TORMENTA '+Math.ceil(until)+'s']);
+  }
+  $('combatStatuses').innerHTML=statuses.map(([c,t])=>'<span class="'+c+'">'+t+'</span>').join('');
+
+  $('combatSpaceName').textContent=ch.ability;
+  let spaceState=p.dc<=0?'LISTO':p.dc.toFixed(1)+'s',spaceProgress=1-hudPct(p.dc,Math.max(.01,p.s.dc||1)),spaceReady=p.dc<=0;
+  if(p.fx?.fortify>0){spaceState='ACTIVO';spaceProgress=1;spaceReady=true}
+  if(p.fx?.invisible>0){spaceState='ACTIVO';spaceProgress=1;spaceReady=true}
+  setCombatAction($('combatSpace'),$('combatSpaceState'),$('combatSpaceMeter'),spaceState,spaceProgress,spaceReady);
+
+  $('combatWeaponName').textContent=w.name;
+  if(w.id==='sunline'){
+    const heat=hudPct(p.weaponHeat||0,Math.max(.01,p.mod?.heatCap||1));
+    const locked=(p.weaponLock||0)>0,state=locked?'SOBRECARGA '+p.weaponLock.toFixed(1)+'s':'CALOR '+Math.round(heat*100)+'%';
+    setCombatAction($('combatWeapon'),$('combatWeaponState'),$('combatWeaponMeter'),state,heat,!locked&&heat<.7,locked?'danger':'heat')
+  }else{
+    const rate=Math.max(.07,typeof weaponRate==='function'?weaponRate(p):(w.rate||1)),progress=1-hudPct(p.shot||0,rate),ready=(p.shot||0)<=.02;
+    setCombatAction($('combatWeapon'),$('combatWeaponState'),$('combatWeaponMeter'),ready?'LISTO':((w.rate||0)>=.7?(p.shot||0).toFixed(1)+'s':'RECARGA'),progress,ready)
+  }
+
+  $('combatSpecialName').textContent=sp.name;
+  const specialMax=Math.max(.01,typeof specialCooldown==='function'?specialCooldown(p):sp.cd),specialProgress=1-hudPct(p.specialCd||0,specialMax),specialReady=(p.specialCd||0)<=0;
+  setCombatAction($('combatSpecial'),$('combatSpecialState'),$('combatSpecialMeter'),specialReady?'LISTO':p.specialCd.toFixed(1)+'s',specialProgress,specialReady)
+}
+function syncUI(s){if(!s)return;if(s.training){$('combatHud').classList.add('hidden');renderTrainingHud(s);$('readyOverlay').classList.add('hidden');$('upgradeOverlay').classList.add('hidden');$('matchOverlay').classList.add('hidden');return}combatHudUI(s);const m=modeOf(s);$('modeName').textContent=m.name;$('roundNum').textContent=s.round;$('mapName').textContent=mapDef(s).name;
   const sb=$('scoreboard');sb.innerHTML='';for(const item of scoreData(s)){const el=document.createElement('div');el.className='score-pill';el.style.borderColor=item.color+'66';el.innerHTML='<span style="color:'+item.color+'">'+item.label+'</span><b>'+item.score+'</b>';sb.appendChild(el)}
   const msg=$('centerMessage');if(s.phase==='count'){msg.textContent=Math.ceil(s.count);msg.classList.remove('hidden')}else if(s.phase==='round'){msg.textContent='RONDA TERMINADA';msg.classList.remove('hidden')}else msg.classList.add('hidden');
   readyUI(s);draftUI(s);endUI(s)
@@ -430,15 +490,13 @@ function drawArenaScore(s){}
 function drawBarrels(p,i){const shown=Math.min(7,p.s.n),perp=p.a+Math.PI/2;for(let k=0;k<shown;k++){const off=(k-(shown-1)/2)*6.5,ox=Math.cos(perp)*off,oy=Math.sin(perp)*off;ctx.strokeStyle=PLAYER_COLORS[i];ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(p.x+ox,p.y+oy);ctx.lineTo(p.x+ox+Math.cos(p.a)*39,p.y+oy+Math.sin(p.a)*39);ctx.stroke()}}
 function drawHpAbove(p){
   if(p.fx?.invisible>0&&p.i!==me)return;
-  const w=96,h=11,x=p.x-w/2,y=p.y-52,ratio=Math.max(0,p.hp/p.max);ctx.fillStyle='#05070bdd';ctx.fillRect(x-2,y-2,w+4,h+4);ctx.fillStyle=ratio>.45?PLAYER_COLORS[p.i]:(ratio>.2?'#ffd166':'#ff596f');ctx.fillRect(x,y,w*ratio,h);ctx.strokeStyle='#ffffff40';ctx.lineWidth=1.5;ctx.strokeRect(x,y,w,h);ctx.font='900 11px system-ui';ctx.textAlign='center';ctx.fillStyle='#f7f9ff';ctx.fillText(game?.training&&p.i===1?('DUMMY · '+({fixed:'FIJO',free:'LIBRE',tank:'TANQUE'}[game.trainingDummyMode]||'FIJO')):(Math.max(0,Math.ceil(p.hp))+' / '+p.max),p.x,y-6);
-  if(p.i===me){
-    ctx.font='900 9px system-ui';const c=CHASSIS[p.character]||CHASSIS.mix,sp=SPECIALS[p.loadout?.special]||SPECIALS.atlas,wdef=WEAPONS[p.loadout?.weapon]||WEAPONS.rivet;
-    const basic=p.character==='trucks'?(p.fx?.fortify>0?'FORTIFICADO':(p.dc<=0?'FORTIFICAR':p.dc.toFixed(1)+'s')):p.character==='lizzy'?(p.fx?.invisible>0?'INVISIBLE '+p.fx.invisible.toFixed(1)+'s':(p.dc<=0?'INVISIBILIDAD':p.dc.toFixed(1)+'s')):(p.dc<=0?'DASH':p.dc.toFixed(1)+'s');
-    let text=wdef.name+' · SPACE '+basic+' · E '+(p.specialCd<=0?sp.name:p.specialCd.toFixed(1)+'s');
-    if(wdef.id==='sunline')text+=' · '+(p.weaponLock>0?'SOBRECARGA '+p.weaponLock.toFixed(1)+'s':'CALOR '+Math.round((p.weaponHeat||0)/(p.mod?.heatCap||1)*100)+'%');
-    if(p.fx?.overcharge>0)text+=' · NÚCLEO '+p.fx.overcharge.toFixed(1)+'s';
-    ctx.fillStyle='#c9d1df';ctx.fillText(text,p.x,y+h+17)
-  }
+  const w=96,h=11,x=p.x-w/2,y=p.y-52,ratio=Math.max(0,p.hp/p.max);
+  ctx.fillStyle='#05070bdd';ctx.fillRect(x-2,y-2,w+4,h+4);
+  ctx.fillStyle=ratio>.45?PLAYER_COLORS[p.i]:(ratio>.2?'#ffd166':'#ff596f');ctx.fillRect(x,y,w*ratio,h);
+  ctx.strokeStyle='#ffffff40';ctx.lineWidth=1.5;ctx.strokeRect(x,y,w,h);
+  ctx.font='900 11px system-ui';ctx.textAlign='center';ctx.fillStyle='#f7f9ff';
+  const label=game?.training&&p.i===1?('DUMMY · '+({fixed:'FIJO',free:'LIBRE',tank:'TANQUE'}[game.trainingDummyMode]||'FIJO')):((p.i===me?'TÚ':(p.name||('P'+(p.i+1))))+' · '+Math.max(0,Math.ceil(p.hp)));
+  ctx.fillText(label,p.x,y-7)
 }
 function drawMix(p,n){const color=PLAYER_COLORS[p.i];ctx.save();if(p.inv&&Math.floor(n/70)%2===0)ctx.globalAlpha=.38;ctx.shadowColor=color;ctx.shadowBlur=18;ctx.fillStyle=color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#0a0d15';ctx.beginPath();ctx.arc(p.x,p.y,14,0,Math.PI*2);ctx.fill();ctx.strokeStyle=color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(p.x,p.y,18,0,Math.PI*2);ctx.stroke();drawBarrels(p,p.i);ctx.restore()}
 function drawTrucks(p,n){const color=PLAYER_COLORS[p.i];ctx.save();if(p.inv&&Math.floor(n/70)%2===0)ctx.globalAlpha=.38;ctx.translate(p.x,p.y);ctx.rotate(p.a);ctx.shadowColor=color;ctx.shadowBlur=18;ctx.fillStyle='#202833';ctx.fillRect(-27,-22,52,44);ctx.shadowBlur=0;ctx.fillStyle='#0b0f14';ctx.fillRect(-29,-25,50,8);ctx.fillRect(-29,17,50,8);ctx.fillStyle=color;ctx.globalAlpha*=.85;ctx.fillRect(-20,-16,38,32);ctx.globalAlpha=1;ctx.fillStyle='#141a22';ctx.beginPath();ctx.arc(0,0,15,0,Math.PI*2);ctx.fill();const shown=Math.min(6,p.s.n),spread=6.5;ctx.strokeStyle=color;ctx.lineWidth=6;for(let k=0;k<shown;k++){const off=(k-(shown-1)/2)*spread;ctx.beginPath();ctx.moveTo(8,off);ctx.lineTo(39,off);ctx.stroke()}if(p.fx?.fortify>0){ctx.strokeStyle='#dce3eb';ctx.lineWidth=4;ctx.shadowColor='#dce3eb';ctx.shadowBlur=12;ctx.strokeRect(-34,-30,68,60)}ctx.restore()}

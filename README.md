@@ -89,3 +89,8 @@ Ver `backend/README.md`, `backend/schema.sql` y `backend/fight-random-api/`.
 ## Draft de rarezas
 
 La rareza escala por ronda en la build `2026.10-polish-1`. Legendario empieza a aparecer desde ronda 3 y Mercado Negro desde ronda 5. El comeback desplaza principalmente Básico hacia Raro/Épico y solo aumenta ligeramente las rarezas altas. Un draft puede contener como máximo una carta Legendaria o Mercado Negro y agotar pools de rareza baja nunca promociona automáticamente una tirada a rareza alta.
+
+
+## HUD de combate
+
+La build `2026.10-polish-2` usa un HUD fijo dentro de la arena: vida/estados del jugador y tres bloques para `SPACE`, arma primaria (`M1`) y especial (`E`). Los cooldowns se leen directamente, SUNLINE muestra calor/sobrecarga y la tormenta genera aviso contextual. La información larga ya no se dibuja debajo de la máquina local.
