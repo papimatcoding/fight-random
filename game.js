@@ -4,7 +4,7 @@ function scoreData(s){const m=modeOf(s);if(m.id==='teams')return[{label:'EQUIPO 
 const GARAGE_KEY='fr-garage-build';
 const CHASSIS_ORDER=['mix','trucks','lizzy'];
 let garageBuild=loadGarageBuild(),pickerContext='garage',pickerSlot=null,weaponCompareTimer=null,trainingActive=false,trainingPreviousMode='duel',trainingSlots={A:null,B:null};
-let rarityAnnouncementTimer=null,lastHighTierAnnouncement='';
+let rarityAnnouncementTimer=null,lastHighTierAnnouncement='',garagePreviewTimers=[],appFullscreenMode='';
 window.frQueueIntent='idle';
 
 function blankGarageBuild(){return{character:'mix',loadout:{weapon:null,special:null,system:null}}}
@@ -40,7 +40,45 @@ function garageSetChassis(id){
 function garageCycle(dir){
   const i=CHASSIS_ORDER.indexOf(garageBuild.character),n=(i+dir+CHASSIS_ORDER.length)%CHASSIS_ORDER.length;garageSetChassis(CHASSIS_ORDER[n])
 }
+function stopGarageWeaponPreview(resetText=true){
+  for(const t of garagePreviewTimers)clearTimeout(t);garagePreviewTimers=[];
+  const machine=$('garageMachine');if(machine)machine.classList.remove('is-previewing','preview-hot','preview-overheated','preview-cooling');
+  if(resetText){
+    const w=WEAPONS[garageBuild.loadout.weapon],state=$('garageWeaponState');
+    if(state)state.textContent=w?'ARMA EN ESPERA':'MONTA UN ARMA'
+  }
+}
+function garagePreviewLater(ms,fn){const t=setTimeout(fn,ms);garagePreviewTimers.push(t);return t}
+function previewGarageWeapon(){
+  const id=garageBuild.loadout.weapon,machine=$('garageMachine'),state=$('garageWeaponState'),btn=$('garagePreviewBtn');
+  if(!machine||!state||!id||!WEAPONS[id]){if(state)state.textContent='MONTA UN ARMA';return}
+  stopGarageWeaponPreview(false);machine.classList.add('is-previewing');if(btn)btn.disabled=true;
+
+  const finish=(ms=1300)=>garagePreviewLater(ms,()=>{
+    stopGarageWeaponPreview(true);if(btn)btn.disabled=false
+  });
+
+  if(id==='sunline'){
+    state.textContent='SUNLINE · CARGANDO';
+    garagePreviewLater(650,()=>{machine.classList.add('preview-hot');state.textContent='CALOR · 55%'});
+    garagePreviewLater(1350,()=>{state.textContent='CALOR · 88%'});
+    garagePreviewLater(1900,()=>{machine.classList.add('preview-overheated');state.textContent='SOBRECARGA'});
+    garagePreviewLater(2650,()=>{machine.classList.remove('preview-hot');machine.classList.add('preview-cooling');state.textContent='PURGANDO CALOR'});
+    finish(3700);return
+  }
+  const labels={rivet:'RÁFAGA DE PRUEBA',lance:'DISPARO DE PRUEBA',scrapshot:'DESCARGA DE PRUEBA',piston:'CARRERA HIDRÁULICA',grinder:'ROTOR A RÉGIMEN'};
+  state.textContent=labels[id]||'PRUEBA DE ARMA';
+  finish(id==='grinder'?2200:(id==='lance'?1600:1350))
+}
+async function toggleHangarFullscreen(){
+  try{
+    if(document.fullscreenElement){await document.exitFullscreen();return}
+    appFullscreenMode='hangar';document.body.classList.add('hangar-fullscreen');
+    await document.documentElement.requestFullscreen()
+  }catch(e){appFullscreenMode='';document.body.classList.remove('hangar-fullscreen');console.warn(e)}
+}
 function renderGarage(){
+  stopGarageWeaponPreview(false);
   const c=CHASSIS[garageBuild.character]||CHASSIS.mix,cost=moduleCost(garageBuild.loadout),ok=garageCanQueue();
   machineData($('garageMachine'),garageBuild);
   $('garageChassisName').textContent=c.name;$('garageChassisMeta').textContent=chassisMeta(c.id);
@@ -57,7 +95,8 @@ function renderGarage(){
   $('quickPlayBtn').disabled=!ok;$('hostBtn').disabled=!ok;
   $('partyModeLabel').textContent=(MODES[selectedMode]?.name||selectedMode)+' · QUICKPLAY';
   const title=$('homeBuildTitle'),mods=$('homeBuildModules');if(title)title.textContent=c.name;if(mods)mods.textContent=[moduleName('weapon',garageBuild.loadout.weapon),moduleName('special',garageBuild.loadout.special),moduleName('system',garageBuild.loadout.system)].filter(x=>x!=='AÑADIR').join(' · ')||'Sin montar';
-  const self=$('partySelfName');if(self)self.textContent=typeof frPlayerName==='function'?frPlayerName():'Jugador'
+  const self=$('partySelfName');if(self)self.textContent=typeof frPlayerName==='function'?frPlayerName():'Jugador';
+  const preview=$('garagePreviewBtn'),state=$('garageWeaponState');if(preview)preview.disabled=!garageWeapon;if(state)state.textContent=garageWeapon?'ARMA EN ESPERA':'MONTA UN ARMA'
 }
 function cleanStatNumber(n){const v=Number(n);return Number.isInteger(v)?String(v):String(Number(v.toFixed(2)))}
 function weaponDamageText(d){
@@ -576,7 +615,7 @@ function drawMountedWeapon(p,n){
   const id=p.loadout?.weapon||'rivet',color=PLAYER_COLORS[p.i];ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.a);ctx.strokeStyle=color;ctx.fillStyle='#cfd7e4';ctx.shadowColor=color;ctx.shadowBlur=8;
   if(id==='lance'){ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(8,0);ctx.lineTo(58,0);ctx.stroke();ctx.fillRect(50,-6,18,12)}
   else if(id==='scrapshot'){ctx.lineWidth=5;for(const y of[-8,0,8]){ctx.beginPath();ctx.moveTo(9,y*.45);ctx.lineTo(39,y);ctx.stroke()}ctx.fillRect(34,-12,10,24)}
-  else if(id==='sunline'){ctx.fillStyle='#ff657b';ctx.fillRect(10,-7,32,14);ctx.fillStyle='#fff';ctx.fillRect(37,-3,10,6)}
+  else if(id==='sunline'){const cap=Math.max(.01,p.mod?.heatCap||1),heat=Math.max(0,Math.min(1,(p.weaponHeat||0)/cap)),locked=(p.weaponLock||0)>0;ctx.fillStyle=locked?'#ff314d':(heat>.65?'#ff596d':'#ff657b');ctx.shadowBlur=8+heat*16;ctx.fillRect(10,-7,32,14);ctx.fillStyle=locked?'#ffd6d9':'#fff';ctx.fillRect(37,-3,10,6);if(locked){ctx.globalAlpha=.55;ctx.strokeStyle='#cfd3d8';ctx.lineWidth=2;for(const y of[-9,-14]){ctx.beginPath();ctx.moveTo(34,y);ctx.quadraticCurveTo(42,y-7,48,y-13);ctx.stroke()}}}
   else if(id==='piston'){ctx.fillStyle='#d5b16a';ctx.fillRect(8,-9,34,18);ctx.fillStyle='#ece3c9';ctx.fillRect(38,-14,18,28)}
   else if(id==='grinder'){const a=n*.012;ctx.translate(39,0);ctx.rotate(a);ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(-24,0);ctx.lineTo(24,0);ctx.stroke();ctx.beginPath();ctx.arc(0,0,8,0,Math.PI*2);ctx.fill()}
   else{ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(8,0);ctx.lineTo(43,0);ctx.stroke();ctx.fillRect(37,-6,10,12)}
@@ -584,8 +623,14 @@ function drawMountedWeapon(p,n){
 }
 function drawBladeOrbit(p,n){
   if(p.fx?.bladeStorm<=0||p.fx?.invisible>0&&p.i!==me)return;
-  const count=p.mod?.bladeCount||3,r=72*(p.mod?.bladeRadius||1);ctx.save();ctx.translate(p.x,p.y);ctx.strokeStyle='#ff6d80';ctx.fillStyle='#e8edf4';ctx.shadowColor='#ff536c';ctx.shadowBlur=13;
-  for(let i=0;i<count;i++){const a=n*.009+i*Math.PI*2/count,x=Math.cos(a)*r,y=Math.sin(a)*r;ctx.save();ctx.translate(x,y);ctx.rotate(a+Math.PI/2);ctx.beginPath();ctx.moveTo(0,-13);ctx.lineTo(5,10);ctx.lineTo(0,16);ctx.lineTo(-5,10);ctx.closePath();ctx.fill();ctx.restore()}ctx.restore()
+  const count=p.mod?.bladeCount||3,r=76*(p.mod?.bladeRadius||1),phase=Number.isFinite(p.trinityPhase)?p.trinityPhase:n*.00515;
+  ctx.save();ctx.translate(p.x,p.y);ctx.strokeStyle='#ff6d80';ctx.fillStyle='#f1f4f8';ctx.shadowColor='#ff536c';ctx.shadowBlur=15;
+  for(let i=0;i<count;i++){
+    const a=phase+i*Math.PI*2/count,x=Math.cos(a)*r,y=Math.sin(a)*r;
+    ctx.globalAlpha=.22;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,r,a-.32,a);ctx.stroke();ctx.globalAlpha=1;
+    ctx.save();ctx.translate(x,y);ctx.rotate(a+Math.PI/2);ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(6,8);ctx.lineTo(0,17);ctx.lineTo(-6,8);ctx.closePath();ctx.fill();ctx.strokeStyle='#ff8292';ctx.lineWidth=2;ctx.stroke();ctx.restore()
+  }
+  ctx.restore()
 }
 function drawTurret(p,n){if(p.character==='trucks')drawTrucks(p,n);else if(p.character==='lizzy')drawLizzy(p,n);else drawMix(p,n);drawMountedWeapon(p,n);drawBladeOrbit(p,n);if(!(p.fx?.invisible>0&&p.i!==me)&&p.shield){ctx.strokeStyle='#f8fbff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,p.r+10,0,Math.PI*2);ctx.stroke()}if(!(p.fx?.invisible>0&&p.i!==me)&&p.fx.burn>0){ctx.strokeStyle='#ff7a52';ctx.beginPath();ctx.arc(p.x,p.y,p.r+14,0,Math.PI*2);ctx.stroke()}if(!(p.fx?.invisible>0&&p.i!==me)&&p.fx.slow>0){ctx.strokeStyle='#75bfff';ctx.beginPath();ctx.arc(p.x,p.y,p.r+18,0,Math.PI*2);ctx.stroke()}drawHpAbove(p)}
 const seenEffects=new Set(),seenFeedback=new Set();
@@ -648,7 +693,7 @@ function draw(s,n){ctx.clearRect(0,0,W,H);const map=MAPS[s?.map||0],ww=map.w||W,
 function frame(n){const dt=Math.min(.05,(n-lastFrame)/1000);lastFrame=n;if(trainingActive&&game){sim(dt);view=game}else if(!host&&conn?.open&&me!=null){sendAccumulator+=dt;if(sendAccumulator>.033){sendAccumulator=0;conn.send({type:'input',k:mine})}}const s=trainingActive?game:(host?game:view);if(shake){ctx.save();ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);shake*=.8;draw(s,n);ctx.restore()}else draw(s,n);syncUI(s);requestAnimationFrame(frame)}
 
 function pointerPos(e){const r=cv.getBoundingClientRect(),state=trainingActive?game:(host?game:view),ww=state?worldW(state):W,hh=state?worldH(state):H;mine.ax=(e.clientX-r.left)*ww/r.width;mine.ay=(e.clientY-r.top)*hh/r.height}
-addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;if(['KeyW','KeyA','KeyS','KeyD','Space','KeyE'].includes(e.code))e.preventDefault();if(e.code==='KeyW')mine.u=1;if(e.code==='KeyS')mine.d=1;if(e.code==='KeyA')mine.l=1;if(e.code==='KeyD')mine.r=1;if(e.code==='Space')mine.dash=1;if(e.code==='KeyE')mine.special=1},{passive:false});
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;if(e.code==='Escape'){if(!$('modulePicker').classList.contains('hidden'))closeModulePicker();if(!$('friendPicker').classList.contains('hidden'))$('friendPicker').classList.add('hidden');}if(['KeyW','KeyA','KeyS','KeyD','Space','KeyE'].includes(e.code))e.preventDefault();if(e.code==='KeyW')mine.u=1;if(e.code==='KeyS')mine.d=1;if(e.code==='KeyA')mine.l=1;if(e.code==='KeyD')mine.r=1;if(e.code==='Space')mine.dash=1;if(e.code==='KeyE')mine.special=1},{passive:false});
 addEventListener('keyup',e=>{if(e.code==='KeyW')mine.u=0;if(e.code==='KeyS')mine.d=0;if(e.code==='KeyA')mine.l=0;if(e.code==='KeyD')mine.r=0;if(e.code==='Space')mine.dash=0;if(e.code==='KeyE')mine.special=0});
 cv.onpointermove=pointerPos;cv.addEventListener('pointerdown',()=>{try{ensureAudio()?.resume?.()}catch{}},{once:true});cv.onpointerdown=e=>{pointerPos(e);if(e.button===0)mine.fire=1};addEventListener('pointerup',()=>mine.fire=0);addEventListener('blur',()=>{mine.u=mine.d=mine.l=mine.r=mine.fire=mine.dash=mine.special=0});
 
@@ -693,16 +738,26 @@ $('trainingClearUpgrades').onclick=()=>rebuildTrainingMachine({});
 $('trainingSaveA').onclick=()=>saveTrainingSlot('A');$('trainingSaveB').onclick=()=>saveTrainingSlot('B');
 $('trainingLoadA').onclick=()=>loadTrainingSlot('A');$('trainingLoadB').onclick=()=>loadTrainingSlot('B');
 async function toggleArenaFullscreen(){
-  try{if(document.fullscreenElement)await document.exitFullscreen();else await $('canvasFrame').requestFullscreen()}
-  catch(e){console.warn(e)}
+  try{
+    if(document.fullscreenElement){await document.exitFullscreen();return}
+    appFullscreenMode='arena';await $('canvasFrame').requestFullscreen()
+  }catch(e){appFullscreenMode='';console.warn(e)}
 }
 $('fullscreenBtn').onclick=toggleArenaFullscreen;
 $('arenaFullscreenBtn').onclick=toggleArenaFullscreen;
+$('garageFullscreenBtn').onclick=toggleHangarFullscreen;
+$('garagePreviewBtn').onclick=previewGarageWeapon;
+$('garageClearBtn').onclick=()=>{
+  stopGarageWeaponPreview(false);garageBuild.loadout={weapon:null,special:null,system:null};saveGarageBuild();renderGarage()
+};
 $('arenaLeaveBtn').onclick=()=>{if(trainingActive)exitTestRange();else if(typeof clean==='function')clean()};
 document.addEventListener('fullscreenchange',()=>{
   const on=!!document.fullscreenElement;
-  $('fullscreenBtn').textContent=on?'SALIR DE PANTALLA COMPLETA':'PANTALLA COMPLETA';
-  $('arenaFullscreenBtn').innerHTML=on?'↙ <span>SALIR FULLSCREEN</span>':'⛶ <span>PANTALLA COMPLETA</span>'
+  if(!on){document.body.classList.remove('hangar-fullscreen');appFullscreenMode=''}
+  else if(appFullscreenMode==='hangar')document.body.classList.add('hangar-fullscreen');
+  $('fullscreenBtn').textContent=on&&appFullscreenMode==='arena'?'SALIR DE PANTALLA COMPLETA':'PANTALLA COMPLETA';
+  $('arenaFullscreenBtn').innerHTML=on&&appFullscreenMode==='arena'?'↙ <span>SALIR FULLSCREEN</span>':'⛶ <span>PANTALLA COMPLETA</span>';
+  $('garageFullscreenBtn').textContent=on&&appFullscreenMode==='hangar'?'↙ SALIR FULLSCREEN':'⛶ FULLSCREEN'
 });
 renderGarage();showLobbyView('home');
 const invite=new URL(location.href).searchParams.get('room');if(invite)$('roomInput').value=invite.toUpperCase().slice(0,6);
