@@ -103,7 +103,7 @@ function applySystem(p){
 function resetMachineStats(p){
   p.s=machineBaseStats(p.character);
   p.mod=blankMachineMods();
-  p.rivetCycle=0;p.fusionDragonCharge=0;p.grinderGuard=0;
+  p.rivetCycle=0;p.fusionDragonCharge=0;p.grinderGuard=0;p.trinityPhase=0;p.trinityHitCd={};
   applySystem(p);
 }
 
@@ -517,7 +517,15 @@ function fireHound(p){
   for(let k=0;k<count;k++){const off=count===1?0:(k/(count-1)-.5)*spread,aa=a+off,speed=405*pace;game.bullets.push({x:p.x+Math.cos(aa)*34,y:p.y+Math.sin(aa)*34,vx:Math.cos(aa)*speed,vy:Math.sin(aa)*speed,r:7,owner:p.i,dmg:7.5*p.mod.missileDamage*p.mod.specialDamage,bounces:0,homing:1.08*p.mod.missileHoming,boom:1,fire:0,frost:0,shock:0,life:3.0,missile:true})}
   addEffect('muzzle',p.x+Math.cos(a)*30,p.y+Math.sin(a)*30,58,'#9ad8ff',.20,p.i)
 }
-function fireTrinity(p){p.fx.bladeStorm=4.0*p.mod.bladeDuration;p.fx.bladeTick=0;addEffect('trinity',p.x,p.y,90*p.mod.bladeRadius,'#ff697d',.40,p.i)}
+function trinityBladePoints(p){
+  const count=Math.max(1,p.mod?.bladeCount||3),radius=76*(p.mod?.bladeRadius||1),phase=p.trinityPhase||0,out=[];
+  for(let i=0;i<count;i++){const a=phase+i*Math.PI*2/count;out.push({x:p.x+Math.cos(a)*radius,y:p.y+Math.sin(a)*radius,a})}
+  return out
+}
+function fireTrinity(p){
+  p.fx.bladeStorm=4.0*p.mod.bladeDuration;p.fx.bladeTick=0;p.trinityPhase=0;p.trinityHitCd={};
+  addEffect('trinity',p.x,p.y,96*p.mod.bladeRadius,'#ff697d',.46,p.i)
+}
 
 fireSpecial=function(p){
   revealPlayer(p);
@@ -566,8 +574,32 @@ function updateMines(dt){
   for(let i=game.mines.length-1;i>=0;i--){const m=game.mines[i];m.life-=dt;m.arm-=dt;if(m.life<=0){game.mines.splice(i,1);continue}if(m.arm>0)continue;let trigger=false;for(const p of game.players){if(!p.alive||!isEnemy(m.owner,p.i))continue;if(Math.hypot(p.x-m.x,p.y-m.y)<m.r+p.r+10){trigger=true;break}}if(trigger){game.mines.splice(i,1);explodeMine(m)}}
 }
 function updateBladeStorm(dt){
-  for(const p of game.players){if(!p.alive||p.fx.bladeStorm<=0)continue;p.fx.bladeTick-=dt;if(p.fx.bladeTick>0)continue;p.fx.bladeTick=.18;const radius=76*p.mod.bladeRadius;
-    for(const t of game.players){if(!t.alive||!isEnemy(p.i,t.i))continue;const d=Math.hypot(t.x-p.x,t.y-p.y);if(d<radius+t.r&&!lineBlocked(p.x,p.y,t.x,t.y)){const dmg=2.7*p.mod.bladeDamage*p.mod.specialDamage,dx=(t.x-p.x)/(d||1),dy=(t.y-p.y)/(d||1);damageRaw(t,dmg,p.i,false,dx*55,dy*55)}}
+  for(const p of game.players){
+    if(!p.alive||p.fx.bladeStorm<=0)continue;
+    p.trinityPhase=(p.trinityPhase||0)+dt*5.15;
+    const cds=p.trinityHitCd||(p.trinityHitCd={});
+    for(const key of Object.keys(cds)){cds[key]-=dt;if(cds[key]<=0)delete cds[key]}
+    const blades=trinityBladePoints(p),bladeR=14,dmg=6.4*p.mod.bladeDamage*p.mod.specialDamage;
+
+    for(const t of game.players){
+      if(!t.alive||!isEnemy(p.i,t.i)||cds['p'+t.i]>0)continue;
+      for(const blade of blades){
+        const d=Math.hypot(t.x-blade.x,t.y-blade.y);
+        if(d>bladeR+t.r||lineBlocked(blade.x,blade.y,t.x,t.y))continue;
+        const dx=(t.x-p.x)/(Math.hypot(t.x-p.x,t.y-p.y)||1),dy=(t.y-p.y)/(Math.hypot(t.x-p.x,t.y-p.y)||1);
+        damageRaw(t,dmg,p.i,false,dx*78,dy*78);addFeedback('hit',t.x,t.y,dmg,p.i,t.i);
+        cds['p'+t.i]=.24;break
+      }
+    }
+
+    for(const barrel of game.barrels||[]){
+      if(!barrel.alive||cds['b'+barrel.id]>0)continue;
+      for(const blade of blades){
+        if(Math.hypot(barrel.x-blade.x,barrel.y-blade.y)>bladeR+barrel.r)continue;
+        damageMeleeBarrel(barrel,8.5*p.mod.bladeDamage*p.mod.specialDamage,p.i);
+        cds['b'+barrel.id]=.22;break
+      }
+    }
   }
 }
 const legacyUpdateGroundFires=updateGroundFires;
