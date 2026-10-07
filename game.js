@@ -76,9 +76,10 @@ function weaponTheoreticalDps(d){
   const hit=d.id==='scrapshot'?d.damage*(d.pellets||1):d.damage;
   return hit/Math.max(.01,d.rate||1)
 }
-function statDelta(label,next,prev,epsilon=.001){
+function statDelta(label,next,prev,epsilon=.001,lowerBetter=false){
   if(Math.abs(next-prev)<=epsilon)return'<span class="same">'+label+' =</span>';
-  return'<span class="'+(next>prev?'up':'down')+'">'+label+' '+(next>prev?'↑':'↓')+'</span>'
+  const rising=next>prev,better=lowerBetter?!rising:rising;
+  return'<span class="'+(better?'better':'worse')+'">'+label+' '+(rising?'↑':'↓')+'</span>'
 }
 function showWeaponCompare(prev,next){
   const box=$('weaponCompare');if(!box||!prev||!next||prev.id===next.id)return;
@@ -86,7 +87,7 @@ function showWeaponCompare(prev,next){
     statDelta('DPS',weaponTheoreticalDps(next),weaponTheoreticalDps(prev),.05)+
     statDelta('CADENCIA',1/(next.rate||1),1/(prev.rate||1),.01)+
     statDelta('ALCANCE',next.range||0,prev.range||0,.5)+
-    statDelta('RETROCESO',next.recoil||0,prev.recoil||0,.5);
+    statDelta('RETROCESO',next.recoil||0,prev.recoil||0,.5,true);
   box.classList.remove('hidden');box.classList.add('visible');
   clearTimeout(weaponCompareTimer);
   weaponCompareTimer=setTimeout(()=>{box.classList.remove('visible');setTimeout(()=>box.classList.add('hidden'),180)},1600)
@@ -198,13 +199,14 @@ function startTestRange(){
   Object.assign(mine,blankInput());mine.ax=d.x;mine.ay=d.y;
   $('lobby').classList.add('hidden');$('roomPanel').classList.add('hidden');$('gameWrap').classList.remove('hidden');$('fullscreenBtn').classList.remove('hidden');$('trainingHud').classList.remove('hidden');
   $('trainingBuildName').textContent=(CHASSIS[p.character]?.name||p.character)+' · '+(WEAPONS[p.loadout.weapon]?.name||'ARMA');
-  $('modeName').textContent='PRUEBAS';$('roundNum').textContent='—';$('mapName').textContent='BANCO';
+  $('scoreboard').innerHTML='';$('centerMessage').classList.add('hidden');
+  $('modeName').textContent='PRUEBAS';$('roundNum').textContent='—';$('mapName').textContent='BANCO';if(typeof net==='function')net('local',true);
 }
 function exitTestRange(){
   trainingActive=false;
   Object.assign(mine,blankInput());
   game=view=null;me=null;host=false;selectedMode=trainingPreviousMode;
-  $('trainingHud').classList.add('hidden');$('gameWrap').classList.add('hidden');$('roomPanel').classList.add('hidden');$('fullscreenBtn').classList.add('hidden');$('lobby').classList.remove('hidden');
+  $('trainingHud').classList.add('hidden');$('gameWrap').classList.add('hidden');$('roomPanel').classList.add('hidden');$('fullscreenBtn').classList.add('hidden');$('lobby').classList.remove('hidden');if(typeof net==='function')net('offline',false);
   renderGarage();showLobbyView('hangar')
 }
 function renderTrainingHud(s){
