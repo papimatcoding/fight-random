@@ -233,20 +233,48 @@
         <div class="training-hud hidden" id="trainingHud">
           <div class="training-title">
             <div><span>CAMPO DE PRUEBAS</span><strong id="trainingBuildName">MIX · RIVET-9</strong></div>
-            <button class="ghost compact" id="trainingExitBtn" type="button">VOLVER AL HANGAR</button>
+            <div class="training-title-actions">
+              <button class="secondary compact" id="trainingUpgradesBtn" type="button">MEJORAS</button>
+              <button class="ghost compact" id="trainingExitBtn" type="button">VOLVER AL HANGAR</button>
+            </div>
           </div>
           <div class="training-metrics">
             <div><span>DAÑO TOTAL</span><strong id="trainingDamage">0</strong></div>
             <div><span>DPS · 5s</span><strong id="trainingDps">0</strong></div>
+            <div><span>BURST · 1s</span><strong id="trainingBurst">0</strong></div>
             <div><span>GOLPE MÁX.</span><strong id="trainingBest">0</strong></div>
             <div><span>PRECISIÓN</span><strong id="trainingAccuracy">0%</strong></div>
           </div>
           <div class="training-actions">
             <button class="secondary compact" id="trainingResetBtn" type="button">RESET MÉTRICAS</button>
-            <button class="secondary compact" id="trainingDummyBtn" type="button">RECOLOCAR DUMMY</button>
+            <button class="secondary compact" id="trainingDummyBtn" type="button">DUMMY · FIJO</button>
             <button class="secondary compact" id="trainingCooldownBtn" type="button">CD NORMALES</button>
           </div>
+
+          <div class="training-ab">
+            <div class="training-slot">
+              <div><span>BUILD A</span><strong id="trainingALabel">vacía</strong></div>
+              <div class="training-slot-actions"><button id="trainingSaveA" type="button">GUARDAR</button><button id="trainingLoadA" type="button" disabled>CARGAR</button></div>
+              <small id="trainingAStats">—</small>
+            </div>
+            <div class="training-slot">
+              <div><span>BUILD B</span><strong id="trainingBLabel">vacía</strong></div>
+              <div class="training-slot-actions"><button id="trainingSaveB" type="button">GUARDAR</button><button id="trainingLoadB" type="button" disabled>CARGAR</button></div>
+              <small id="trainingBStats">—</small>
+            </div>
+            <div class="training-diff" id="trainingDiff">Guarda A y B para comparar.</div>
+          </div>
         </div>
+
+        <aside class="training-upgrades hidden" id="trainingUpgrades">
+          <div class="training-upgrades-head">
+            <div><span>MODIFICACIONES</span><strong>BUILD DE PRUEBA</strong></div>
+            <button class="garage-icon-btn" id="trainingUpgradesClose" type="button">×</button>
+          </div>
+          <p>Fuerza cualquier mejora compatible. Cambiar un nivel reconstruye la máquina y reinicia las métricas.</p>
+          <div id="trainingUpgradeGroups" class="training-upgrade-groups"></div>
+          <button class="ghost compact training-clear-upgrades" id="trainingClearUpgrades" type="button">QUITAR TODAS LAS MEJORAS</button>
+        </aside>
 
         <div class="ready-overlay hidden" id="readyOverlay">
           <div class="ready-garage">
