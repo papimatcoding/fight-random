@@ -545,8 +545,23 @@ function drawEffects(s){if(!s?.effects)return;for(const e of s.effects){if(!seen
   if(e.type==='slash'){ctx.translate(e.x,e.y);ctx.globalAlpha=alpha;ctx.strokeStyle='#f4efff';ctx.shadowColor='#b7a7ff';ctx.shadowBlur=18;ctx.lineWidth=7*(1-t)+2;ctx.beginPath();ctx.arc(0,0,e.radius*.52,-1.05,1.05);ctx.stroke();ctx.restore();continue}
   if(e.type==='cloak'||e.type==='reveal'){ctx.globalAlpha=alpha*.9;ctx.strokeStyle=e.color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(e.x,e.y,e.radius*(.35+.65*t),0,Math.PI*2);ctx.stroke();ctx.restore();continue}
   if(e.type==='beam'){ctx.globalAlpha=alpha;ctx.strokeStyle=e.color;ctx.shadowColor=e.color;ctx.shadowBlur=18;ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(e.x2,e.y2);ctx.stroke();ctx.lineWidth=2;ctx.strokeStyle='#fff4f5';ctx.stroke();ctx.restore();continue}
-  if(e.type==='piston'){ctx.globalAlpha=alpha;ctx.strokeStyle=e.color;ctx.lineWidth=12*(1-t)+3;ctx.beginPath();ctx.moveTo(e.x-Math.cos(0)*0,e.y);ctx.arc(e.x,e.y,e.radius*(.35+.6*t),-.55,.55);ctx.stroke();ctx.restore();continue}
-  if(e.type==='axeSwing'){ctx.globalAlpha=alpha;ctx.strokeStyle=e.color;ctx.shadowColor=e.color;ctx.shadowBlur=12;ctx.lineWidth=5;ctx.beginPath();ctx.arc(e.x,e.y,e.radius*.78,-2.5+Math.PI*2*t,-.4+Math.PI*2*t);ctx.stroke();ctx.restore();continue}
+  if(e.type==='piston'){
+    const extend=t<.55?t/.55:Math.max(0,(1-t)/.45),reach=30+e.radius*.72*extend;
+    ctx.translate(e.x,e.y);ctx.rotate(e.a||0);ctx.globalAlpha=alpha;ctx.lineCap='round';
+    ctx.strokeStyle='#6e7680';ctx.lineWidth=15;ctx.beginPath();ctx.moveTo(18,0);ctx.lineTo(reach-12,0);ctx.stroke();
+    ctx.strokeStyle=e.color;ctx.shadowColor=e.color;ctx.shadowBlur=14;ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(20,0);ctx.lineTo(reach-8,0);ctx.stroke();
+    ctx.shadowBlur=0;ctx.fillStyle='#efe3c5';ctx.fillRect(reach-8,-15,24,30);ctx.strokeStyle='#9a8357';ctx.lineWidth=3;ctx.strokeRect(reach-8,-15,24,30);
+    ctx.restore();continue
+  }
+  if(e.type==='axeSwing'){
+    const sweep=-.92+1.84*Math.min(1,t/.82),bladeA=(e.a||0)+sweep,reach=e.radius*.88;
+    ctx.globalAlpha=alpha;ctx.strokeStyle=e.color;ctx.shadowColor=e.color;ctx.shadowBlur=14;ctx.lineCap='round';
+    ctx.lineWidth=6;ctx.beginPath();ctx.arc(e.x,e.y,e.radius*.76,(e.a||0)-.92,bladeA);ctx.stroke();
+    ctx.translate(e.x,e.y);ctx.rotate(bladeA);ctx.shadowBlur=8;ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(28,0);ctx.lineTo(reach,0);ctx.stroke();
+    ctx.fillStyle='#eef3f8';ctx.beginPath();ctx.arc(reach,0,10,0,Math.PI*2);ctx.fill();
+    if((e.passes||1)>1){ctx.globalAlpha*=.55;ctx.rotate(Math.PI);ctx.strokeStyle='#c7d7e6';ctx.beginPath();ctx.moveTo(28,0);ctx.lineTo(reach*.78,0);ctx.stroke()}
+    ctx.restore();continue
+  }
 
   ctx.globalCompositeOperation='lighter';const grad=ctx.createRadialGradient(e.x,e.y,0,e.x,e.y,e.radius);grad.addColorStop(0,e.color+'dd');grad.addColorStop(.22,e.color+'88');grad.addColorStop(1,e.color+'00');ctx.globalAlpha=.75*alpha;ctx.fillStyle=grad;ctx.beginPath();ctx.arc(e.x,e.y,e.radius*(.45+.55*t),0,Math.PI*2);ctx.fill();ctx.globalAlpha=alpha;ctx.strokeStyle=e.color;ctx.lineWidth=Math.max(2,8*(1-t));ctx.beginPath();ctx.arc(e.x,e.y,e.radius*(.18+.82*t),0,Math.PI*2);ctx.stroke();const seed=(e.id||'x').split('').reduce((a,ch)=>a+ch.charCodeAt(0),0),count=e.type==='cannon'?18:e.type==='barrel'?14:8;for(let k=0;k<count;k++){const a=(Math.PI*2/count)*k+seed*.013,dist=e.radius*t*(.45+((k*37)%100)/180);ctx.globalAlpha=alpha*.9;ctx.fillStyle=k%2?e.color:'#fff2cc';ctx.beginPath();ctx.arc(e.x+Math.cos(a)*dist,e.y+Math.sin(a)*dist,2+(k%3),0,Math.PI*2);ctx.fill()}ctx.restore()}}
 function drawStorm(s){const st=s?.storm;if(!st)return;const remain=st.start-st.elapsed;if(st.active){ctx.save();ctx.fillStyle='rgba(91,38,130,.23)';ctx.beginPath();ctx.rect(0,0,worldW(s),worldH(s));ctx.arc(worldW(s)/2,worldH(s)/2,Math.max(0,st.radius),0,Math.PI*2,true);ctx.fill('evenodd');ctx.strokeStyle='#bd67ff';ctx.shadowColor='#bd67ff';ctx.shadowBlur=16;ctx.lineWidth=4;ctx.beginPath();ctx.arc(worldW(s)/2,worldH(s)/2,st.radius,0,Math.PI*2);ctx.stroke();ctx.restore();ctx.save();ctx.font='900 13px system-ui';ctx.textAlign='center';ctx.fillStyle='#d59aff';ctx.fillText('TORMENTA',worldW(s)/2,54);ctx.restore()}else if(remain<=8&&remain>0){ctx.save();ctx.font='900 13px system-ui';ctx.textAlign='center';ctx.fillStyle='#c79be6';ctx.fillText('TORMENTA EN '+Math.ceil(remain)+' s',worldW(s)/2,54);ctx.restore()}}
