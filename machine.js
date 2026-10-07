@@ -371,20 +371,55 @@ function laserShot(p,w){
   selfRecoil(p,w.recoil);
   if(p.weaponHeat>=cap){p.weaponHeat=cap;p.weaponLock=1.25;addFeedback('overheat',p.x,p.y,0,p.i,null,'SOBRECARGA')}
 }
+function damageMeleeBarrel(barrel,amount,source){
+  if(!barrel?.alive)return false;
+  barrel.hp-=amount;shake=Math.max(shake,4);
+  if(barrel.hp<=0)explodeBarrel(barrel,source);
+  else addEffect('barrelHit',barrel.x,barrel.y,28,'#ff9c58',.12,source);
+  return true
+}
+function meleeCandidate(p,range,arc){
+  let best=null,bestD=Infinity;
+  for(const t of game.players){
+    if(!t.alive||!isEnemy(p.i,t.i))continue;
+    const dx=t.x-p.x,dy=t.y-p.y,d=Math.hypot(dx,dy);
+    if(d>range+t.r||angleDelta(Math.atan2(dy,dx),p.a)>arc/2||lineBlocked(p.x,p.y,t.x,t.y))continue;
+    if(d<bestD){bestD=d;best={type:'player',target:t,d}}
+  }
+  for(const barrel of game.barrels||[]){
+    if(!barrel.alive)continue;
+    const dx=barrel.x-p.x,dy=barrel.y-p.y,d=Math.hypot(dx,dy);
+    if(d>range+barrel.r||angleDelta(Math.atan2(dy,dx),p.a)>arc/2||lineBlocked(p.x,p.y,barrel.x,barrel.y))continue;
+    if(d<bestD){bestD=d;best={type:'barrel',target:barrel,d}}
+  }
+  return best
+}
+function pushDirectionalEffect(type,p,radius,color,duration,extra={}){
+  if(!game.effects)game.effects=[];
+  game.effects.push({id:Math.random().toString(36).slice(2),type,x:p.x,y:p.y,a:p.a,radius,color,duration,life:duration,owner:p.i,...extra})
+}
 function pistonShot(p,w){
-  const t=nearestInCone(p,w.range,.76);p.stats.shots++;
-  addEffect('piston',p.x+Math.cos(p.a)*55,p.y+Math.sin(p.a)*55,w.range,'#ffd37d',.18,p.i);
+  const range=w.range,arc=.76,target=meleeCandidate(p,range,arc);p.stats.shots++;
+  pushDirectionalEffect('piston',p,range,'#ffd37d',.22);
   selfRecoil(p,w.recoil);
-  if(!t)return;
+  if(!target)return;
   const dmg=w.damage*p.mod.weaponDamage,knock=w.knock*p.mod.pistonKnock;
-  damageRaw(t,dmg,p.i,false,Math.cos(p.a)*knock,Math.sin(p.a)*knock);p.stats.hits++;addFeedback('hit',t.x,t.y,dmg,p.i,t.i)
+  if(target.type==='barrel'){damageMeleeBarrel(target.target,dmg*1.25,p.i);p.stats.hits++;return}
+  damageRaw(target.target,dmg,p.i,false,Math.cos(p.a)*knock,Math.sin(p.a)*knock);p.stats.hits++;addFeedback('hit',target.target.x,target.target.y,dmg,p.i,target.target.i)
 }
 function grinderShot(p,w){
-  const range=w.range*p.mod.grinderRange,passes=1+(p.mod.pellets>0?1:0);p.stats.shots+=passes;
-  addEffect('axeSwing',p.x,p.y,range,'#d8e2ef',.24,p.i);selfRecoil(p,w.recoil);
+  const range=w.range*p.mod.grinderRange,arc=1.55,passes=1+(p.mod.pellets>0?1:0),dmg=w.damage*p.mod.weaponDamage*p.mod.grinderDamage*(passes>1?1.55:1);p.stats.shots+=passes;
+  pushDirectionalEffect('axeSwing',p,range,'#d8e2ef',.28,{passes});
+  selfRecoil(p,w.recoil);
   for(const t of game.players){
-    if(!t.alive||!isEnemy(p.i,t.i))continue;const d=Math.hypot(t.x-p.x,t.y-p.y);
-    if(d<=range+t.r&&!lineBlocked(p.x,p.y,t.x,t.y)){const dmg=w.damage*p.mod.weaponDamage*p.mod.grinderDamage*(passes>1?1.55:1);damageRaw(t,dmg,p.i,false,(t.x-p.x)/(d||1)*w.knock,(t.y-p.y)/(d||1)*w.knock);p.stats.hits++;addFeedback('hit',t.x,t.y,dmg,p.i,t.i)}
+    if(!t.alive||!isEnemy(p.i,t.i))continue;const dx=t.x-p.x,dy=t.y-p.y,d=Math.hypot(dx,dy);
+    if(d>range+t.r||angleDelta(Math.atan2(dy,dx),p.a)>arc/2||lineBlocked(p.x,p.y,t.x,t.y))continue;
+    damageRaw(t,dmg,p.i,false,Math.cos(p.a)*w.knock,Math.sin(p.a)*w.knock);p.stats.hits++;addFeedback('hit',t.x,t.y,dmg,p.i,t.i)
+  }
+  for(const barrel of game.barrels||[]){
+    if(!barrel.alive)continue;const dx=barrel.x-p.x,dy=barrel.y-p.y,d=Math.hypot(dx,dy);
+    if(d>range+barrel.r||angleDelta(Math.atan2(dy,dx),p.a)>arc/2||lineBlocked(p.x,p.y,barrel.x,barrel.y))continue;
+    if(damageMeleeBarrel(barrel,dmg*1.35,p.i))p.stats.hits++
   }
 }
 
@@ -405,34 +440,34 @@ fire=function(p){
 };
 
 function fireAtlas(p){
-  const a=p.a,speed=430*tempo(),radius=124*p.mod.atlasRadius;p.stats.shots++;
-  game.bullets.push({x:p.x+Math.cos(a)*42,y:p.y+Math.sin(a)*42,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:19,owner:p.i,
-    dmg:16*p.mod.specialDamage,bounces:0,homing:0,boom:0,fire:0,frost:0,shock:0,life:2.5,special:true,specialRadius:radius,
-    specialKnock:360,cluster:p.mod.atlasCluster});addEffect('muzzle',p.x+Math.cos(a)*32,p.y+Math.sin(a)*32,52,'#ffd8a8',.18,p.i)
+  const a=p.a,speed=500*tempo(),radius=136*p.mod.atlasRadius;p.stats.shots++;
+  game.bullets.push({x:p.x+Math.cos(a)*42,y:p.y+Math.sin(a)*42,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:20,owner:p.i,
+    dmg:18*p.mod.specialDamage,bounces:0,homing:0,boom:0,fire:0,frost:0,shock:0,life:2.35,special:true,specialRadius:radius,
+    specialKnock:400,cluster:p.mod.atlasCluster});addEffect('muzzle',p.x+Math.cos(a)*32,p.y+Math.sin(a)*32,58,'#ffd8a8',.20,p.i)
 }
 function fireHelltrail(p){
-  const rows=p.mod.hellRows>1?[-18,18]:[0],count=6,a=p.a,perp=a+Math.PI/2,pace=tempo();
-  for(const off of rows)for(let k=0;k<count;k++){const delay=k*.09,x=p.x+Math.cos(a)*(30+k*18)+Math.cos(perp)*off,y=p.y+Math.sin(a)*(30+k*18)+Math.sin(perp)*off;game.bullets.push({x,y,vx:Math.cos(a)*(410+18*k)*pace,vy:Math.sin(a)*(410+18*k)*pace,r:8,owner:p.i,dmg:4.5*p.mod.specialDamage,bounces:0,homing:0,boom:0,fire:0,frost:0,shock:0,life:.72+delay,groundFire:true,napalmRadius:42*p.mod.hellRadius,napalmLife:4.6*p.mod.hellLife})}
-  p.stats.shots+=count*rows.length;addEffect('muzzle',p.x+Math.cos(a)*36,p.y+Math.sin(a)*36,66,'#ff813d',.24,p.i)
+  const rows=p.mod.hellRows>1?[-20,20]:[0],count=7,a=p.a,perp=a+Math.PI/2,pace=tempo();
+  for(const off of rows)for(let k=0;k<count;k++){const delay=k*.085,x=p.x+Math.cos(a)*(30+k*18)+Math.cos(perp)*off,y=p.y+Math.sin(a)*(30+k*18)+Math.sin(perp)*off;game.bullets.push({x,y,vx:Math.cos(a)*(425+18*k)*pace,vy:Math.sin(a)*(425+18*k)*pace,r:9,owner:p.i,dmg:5.2*p.mod.specialDamage,bounces:0,homing:0,boom:0,fire:0,frost:0,shock:0,life:.78+delay,groundFire:true,napalmRadius:48*p.mod.hellRadius,napalmLife:5.0*p.mod.hellLife,napalmDamage:.9*p.mod.specialDamage})}
+  p.stats.shots+=count*rows.length;addEffect('muzzle',p.x+Math.cos(a)*36,p.y+Math.sin(a)*36,72,'#ff813d',.26,p.i)
 }
 function fireShiv(p){
   const wasInvisible=p.fx.invisible>0,predator=wasInvisible&&p.s.predator;revealPlayer(p);
-  const range=112*p.mod.shivRange*(predator?1.10:1),arc=.78,base=30*p.mod.shivDamage*p.mod.specialDamage+(predator?6:0);let hitAny=false;
+  const range=118*p.mod.shivRange*(predator?1.10:1),arc=.84,base=32*p.mod.shivDamage*p.mod.specialDamage+(predator?6:0);let hitAny=false;
   addEffect('slash',p.x+Math.cos(p.a)*range*.52,p.y+Math.sin(p.a)*range*.52,range,'#e9e4ff',.28,p.i);
   for(const t of game.players){if(!t.alive||!isEnemy(p.i,t.i))continue;const dx=t.x-p.x,dy=t.y-p.y,d=Math.hypot(dx,dy);if(d>range+t.r||angleDelta(Math.atan2(dy,dx),p.a)>arc/2||lineBlocked(p.x,p.y,t.x,t.y))continue;let damage=base;if(p.mod.shivExecute&&t.hp/t.max<.35)damage*=1.38;damage*=Math.max(.72,1-d/(range*2.2));damageRaw(t,damage,p.i,false,Math.cos(p.a)*220,Math.sin(p.a)*220);addFeedback('hit',t.x,t.y,damage,p.i,t.i);p.stats.hits++;hitAny=true}
   if(predator&&hitAny)p.dc=Math.max(0,p.dc-p.s.dc*.42);if(hitAny)shake=Math.max(shake,12)
 }
 function placeMines(p){
   const count=p.mod.mineCount,life=p.mod.mineLife;
-  for(let k=0;k<count;k++){const back=32+k*28,side=(k%2?1:-1)*12,x=p.x-Math.cos(p.a)*back+Math.cos(p.a+Math.PI/2)*side,y=p.y-Math.sin(p.a)*back+Math.sin(p.a+Math.PI/2)*side;game.mines.push({id:Math.random().toString(36).slice(2),x,y,owner:p.i,r:13,arm:.45,life,maxLife:life,damage:18*p.mod.mineDamage*p.mod.specialDamage,radius:76*p.mod.mineRadius,created:performance.now()})}
+  for(let k=0;k<count;k++){const back=32+k*28,side=(k%2?1:-1)*12,x=p.x-Math.cos(p.a)*back+Math.cos(p.a+Math.PI/2)*side,y=p.y-Math.sin(p.a)*back+Math.sin(p.a+Math.PI/2)*side;game.mines.push({id:Math.random().toString(36).slice(2),x,y,owner:p.i,r:14,arm:.30,life,maxLife:life,damage:20*p.mod.mineDamage*p.mod.specialDamage,radius:80*p.mod.mineRadius,created:performance.now()})}
   const mineMine=game.mines.filter(m=>m.owner===p.i);while(mineMine.length>6+(p.mod.mineCount-4)){const old=mineMine.shift(),idx=game.mines.indexOf(old);if(idx>=0)game.mines.splice(idx,1)}
 }
 function fireHound(p){
-  const count=p.mod.missileCount,spread=.36,a=p.a,pace=tempo();p.stats.shots+=count;
-  for(let k=0;k<count;k++){const off=count===1?0:(k/(count-1)-.5)*spread,aa=a+off,speed=390*pace;game.bullets.push({x:p.x+Math.cos(aa)*34,y:p.y+Math.sin(aa)*34,vx:Math.cos(aa)*speed,vy:Math.sin(aa)*speed,r:7,owner:p.i,dmg:7.2*p.mod.missileDamage*p.mod.specialDamage,bounces:0,homing:.82*p.mod.missileHoming,boom:0,fire:0,frost:0,shock:0,life:2.7,missile:true})}
-  addEffect('muzzle',p.x+Math.cos(a)*30,p.y+Math.sin(a)*30,52,'#9ad8ff',.18,p.i)
+  const count=p.mod.missileCount,spread=.34,a=p.a,pace=tempo();p.stats.shots+=count;
+  for(let k=0;k<count;k++){const off=count===1?0:(k/(count-1)-.5)*spread,aa=a+off,speed=405*pace;game.bullets.push({x:p.x+Math.cos(aa)*34,y:p.y+Math.sin(aa)*34,vx:Math.cos(aa)*speed,vy:Math.sin(aa)*speed,r:7,owner:p.i,dmg:7.5*p.mod.missileDamage*p.mod.specialDamage,bounces:0,homing:1.08*p.mod.missileHoming,boom:1,fire:0,frost:0,shock:0,life:3.0,missile:true})}
+  addEffect('muzzle',p.x+Math.cos(a)*30,p.y+Math.sin(a)*30,58,'#9ad8ff',.20,p.i)
 }
-function fireTrinity(p){p.fx.bladeStorm=3.5*p.mod.bladeDuration;p.fx.bladeTick=0;addEffect('trinity',p.x,p.y,82*p.mod.bladeRadius,'#ff697d',.36,p.i)}
+function fireTrinity(p){p.fx.bladeStorm=4.0*p.mod.bladeDuration;p.fx.bladeTick=0;addEffect('trinity',p.x,p.y,90*p.mod.bladeRadius,'#ff697d',.40,p.i)}
 
 fireSpecial=function(p){
   revealPlayer(p);
@@ -481,8 +516,8 @@ function updateMines(dt){
   for(let i=game.mines.length-1;i>=0;i--){const m=game.mines[i];m.life-=dt;m.arm-=dt;if(m.life<=0){game.mines.splice(i,1);continue}if(m.arm>0)continue;let trigger=false;for(const p of game.players){if(!p.alive||!isEnemy(m.owner,p.i))continue;if(Math.hypot(p.x-m.x,p.y-m.y)<m.r+p.r+10){trigger=true;break}}if(trigger){game.mines.splice(i,1);explodeMine(m)}}
 }
 function updateBladeStorm(dt){
-  for(const p of game.players){if(!p.alive||p.fx.bladeStorm<=0)continue;p.fx.bladeTick-=dt;if(p.fx.bladeTick>0)continue;p.fx.bladeTick=.20;const radius=72*p.mod.bladeRadius;
-    for(const t of game.players){if(!t.alive||!isEnemy(p.i,t.i))continue;const d=Math.hypot(t.x-p.x,t.y-p.y);if(d<radius+t.r&&!lineBlocked(p.x,p.y,t.x,t.y)){const dmg=2.5*p.mod.bladeDamage*p.mod.specialDamage,dx=(t.x-p.x)/(d||1),dy=(t.y-p.y)/(d||1);damageRaw(t,dmg,p.i,false,dx*55,dy*55)}}
+  for(const p of game.players){if(!p.alive||p.fx.bladeStorm<=0)continue;p.fx.bladeTick-=dt;if(p.fx.bladeTick>0)continue;p.fx.bladeTick=.18;const radius=76*p.mod.bladeRadius;
+    for(const t of game.players){if(!t.alive||!isEnemy(p.i,t.i))continue;const d=Math.hypot(t.x-p.x,t.y-p.y);if(d<radius+t.r&&!lineBlocked(p.x,p.y,t.x,t.y)){const dmg=2.7*p.mod.bladeDamage*p.mod.specialDamage,dx=(t.x-p.x)/(d||1),dy=(t.y-p.y)/(d||1);damageRaw(t,dmg,p.i,false,dx*55,dy*55)}}
   }
 }
 const legacyUpdateGroundFires=updateGroundFires;
