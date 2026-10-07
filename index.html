@@ -113,6 +113,8 @@
             <button class="loadout-slot" type="button" data-garage-slot="weapon"><span>ARMA</span><strong id="garageWeaponName">AÑADIR</strong><small id="garageWeaponStats"></small><b>+</b></button>
             <button class="loadout-slot" type="button" data-garage-slot="special"><span>ESPECIAL</span><strong id="garageSpecialName">AÑADIR</strong><b>+</b></button>
             <button class="loadout-slot" type="button" data-garage-slot="system"><span>SISTEMA</span><strong id="garageSystemName">AÑADIR</strong><b>+</b></button>
+            <div class="weapon-compare hidden" id="weaponCompare" aria-live="polite"></div>
+            <button class="secondary test-range-button" id="testRangeBtn" type="button"><strong>CAMPO DE PRUEBAS</strong><small>dummy + métricas · PC</small></button>
             <div class="capacity garage-capacity">
               <div class="capacity-line"><span>CAPACIDAD</span><strong id="garageCapacityText">0 / 10</strong></div>
               <div class="capacity-track"><i id="garageCapacityFill"></i></div>
@@ -227,6 +229,24 @@
       <div class="canvas-frame" id="canvasFrame">
         <canvas id="game" width="1280" height="720" aria-label="Arena de Fight Random"></canvas>
         <div class="center-message hidden" id="centerMessage"></div>
+
+        <div class="training-hud hidden" id="trainingHud">
+          <div class="training-title">
+            <div><span>CAMPO DE PRUEBAS</span><strong id="trainingBuildName">MIX · RIVET-9</strong></div>
+            <button class="ghost compact" id="trainingExitBtn" type="button">VOLVER AL HANGAR</button>
+          </div>
+          <div class="training-metrics">
+            <div><span>DAÑO TOTAL</span><strong id="trainingDamage">0</strong></div>
+            <div><span>DPS · 5s</span><strong id="trainingDps">0</strong></div>
+            <div><span>GOLPE MÁX.</span><strong id="trainingBest">0</strong></div>
+            <div><span>PRECISIÓN</span><strong id="trainingAccuracy">0%</strong></div>
+          </div>
+          <div class="training-actions">
+            <button class="secondary compact" id="trainingResetBtn" type="button">RESET MÉTRICAS</button>
+            <button class="secondary compact" id="trainingDummyBtn" type="button">RECOLOCAR DUMMY</button>
+            <button class="secondary compact" id="trainingCooldownBtn" type="button">CD NORMALES</button>
+          </div>
+        </div>
 
         <div class="ready-overlay hidden" id="readyOverlay">
           <div class="ready-garage">
