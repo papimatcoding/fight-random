@@ -5,7 +5,8 @@ const FR_BUILD='2026.10-menu-1';
 const FRStore={
   token:'',
   profile:null,
-  lobby:{rooms:[],leaderboard:[],recent:[]},
+  lobby:{rooms:[],leaderboard:[],recent:[],social:{friends:[],incoming:[],outgoing:[],invites:[]}},
+  pendingInviteFriend:'',
   heartbeat:null,
   roomCode:'',
   recorded:new Set(),
@@ -64,8 +65,67 @@ function frRenderProfile(){
   if(input&&!input.matches(':focus'))input.value=p?.nickname||localStorage.getItem('fr-nickname')||'';
 }
 function frModeLabel(id){return({duel:'1V1',ffa3:'1V1V1',teams:'2V2',core:'NÚCLEO'})[id]||id}
+function frSetSocial(social){
+  FRStore.lobby.social=social||{friends:[],incoming:[],outgoing:[],invites:[]};
+  frRenderSocial()
+}
+function frRenderSocial(){
+  const social=FRStore.lobby.social||{},friends=social.friends||[],incoming=social.incoming||[],outgoing=social.outgoing||[],invites=social.invites||[];
+  const badge=document.getElementById('friendsBadge'),total=incoming.length+invites.length;
+  if(badge){badge.textContent=String(total);badge.classList.toggle('hidden',!total)}
+  const fc=document.getElementById('friendCount'),rc=document.getElementById('requestCount'),ic=document.getElementById('inviteCount');
+  if(fc)fc.textContent=String(friends.length);if(rc)rc.textContent=String(incoming.length+outgoing.length);if(ic)ic.textContent=String(invites.length);
+
+  const inviteBox=document.getElementById('friendInvites');
+  if(inviteBox){
+    inviteBox.innerHTML='';
+    for(const x of invites){
+      const row=document.createElement('div');row.className='friend-row invite-row';
+      row.innerHTML='<span class="friend-status online"></span><span class="friend-copy"><b>'+escapeHtml(x.from)+'</b><small>te invita a '+escapeHtml(frModeLabel(x.mode))+'</small></span><span class="friend-actions"><button class="secondary compact" data-accept>ENTRAR</button><button class="ghost compact" data-decline>×</button></span>';
+      row.querySelector('[data-accept]').onclick=()=>frFriendInviteRespond(x.id,true);
+      row.querySelector('[data-decline]').onclick=()=>frFriendInviteRespond(x.id,false);
+      inviteBox.appendChild(row)
+    }
+    if(!invites.length)inviteBox.innerHTML='<div class="empty-state">Sin invitaciones.</div>'
+  }
+
+  const reqBox=document.getElementById('friendRequests');
+  if(reqBox){
+    reqBox.innerHTML='';
+    for(const x of incoming){
+      const row=document.createElement('div');row.className='friend-row';
+      row.innerHTML='<span class="friend-status '+(x.online?'online':'')+'"></span><span class="friend-copy"><b>'+escapeHtml(x.nickname)+'</b><small>'+x.rating+' rating · quiere añadirte</small></span><span class="friend-actions"><button class="secondary compact" data-ok>ACEPTAR</button><button class="ghost compact" data-no>NO</button></span>';
+      row.querySelector('[data-ok]').onclick=()=>frFriendRespond(x.friendshipId,true);
+      row.querySelector('[data-no]').onclick=()=>frFriendRespond(x.friendshipId,false);
+      reqBox.appendChild(row)
+    }
+    for(const x of outgoing){
+      const row=document.createElement('div');row.className='friend-row pending';
+      row.innerHTML='<span class="friend-status"></span><span class="friend-copy"><b>'+escapeHtml(x.nickname)+'</b><small>solicitud enviada</small></span><span class="friend-actions"><span class="pending-label">PENDIENTE</span></span>';
+      reqBox.appendChild(row)
+    }
+    if(!incoming.length&&!outgoing.length)reqBox.innerHTML='<div class="empty-state">Sin solicitudes.</div>'
+  }
+
+  const friendBox=document.getElementById('friendsList'),picker=document.getElementById('friendPickerList');
+  const renderFriend=(x,forPicker=false)=>{
+    const row=document.createElement('div');row.className='friend-row';
+    row.innerHTML='<span class="friend-status '+(x.online?'online':'')+'"></span><span class="friend-copy"><b>'+escapeHtml(x.nickname)+'</b><small>'+x.rating+' rating · '+(x.online?'online':'offline')+'</small></span><span class="friend-actions"><button class="secondary compact" data-play>'+(forPicker?'INVITAR':'AMISTOSA')+'</button>'+(forPicker?'':'<button class="ghost compact" data-remove>×</button>')+'</span>';
+    row.querySelector('[data-play]').onclick=()=>forPicker?frInviteFriend(x.id):frStartFriendlyWithFriend(x.id);
+    const remove=row.querySelector('[data-remove]');if(remove)remove.onclick=()=>frFriendRemove(x.friendshipId);
+    return row
+  };
+  if(friendBox){
+    friendBox.innerHTML='';for(const x of friends)friendBox.appendChild(renderFriend(x,false));
+    if(!friends.length)friendBox.innerHTML='<div class="empty-state">Añade a alguien por su apodo.</div>'
+  }
+  if(picker){
+    picker.innerHTML='';for(const x of friends)picker.appendChild(renderFriend(x,true));
+    if(!friends.length)picker.innerHTML='<div class="empty-state">No tienes amigos todavía.</div>'
+  }
+}
 function frRenderLobby(){
-  frRenderProfile();
+  frRenderProfile();frRenderSocial();
   const rooms=document.getElementById('publicRooms');
   if(rooms){
     rooms.innerHTML='';
@@ -122,7 +182,7 @@ async function frRefreshLobby(){
   try{
     const data=await frApi('lobby');
     FRStore.profile=data.profile||FRStore.profile;
-    FRStore.lobby={rooms:data.rooms||[],leaderboard:data.leaderboard||[],recent:data.recent||[]};
+    FRStore.lobby={rooms:data.rooms||[],leaderboard:data.leaderboard||[],recent:data.recent||[],social:data.social||{friends:[],incoming:[],outgoing:[],invites:[]}};
     frRenderLobby();return FRStore.lobby;
   }catch(e){console.warn('Lobby refresh failed:',e);frBackendIndicator(false);return FRStore.lobby}
 }
@@ -136,7 +196,9 @@ async function frCreateRoom(code,mode,character='mix'){
   await frInit();
   try{
     const data=await frApi('create_room',{code,mode,visibility:frVisibility(),character,buildVersion:FR_BUILD});
-    FRStore.roomCode=code;frStartHeartbeat(code);return data;
+    FRStore.roomCode=code;frStartHeartbeat(code);
+    if(FRStore.pendingInviteFriend){const friendId=FRStore.pendingInviteFriend;FRStore.pendingInviteFriend='';try{await frInviteFriend(friendId,code)}catch(e){console.warn('Friend invite failed:',e)}}
+    return data;
   }catch(e){console.warn('Room publish failed:',e);frBackendIndicator(false);return null}
 }
 async function frJoinRoom(code,seat,character='mix'){
@@ -171,10 +233,40 @@ async function frQuickPlay(){
   if(typeof setQueueIntent==='function')setQueueIntent('quick');
   try{
     await frInit();const lobby=await frRefreshLobby();
-    const room=(lobby.rooms||[]).find(r=>r.mode===selectedMode&&r.players<r.maxPlayers);
+    const candidates=(lobby.rooms||[]).filter(r=>r.mode===selectedMode&&r.players<r.maxPlayers);
+    const room=candidates.length?candidates[Math.floor(Math.random()*candidates.length)]:null;
     if(room)joinGame?.(room.code);else hostGame?.();
   }finally{if(btn)setTimeout(()=>{btn.disabled=typeof garageCanQueue==='function'?!garageCanQueue():false},700)}
 }
+async function frFriendRequest(nickname){
+  const data=await frApi('friend_request',{nickname});frSetSocial(data.social);return data
+}
+async function frFriendRespond(friendshipId,accept){
+  const data=await frApi('friend_respond',{friendshipId,accept:!!accept});frSetSocial(data.social);return data
+}
+async function frFriendRemove(friendshipId){
+  const data=await frApi('friend_remove',{friendshipId});frSetSocial(data.social);return data
+}
+async function frInviteFriend(friendId,roomCode=FRStore.roomCode){
+  if(!roomCode)throw new Error('Primero crea una partida amistosa.');
+  await frApi('friend_invite',{friendId,code:roomCode});
+  const msg=document.getElementById('friendMessage');if(msg)msg.textContent='Invitación enviada.';
+  return true
+}
+function frStartFriendlyWithFriend(friendId){
+  if(typeof garageCanQueue==='function'&&!garageCanQueue()){if(typeof status==='function')status('Completa una máquina válida primero.',true);return}
+  FRStore.pendingInviteFriend=friendId;
+  const visibility=document.getElementById('roomVisibility');if(visibility)visibility.value='private';
+  if(typeof setQueueIntent==='function')setQueueIntent('friendly');
+  hostGame?.()
+}
+async function frFriendInviteRespond(inviteId,accept){
+  const data=await frApi('friend_invite_respond',{inviteId,accept:!!accept});
+  if(!accept){frSetSocial(data.social);return}
+  if(typeof setQueueIntent==='function')setQueueIntent('friendly');
+  if(data.code)joinGame?.(data.code)
+}
+window.frInviteFriend=frInviteFriend;
 async function frRecordMatch(g){
   if(!(typeof host!=='undefined'&&host)||!g?.clientMatchId||FRStore.recorded.has(g.clientMatchId)||!FRStore.roomCode)return;
   FRStore.recorded.add(g.clientMatchId);
@@ -197,6 +289,11 @@ async function frRecordMatch(g){
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('friendAddForm')?.addEventListener('submit',async e=>{
+    e.preventDefault();const input=document.getElementById('friendNameInput'),msg=document.getElementById('friendMessage');
+    try{await frFriendRequest(input?.value||'');if(input)input.value='';if(msg)msg.textContent='Solicitud enviada.'}
+    catch(err){if(msg)msg.textContent=err.message||'No se pudo enviar.'}
+  });
   document.getElementById('saveNicknameBtn')?.addEventListener('click',async()=>{
     const input=document.getElementById('nicknameInput'),msg=document.getElementById('profileMessage');
     try{await frSetNickname(input?.value||'');if(msg)msg.textContent='Guardado.'}
