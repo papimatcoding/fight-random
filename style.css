@@ -263,3 +263,107 @@
 }
 
 .map-chip{min-width:118px}.map-chip strong{display:block;max-width:145px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;margin-top:2px}
+
+
+/* ==========================================================
+   CLEAN LOBBY / HANGAR SPLIT
+   ========================================================== */
+.menu-shell{
+  position:relative;height:calc(100dvh - 70px);min-height:560px;max-height:860px;
+  overflow:hidden;background:#090d12;border-color:#272d34
+}
+.lobby-view{position:absolute;inset:0;padding:16px;display:flex;flex-direction:column;gap:12px}
+.lobby-home{justify-content:space-between}
+.lobby-topline{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.profile-button{border:0;background:transparent;color:#fff;text-align:left;padding:0;min-width:180px}
+.profile-button strong,.lobby-build-summary strong{display:block;font-size:18px;letter-spacing:-.035em}
+.profile-button small,.lobby-build-summary small{display:block;color:#737e8a;font-size:9px;margin-top:2px;max-width:360px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lobby-build-summary{text-align:right;max-width:48%}
+.lobby-profile-edit{position:absolute;left:16px;top:76px;z-index:20;width:min(340px,calc(100% - 32px));grid-template-columns:1fr auto;padding:8px;border:1px solid #333b45;border-radius:10px;background:#0d1218;box-shadow:0 14px 40px #0009}
+
+.lobby-center{width:min(560px,100%);margin:auto;display:flex;flex-direction:column;align-items:stretch;gap:10px}
+.mode-selector{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.mode-selector .mode-card{min-height:56px;padding:8px 6px;border-radius:9px}
+.mode-selector .mode-card strong{display:block;font-size:11px}
+.mode-selector .mode-card span{display:block;font-size:7px;margin-top:2px;color:#6f7a87}
+.mode-selector .mode-card.selected{border-color:#86919b;box-shadow:inset 0 0 0 1px #86919b;background:#151b22}
+.home-party{width:min(360px,100%);align-self:center}
+.home-party .party-slot{padding:7px 9px}
+.lobby-play{width:100%;min-height:78px;border-radius:12px;background:#b94343;box-shadow:none}
+.lobby-play span{display:block;font-size:22px;letter-spacing:.025em}
+.lobby-play small{display:block;font-size:8px;opacity:.72;margin-top:3px}
+.compact-status{text-align:center;margin:0!important;min-height:14px}
+
+.lobby-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.lobby-nav button{border:1px solid #2d343d;background:#10151b;color:#e8ecf1;border-radius:10px;padding:11px 8px;text-align:left}
+.lobby-nav button:hover{border-color:#59636e;background:#151c23}
+.lobby-nav strong{display:block;font-size:10px;letter-spacing:.08em}
+.lobby-nav span{display:block;color:#737e8a;font-size:8px;margin-top:3px}
+.friendly-row{display:grid;grid-template-columns:160px minmax(230px,360px);justify-content:center;gap:8px}
+.friendly-row .secondary,.friendly-row .ghost{padding:10px 12px;font-size:9px}
+.friendly-row .join-row{grid-template-columns:1fr 72px}
+.friendly-row input{padding:10px;font-size:10px}
+
+.subview-head{display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:10px;padding-bottom:10px;border-bottom:1px solid #252c34}
+.subview-head strong{display:block;font-size:23px;letter-spacing:-.04em}
+.subview-head small{color:#6f7a86;font-size:8px;font-weight:900;letter-spacing:.1em}
+.back-menu{width:38px;height:38px;border:1px solid #343c46;border-radius:9px;background:#121820;color:#eef1f5;font-size:24px}
+.subview-content{flex:1;min-height:0;overflow:auto;margin:0!important;padding:4px}
+#lobbyRooms .room-list,#lobbyRanking .leaderboard-list,#lobbyHistory .recent-list{max-height:none}
+
+.hangar-layout{flex:1;min-height:0;display:grid;grid-template-columns:1fr 260px;gap:10px}
+.hangar-main{position:relative;min-width:0;min-height:0;border:1px solid #252c34;border-radius:12px;background:#0d1218;padding:10px;display:flex;flex-direction:column}
+.hangar-main .machine-stage{flex:1;min-height:0}
+.hangar-loadout{display:flex;flex-direction:column;gap:8px;border:1px solid #252c34;border-radius:12px;background:#0d1218;padding:10px}
+.loadout-slot{position:relative;border:1px solid #303842;background:#121820;color:#f0f3f6;border-radius:10px;padding:13px 42px 13px 12px;text-align:left;min-height:66px}
+.loadout-slot:hover{border-color:#65717c}
+.loadout-slot span{display:block;color:#727d89;font-size:7px;letter-spacing:.12em;font-weight:950}
+.loadout-slot strong{display:block;margin-top:5px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.loadout-slot>b{position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:24px;font-weight:400;color:#89949f}
+.hangar-loadout .garage-capacity{margin-top:auto}
+.hangar-main .garage-machine{top:51%}
+.hangar-main .garage-floor{bottom:6%}
+
+/* For now modules are names only. No fake asset silhouettes. */
+.gm-weapon,.gm-special,.gm-system{display:none!important}
+.module-picker-panel{width:min(720px,100%)}
+.module-picker-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.module-choice{
+  min-height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;padding:12px;text-align:center;border:1px solid #2e363f;border-radius:10px;background:#11171d;color:#eef2f5
+}
+.module-choice b{font-size:11px;letter-spacing:.035em}
+.module-choice small{font-size:8px;color:#737f8a}
+.module-choice.selected{border-color:#8c98a4;box-shadow:inset 0 0 0 1px #8c98a4}
+.module-choice.locked{opacity:.28}
+.module-choice.module-remove{grid-template-columns:none}
+.module-glyph,.module-choice-copy{display:none!important}
+
+/* HUD: score is geometrically centered, metadata cannot push it sideways. */
+.match-header{
+  display:grid!important;grid-template-columns:minmax(120px,1fr) auto minmax(120px,1fr);
+  align-items:center;gap:8px;min-height:44px;margin-bottom:6px;position:relative
+}
+.scoreboard{grid-column:2;justify-self:center;display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:nowrap}
+.hud-side{display:flex;align-items:center}.hud-left{grid-column:1;justify-content:flex-end}.hud-right{grid-column:3;justify-content:flex-start}
+.score-pill,.round-chip{padding:5px 10px;border-radius:9px}
+.score-pill b{font-size:16px;margin-left:6px}.round-chip strong{font-size:14px}.round-chip span{font-size:7px}
+.map-chip{min-width:108px}.map-chip strong{max-width:120px;font-size:10px}
+.game-wrap .canvas-frame{margin-inline:auto}
+
+@media(max-width:760px){
+  .menu-shell{height:calc(100dvh - 58px);min-height:520px;max-height:none}
+  .lobby-view{padding:9px;gap:8px}
+  .lobby-topline{gap:8px}.profile-button strong,.lobby-build-summary strong{font-size:15px}.profile-button small,.lobby-build-summary small{font-size:7px}
+  .lobby-center{gap:7px}.mode-selector{gap:4px}.mode-selector .mode-card{min-height:46px;padding:6px 3px}.mode-selector .mode-card strong{font-size:9px}
+  .home-party{width:100%}.lobby-play{min-height:62px}.lobby-play span{font-size:18px}
+  .lobby-nav{grid-template-columns:1fr 1fr;gap:5px}.lobby-nav button{padding:8px}.lobby-nav span{display:none}
+  .friendly-row{grid-template-columns:1fr 1.35fr;gap:5px}.friendly-row .join-row{grid-template-columns:1fr 58px}
+  .friendly-row .secondary,.friendly-row .ghost,.friendly-row input{padding:8px;font-size:8px}
+  .hangar-layout{grid-template-columns:1fr;grid-template-rows:minmax(250px,1fr) auto}
+  .hangar-loadout{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:6px}.loadout-slot{min-height:54px;padding:8px 20px 8px 7px}.loadout-slot>b{right:7px;font-size:18px}.loadout-slot strong{font-size:8px}.hangar-loadout .garage-capacity{grid-column:1/-1}
+  .hangar-main .machine-stage{min-height:240px}.hangar-main .garage-machine{transform:translate(-50%,-50%) scale(.72)}
+  .module-picker-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .module-choice{min-height:62px;padding:8px}.module-choice b{font-size:9px}
+  .match-header{grid-template-columns:82px 1fr 82px;gap:3px}.scoreboard{gap:3px}.score-pill,.round-chip{padding:4px 6px}.score-pill{font-size:9px}.score-pill b{font-size:12px;margin-left:3px}.round-chip strong{font-size:11px}.map-chip{min-width:0}.map-chip strong{max-width:70px;font-size:8px}
+}

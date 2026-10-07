@@ -53,6 +53,7 @@ function renderGarage(){
   $('garageLoadoutWarning').classList.toggle('bad',!ok);
   $('quickPlayBtn').disabled=!ok;$('hostBtn').disabled=!ok;
   $('partyModeLabel').textContent=(MODES[selectedMode]?.name||selectedMode)+' · QUICKPLAY';
+  const title=$('homeBuildTitle'),mods=$('homeBuildModules');if(title)title.textContent=c.name;if(mods)mods.textContent=[moduleName('weapon',garageBuild.loadout.weapon),moduleName('special',garageBuild.loadout.special),moduleName('system',garageBuild.loadout.system)].filter(x=>x!=='AÑADIR').join(' · ')||'Sin montar';
   const self=$('partySelfName');if(self)self.textContent=typeof frPlayerName==='function'?frPlayerName():'Jugador'
 }
 function moduleCardStats(d,slot){
@@ -66,11 +67,11 @@ function openModulePicker(slot,context='garage'){
   if(!p)return;
   const table=moduleTable(slot),grid=$('modulePickerGrid'),c=CHASSIS[p.character]||CHASSIS.mix;grid.innerHTML='';
   $('modulePickerKicker').textContent=moduleLabel(slot);$('modulePickerTitle').textContent='MONTA UNA PIEZA';
-  if(context==='garage'){const remove=document.createElement('button');remove.className='module-choice module-remove';remove.innerHTML='<span class="module-glyph">−</span><b>DESMONTAR</b><small>libera capacidad</small>';remove.onclick=()=>chooseModule(null);grid.appendChild(remove)}
+  if(context==='garage'){const remove=document.createElement('button');remove.className='module-choice module-remove';remove.innerHTML='<b>DESMONTAR</b>';remove.onclick=()=>chooseModule(null);grid.appendChild(remove)}
   for(const d of Object.values(table)){
     const candidate={...(p.loadout||{}),[slot]:d.id},compatible=moduleAllowed(p.character,d),fits=moduleCost(candidate)<=c.capacity,disabled=!compatible||!fits;
     const bt=document.createElement('button');bt.className='module-choice'+(disabled?' locked':'')+(p.loadout?.[slot]===d.id?' selected':'');bt.disabled=disabled;
-    bt.innerHTML='<span class="module-glyph glyph-'+d.id+'"></span><span class="module-choice-copy"><b>'+d.name+'</b><small>'+d.desc+'</small><em>'+moduleCardStats(d,slot)+'</em></span><strong>'+d.cost+'P</strong>';
+    bt.innerHTML='<b>'+d.name+'</b><small>'+d.cost+'P</small>';
     bt.onclick=()=>chooseModule(d.id);grid.appendChild(bt)
   }
   $('modulePicker').classList.remove('hidden')
@@ -229,6 +230,11 @@ addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==
 addEventListener('keyup',e=>{if(e.code==='KeyW')mine.u=0;if(e.code==='KeyS')mine.d=0;if(e.code==='KeyA')mine.l=0;if(e.code==='KeyD')mine.r=0;if(e.code==='Space')mine.dash=0;if(e.code==='KeyE')mine.special=0});
 cv.onpointermove=pointerPos;cv.addEventListener('pointerdown',()=>{try{ensureAudio()?.resume?.()}catch{}},{once:true});cv.onpointerdown=e=>{pointerPos(e);if(e.button===0)mine.fire=1};addEventListener('pointerup',()=>mine.fire=0);addEventListener('blur',()=>{mine.u=mine.d=mine.l=mine.r=mine.fire=mine.dash=mine.special=0});
 
+function showLobbyView(name='home'){
+  const map={home:'lobbyHome',hangar:'lobbyHangar',rooms:'lobbyRooms',ranking:'lobbyRanking',history:'lobbyHistory'};
+  for(const id of Object.values(map))$(id)?.classList.toggle('hidden',id!==map[name]);
+  if(name==='hangar')renderGarage();
+}
 for(const b of document.querySelectorAll('.mode-card'))b.addEventListener('click',()=>{selectedMode=b.dataset.mode;document.querySelectorAll('.mode-card').forEach(x=>x.classList.toggle('selected',x===b));renderGarage()});
 for(const b of document.querySelectorAll('[data-garage-slot]'))b.addEventListener('click',()=>openModulePicker(b.dataset.garageSlot,'garage'));
 for(const b of document.querySelectorAll('[data-ready-slot]'))b.addEventListener('click',()=>openModulePicker(b.dataset.readySlot,'ready'));
@@ -236,22 +242,18 @@ $('garageChassisPrev').onclick=()=>garageCycle(-1);$('garageChassisNext').onclic
 $('readyChassisPrev').onclick=()=>readyCycleChassis(-1);$('readyChassisNext').onclick=()=>readyCycleChassis(1);
 $('modulePickerClose').onclick=closeModulePicker;$('modulePicker').addEventListener('pointerdown',e=>{if(e.target===$('modulePicker'))closeModulePicker()});
 $('editProfileBtn').onclick=()=>$('profileEdit').classList.toggle('hidden');
-for(const b of document.querySelectorAll('.garage-tab'))b.onclick=()=>{
-  const key=b.dataset.garagePanel,title=key==='rooms'?'SALAS PÚBLICAS':key==='ranking'?'RANKING':'HISTORIAL';
-  $('drawerTitle').textContent=title;$('garageDrawer').classList.remove('hidden');
-  $('drawerRooms').classList.toggle('hidden',key!=='rooms');$('drawerRanking').classList.toggle('hidden',key!=='ranking');$('drawerHistory').classList.toggle('hidden',key!=='history')
-};
-$('closeGarageDrawer').onclick=()=>$('garageDrawer').classList.add('hidden');
+for(const b of document.querySelectorAll('[data-lobby-view]'))b.onclick=()=>showLobbyView(b.dataset.lobbyView);
+for(const b of document.querySelectorAll('[data-lobby-home]'))b.onclick=()=>showLobbyView('home');
 $('hostBtn').onclick=()=>{if(!garageCanQueue()){status('Completa una máquina válida.',true);return}$('roomVisibility').value='private';setQueueIntent('friendly');hostGame()};
 $('joinForm').onsubmit=e=>{e.preventDefault();setQueueIntent('friendly');joinGame($('roomInput').value)};
 $('roomInput').oninput=e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
-$('leaveBtn').onclick=()=>{const u=new URL(location.href);u.searchParams.delete('room');history.replaceState({},'',u);setQueueIntent('idle');clean();renderGarage()};
+$('leaveBtn').onclick=()=>{const u=new URL(location.href);u.searchParams.delete('room');history.replaceState({},'',u);setQueueIntent('idle');clean();renderGarage();showLobbyView('home')};
 $('copyBtn').onclick=async()=>{const u=new URL(location.href);u.searchParams.set('room',code);try{await navigator.clipboard.writeText(u.toString());$('copyBtn').textContent='COPIADO';setTimeout(()=>$('copyBtn').textContent='COPIAR ENLACE',1200)}catch{prompt('Copia el enlace:',u.toString())}};
 $('readyBtn').onclick=()=>{if(me==null)return;const state=host?game:view,p=state?.players?.[me];if(p&&loadoutValid(p)){garageBuild={character:p.character,loadout:clone(p.loadout)};saveGarageBuild()}if(host)setReady(me,'ready');else conn?.send({type:'ready'})};
 $('rematchBtn').onclick=()=>{if(me==null)return;if(host)setReady(me,'rematch');else conn?.send({type:'rematch'})};
 $('fullscreenBtn').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('canvasFrame').requestFullscreen()}catch(e){console.warn(e)}};
 document.addEventListener('fullscreenchange',()=>{$('fullscreenBtn').textContent=document.fullscreenElement?'SALIR DE PANTALLA COMPLETA':'PANTALLA COMPLETA'});
-renderGarage();
+renderGarage();showLobbyView('home');
 const invite=new URL(location.href).searchParams.get('room');if(invite)$('roomInput').value=invite.toUpperCase().slice(0,6);
 if(typeof Peer==='undefined')status('No se pudo cargar la conexión online. Recarga.',true);else if(invite){setQueueIntent('friendly');setTimeout(()=>joinGame(invite),0);}
 requestAnimationFrame(frame);

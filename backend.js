@@ -1,7 +1,7 @@
 'use strict';
 
 const FR_API='https://xtekdrkqgfjnnwawyoim.supabase.co/functions/v1/fight-random-api';
-const FR_BUILD='2026.10-garage-1';
+const FR_BUILD='2026.10-menu-1';
 const FRStore={
   token:'',
   profile:null,
