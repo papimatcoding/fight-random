@@ -11,6 +11,7 @@
 
 RARITY_LABEL.common='BÁSICO';
 RARITY_LABEL.illegal='MERCADO NEGRO';
+RARITY_LABEL.fusion='FUSIÓN';
 
 const CHASSIS={
   mix:{id:'mix',name:'MIX',hp:155,largeHp:170,speed:225,radius:22,capacity:10,ability:'DASH',weight:'medium'},
@@ -86,7 +87,8 @@ function blankMachineMods(){return{
   specialCd:1,specialDamage:1,atlasRadius:1,atlasCluster:0,hellRadius:1,hellLife:1,hellRows:1,
   shivRange:1,shivDamage:1,shivExecute:0,mineCount:4,mineDamage:1,mineRadius:1,mineLife:6.5,
   missileCount:4,missileHoming:1,missileDamage:1,bladeDuration:1,bladeRadius:1,bladeCount:3,
-  bladeDamage:1
+  bladeDamage:1,rivetBreaker:0,sunPurge:0,pistonRecovery:0,grinderGuard:0,
+  fusionCryo:0,fusionDragon:0,fusionSiege:0,fusionCrown:0,fusionPlatform:0,fusionSwarm:0
 }}
 
 function applySystem(p){
@@ -193,6 +195,7 @@ function addUpgrade(id,name,desc,rarity,max,eligible,apply){GENERAL[id]={name,de
 addUpgrade('rivet_feed','Motor de alimentación','RIVET-9 cicla un 11% más rápido.','common',2,req('weapon','rivet'),p=>p.mod.weaponRate*=.89);
 addUpgrade('rivet_heavy','Remaches densos','Más daño y un poco más de retroceso propio.','rare',2,req('weapon','rivet'),p=>{p.mod.weaponDamage*=1.13;p.mod.recoil*=1.08});
 addUpgrade('rivet_split','Receptor dividido','RIVET-9 dispara un proyectil adicional con ligera apertura.','epic',1,req('weapon','rivet'),p=>p.mod.pellets++);
+addUpgrade('rivet_breaker','Remache de ruptura','Cada quinto ciclo dispara un remache pesado de daño aumentado.','epic',1,req('weapon','rivet'),p=>p.mod.rivetBreaker=1);
 
 // LANCE-50
 addUpgrade('lance_chamber','Cámara larga','Aumenta daño y alcance del LANCE-50.','common',2,req('weapon','lance'),p=>{p.mod.weaponDamage*=1.10;p.mod.weaponRange*=1.08});
@@ -207,16 +210,19 @@ addUpgrade('scrap_dragon','Carga térmica','Los fragmentos aplican una quemadura
 // SUNLINE
 addUpgrade('sun_sink','Disipador cerámico','Más margen térmico y mejor refrigeración.','common',2,req('weapon','sunline'),p=>{p.mod.heatCap*=1.16;p.mod.heatCool*=1.14});
 addUpgrade('sun_focus','Lente focal','Aumenta daño y alcance del haz.','rare',2,req('weapon','sunline'),p=>{p.mod.weaponDamage*=1.10;p.mod.weaponRange*=1.08});
+addUpgrade('sun_purge','Purga de emergencia','Al sobrecalentarse, SUNLINE descarga una onda defensiva alrededor de la máquina.','epic',1,req('weapon','sunline'),p=>p.mod.sunPurge=1);
 addUpgrade('sun_redline','Lente Redline','Por encima del 70% de calor el haz causa mucho más daño, pero se calienta antes.','illegal',1,req('weapon','sunline'),p=>{p.mod.laserRedline=1;p.mod.heatGain*=1.18});
 
 // PISTON
 addUpgrade('piston_hyd','Hidráulica reforzada','Más daño para PISTON.','common',2,req('weapon','piston'),p=>p.mod.weaponDamage*=1.13);
+addUpgrade('piston_recovery','Retorno hidráulico','Conectar PISTON recupera parte de la habilidad del chasis.','rare',1,req('weapon','piston'),p=>p.mod.pistonRecovery=1);
 addUpgrade('piston_shock','Cabezal de impacto','Aumenta brutalmente el empuje del puñetazo.','epic',1,req('weapon','piston'),p=>p.mod.pistonKnock*=1.35);
 addUpgrade('piston_double','Doble carrera','PISTON recupera el golpe mucho antes.','illegal',1,req('weapon','piston'),p=>p.mod.weaponRate*=.66);
 
 // GRINDER
 addUpgrade('grinder_shaft','Eje extendido','Aumenta el alcance del hacha.','common',2,req('weapon','grinder'),p=>p.mod.grinderRange*=1.12);
 addUpgrade('grinder_edge','Dientes de carburo','Aumenta el daño de GRINDER.','rare',2,req('weapon','grinder'),p=>p.mod.grinderDamage*=1.12);
+addUpgrade('grinder_guard','Pantalla de chispas','Durante cada barrido de GRINDER recibes menos daño durante un instante.','epic',1,req('weapon','grinder'),p=>p.mod.grinderGuard=1);
 addUpgrade('grinder_twin','Rotor gemelo','Dos pasadas por ciclo con daño individual reducido.','legendary',1,req('weapon','grinder'),p=>p.mod.pellets++);
 
 // Specials
@@ -248,6 +254,23 @@ addUpgrade('sys_clock','Reloj forzado','OVERCLOCK aumenta aún más la cadencia,
 addUpgrade('sys_servos','Servos afinados','SERVOS añade un 6% adicional de velocidad.','rare',1,req('system','servos'),p=>p.s.spd*=1.06);
 addUpgrade('sys_cooling','Líneas criogénicas','REFRIGERACIÓN mejora CD y disipación térmica.','rare',1,req('system','cooling'),p=>{p.mod.specialCd*=.92;p.mod.heatCool*=1.18});
 addUpgrade('sys_stable','Anclaje inercial','ESTABILIZADOR reduce todavía más ambos retrocesos.','rare',1,req('system','stabilizer'),p=>{p.mod.recoil*=.78;p.s.knockTaken*=.88});
+
+function hasAnyPower(p,ids){return ids.some(id=>(p.powers?.[id]||0)>0)}
+function fusionReq(weapon,special=null,system=null,powers=[]){
+  return p=>p.loadout?.weapon===weapon&&(!special||p.loadout?.special===special)&&(!system||p.loadout?.system===system)&&hasAnyPower(p,powers)
+}
+addUpgrade('fusion_swarm','MATRIZ DE ENJAMBRE','RIVET-9 alimenta el guiado: sus impactos recortan la recarga de HOUND PACK.','fusion',1,
+  fusionReq('rivet','hound',null,['rivet_split','rivet_breaker','hound_bus']),p=>p.mod.fusionSwarm=1);
+addUpgrade('fusion_platform','PLATAFORMA DE TIRO','LANCE-50 + ESTABILIZADOR: disparar casi inmóvil potencia el tiro y reduce su retroceso.','fusion',1,
+  fusionReq('lance',null,'stabilizer',['lance_chamber','lance_brake','sys_stable']),p=>p.mod.fusionPlatform=1);
+addUpgrade('fusion_dragon','BOCA DE DRAGÓN','SCRAPSHOT almacena la combustión de HELLTRAIL; el siguiente disparo descarga munición incendiaria reforzada.','fusion',1,
+  fusionReq('scrapshot','helltrail',null,['scrap_dragon','hell_napalm']),p=>p.mod.fusionDragon=1);
+addUpgrade('fusion_cryo','CIRCUITO CRIOGÉNICO','SUNLINE + REFRIGERACIÓN: el haz frío al inicio del ciclo térmico causa daño adicional.','fusion',1,
+  fusionReq('sunline',null,'cooling',['sun_sink','sun_focus','sys_cooling']),p=>p.mod.fusionCryo=1);
+addUpgrade('fusion_siege','MARTILLO DE ASEDIO','PISTON + ATLAS SHELL: cada impacto hidráulico genera una microonda y acelera la recarga de ATLAS.','fusion',1,
+  fusionReq('piston','atlas',null,['piston_shock','piston_recovery','atlas_siege']),p=>p.mod.fusionSiege=1);
+addUpgrade('fusion_crown','CORONA DENTADA','GRINDER + TRINITY DRIVE: durante TRINITY el hacha gana alcance y prolonga ligeramente el anillo al conectar.','fusion',1,
+  fusionReq('grinder','trinity',null,['grinder_edge','grinder_twin','trinity_ring']),p=>p.mod.fusionCrown=1);
 
 availableIds=function(i,rarity,exclude=[]){
   const p=game.players[i];
