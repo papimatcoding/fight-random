@@ -69,7 +69,9 @@ Quickplay muestra solo tu slot antes de buscar partida y usa códigos de sala ú
 
 ## Campo de pruebas
 
-Desde el Hangar se puede abrir un banco de pruebas local (PC por ahora) que no publica partidas ni estadísticas online. Usa un dummy inmortal y muestra daño total, DPS de los últimos 5 segundos, golpe máximo y precisión. Permite resetear métricas, recolocar el dummy y desactivar los cooldowns de `Space`/`E` sin alterar la cadencia del arma ni la sobrecarga de SUNLINE.
+Desde el Hangar se puede abrir un banco de pruebas local (PC por ahora) que no publica partidas ni estadísticas online. Usa un dummy inmortal y muestra daño total, DPS de los últimos 5 segundos, mejor burst de 1 segundo, golpe máximo y precisión. Permite resetear métricas, recolocar el dummy, alternar entre FIJO/LIBRE/TANQUE y desactivar los cooldowns de `Space`/`E` sin alterar la cadencia del arma ni la sobrecarga de SUNLINE.
+
+El panel `MEJORAS` permite forzar cualquier modificación compatible de arma, especial, chasis o sistema, subirla/bajarla entre 0 y su nivel máximo y probar directamente Legendarias o Mercado Negro sin depender del draft. Cada cambio reconstruye la máquina desde sus stats base para evitar acumulaciones fantasma. Los slots A/B guardan build + métricas y comparan DPS, burst, golpe máximo y precisión.
 
 ## Controles
 
