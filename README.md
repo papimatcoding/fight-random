@@ -99,3 +99,8 @@ La build `2026.10-polish-2` usa un HUD fijo dentro de la arena: vida/estados del
 ## Combat V3 / fullscreen
 
 La build `2026.10-combat-3` integra los controles críticos dentro del propio frame de la arena. Marcador, ronda, mapa, fullscreen y SALIR permanecen disponibles al entrar en pantalla completa. El HUD inferior aumenta tamaño y mantiene vida, estados y SPACE/M1/E dentro del área 16:9. Al terminar una partida se muestra la configuración final: chasis, módulos, modificaciones y fusiones obtenidas.
+
+
+## Party 2v2
+
+La build `2026.10-party-1` añade una party de dos jugadores desde la lista de amigos. El líder crea una sala 2v2 privada, el amigo ocupa el segundo asiento del mismo equipo y ambos pueden ajustar la máquina antes de abrir la cola. Al pulsar `BUSCAR RIVALES`, la misma sala se publica a Quickplay; los siguientes dos asientos pertenecen al equipo contrario y la pareja se marca automáticamente como lista. No se crean tablas nuevas: se reutilizan amigos, invitaciones, salas y P2P existentes.

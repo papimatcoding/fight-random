@@ -1091,3 +1091,25 @@
   .canvas-frame:fullscreen .arena-topbar{padding:5px}
   .canvas-frame:fullscreen .combat-hud{padding-bottom:5px}
 }
+
+
+/* ==========================================================
+   PARTY 2V2 V1
+   ========================================================== */
+.friend-actions{flex-wrap:wrap;justify-content:flex-end}
+.friend-actions .party-button{
+  color:#83dec1;border-color:#356956;background:#10231d
+}
+.friend-actions .party-button:hover{border-color:#5da989;background:#153126}
+.party-queue{
+  width:min(440px,100%);margin:4px auto 0;padding:11px 14px;
+  border-color:#4d8872;color:#a1ead2;background:linear-gradient(180deg,#173128,#10211c);
+  font-size:11px;font-weight:950;letter-spacing:.08em
+}
+.party-queue:not(:disabled):hover{border-color:#76c7a7;background:#1a392e}
+.party-queue:disabled{opacity:.58}
+@media(max-width:760px){
+  .friend-actions{max-width:155px}
+  .friend-actions .party-button{font-size:8px;padding:6px 7px}
+  .party-queue{padding:9px 10px;font-size:10px}
+}
