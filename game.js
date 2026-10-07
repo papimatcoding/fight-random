@@ -467,6 +467,7 @@ $('testRangeBtn').onclick=startTestRange;
 $('trainingExitBtn').onclick=exitTestRange;
 $('trainingResetBtn').onclick=resetTrainingMetrics;
 $('trainingDummyBtn').onclick=cycleTrainingDummy;
+$('trainingRepositionBtn').onclick=()=>repositionTrainingDummy(true);
 $('trainingCooldownBtn').onclick=()=>{if(game?.training){game.trainingNoCooldowns=!game.trainingNoCooldowns;renderTrainingHud(game)}};
 $('trainingUpgradesBtn').onclick=()=>{$('trainingUpgrades').classList.toggle('hidden');renderTrainingUpgradePanel()};
 $('trainingUpgradesClose').onclick=()=>$('trainingUpgrades').classList.add('hidden');
